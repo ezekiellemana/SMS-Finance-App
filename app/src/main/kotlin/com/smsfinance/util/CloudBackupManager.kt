@@ -38,7 +38,7 @@ class CloudBackupManager @Inject constructor(
 ) {
     companion object {
         private const val BACKUP_FILE_NAME = "smsfinance_backup.json"
-        private const val APP_NAME = "SMS Finance Widget"
+        private const val APP_NAME = "Smart Money"
         private const val DRIVE_FOLDER = "appDataFolder"
     }
 

@@ -21,6 +21,7 @@ import com.smsfinance.ui.components.*
 import com.smsfinance.ui.theme.*
 import com.smsfinance.util.LocaleHelper
 import com.smsfinance.viewmodel.SettingsViewModel
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun SettingsScreen(
@@ -44,32 +45,17 @@ fun SettingsScreen(
     var showPinSetup     by remember { mutableStateOf(false) }
     var pinInput         by remember { mutableStateOf("") }
 
-    Scaffold(
-        containerColor = BgPrimary,
+    AppScreenScaffold(
+        title = "Settings",
+        subtitle = "Customize your experience",
+        onNavigateBack = onNavigateBack
     ) { padding ->
         ScreenEnterAnimation {
             Column(
                 Modifier.fillMaxSize().padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    Arrangement.SpaceBetween, Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                        }
-                        Column {
-                            Text("Settings", style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold)
-                            Text("Customize your experience", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
                 SectionHeader("Features")
                 AppNavRow("Budget Planning", "Set monthly category budgets",
                     Icons.Default.AccountBalanceWallet,

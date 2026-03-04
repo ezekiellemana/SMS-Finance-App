@@ -16,7 +16,9 @@ data class TransactionUiState(
     val transactions: List<Transaction> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
-    val selectedFilter: TransactionFilter = TransactionFilter()
+    val selectedFilter: TransactionFilter = TransactionFilter(),
+    val visibleCount: Int = 20,
+    val hasMore: Boolean = false
 )
 
 /**
@@ -61,13 +63,20 @@ class TransactionViewModel @Inject constructor(
                 }
             }.catch { e ->
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
-            }.collect { transactions ->
+            }.collect { allTransactions ->
+                val visible = _uiState.value.visibleCount
                 _uiState.value = _uiState.value.copy(
-                    transactions = transactions,
-                    isLoading = false
+                    transactions = allTransactions.take(visible),
+                    isLoading = false,
+                    hasMore = allTransactions.size > visible
                 )
             }
         }
+    }
+
+    fun loadMore() {
+        _uiState.value = _uiState.value.copy(visibleCount = _uiState.value.visibleCount + 20)
+        observeTransactions()
     }
 
     fun applyFilter(filter: TransactionFilter) {

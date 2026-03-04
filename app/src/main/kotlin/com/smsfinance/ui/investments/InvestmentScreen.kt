@@ -39,6 +39,7 @@ import com.smsfinance.viewmodel.InvestmentViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun InvestmentScreen(
@@ -49,34 +50,19 @@ fun InvestmentScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingItem by remember { mutableStateOf<Investment?>(null) }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }, containerColor = AccentTeal) {
-                Icon(Icons.Default.Add, "Add", tint = BgPrimary)
+    AppScreenScaffold(
+        title = "Investments",
+        subtitle = "Track savings goals & portfolio",
+        onNavigateBack = onNavigateBack,
+        actions = {
+            IconButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, null, tint = AccentTeal)
             }
         }
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Investments", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                            Text("Track savings goals & portfolio", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-            }
             // Portfolio summary
             if (!uiState.isLoading) {
                 item { PortfolioSummaryCard(uiState.totalValue, uiState.totalInvested,

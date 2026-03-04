@@ -35,7 +35,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SMSFinanceWidget.Splash">
+        android:theme="@style/Theme.SMSFinanceWidget.VideoSplash">
 
         <!-- Video Splash Activity - LAUNCHER entry point -->
         <activity

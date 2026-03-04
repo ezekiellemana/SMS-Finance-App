@@ -479,7 +479,7 @@ object SmsPatternEngine {
         return null
     }
 
-    private fun extractReference(body: String): String {
+    fun extractReference(body: String): String {
         for (regex in REFERENCE_PATTERNS) {
             val ref = regex.find(body)?.groupValues?.get(1)
             if (!ref.isNullOrBlank()) return ref

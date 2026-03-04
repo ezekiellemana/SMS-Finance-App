@@ -30,6 +30,7 @@ import com.smsfinance.viewmodel.RecurringViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun RecurringScreen(
@@ -40,36 +41,21 @@ fun RecurringScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingItem by remember { mutableStateOf<RecurringTransaction?>(null) }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }, containerColor = AccentTeal) {
-                Icon(Icons.Default.Add, "Add", tint = BgPrimary)
+    AppScreenScaffold(
+        title = "Recurring",
+        subtitle = "Auto-detect & track regular payments",
+        onNavigateBack = onNavigateBack,
+        actions = {
+            IconButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, null, tint = AccentTeal)
             }
         }
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Recurring Transactions", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                            Text("Auto-detect & track regular payments", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-            }
             // ── Auto-detect card ─────────────────────────────────────────────
             item { AutoDetectCard(isDetecting = uiState.isDetecting, onDetect = { viewModel.detectPatterns() }) }
 

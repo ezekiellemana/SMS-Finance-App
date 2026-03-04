@@ -36,6 +36,19 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
 
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+            isIncludeAndroidResources = false
+            all { it.failOnNoDiscoveredTests = false }
+        }
+    }
+
+    hilt {
+        enableAggregatingTask = true
+        enableTransformForLocalTests = false
+    }
+
     packaging {
         resources {
             excludes += setOf(
@@ -55,6 +68,9 @@ android {
         }
     }
 }
+
+// Explicitly register Kotlin test source directory
+android.sourceSets.getByName("test").java.srcDirs("src/test/kotlin")
 
 dependencies {
     // Core Android

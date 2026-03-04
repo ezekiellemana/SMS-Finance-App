@@ -34,6 +34,7 @@ import com.smsfinance.viewmodel.BudgetViewModel
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun BudgetScreen(
@@ -47,45 +48,28 @@ fun BudgetScreen(
     val cal = Calendar.getInstance()
     val monthName = android.text.format.DateFormat.format("MMMM yyyy", cal.time).toString()
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }, containerColor = AccentTeal) {
-                Icon(Icons.Default.Add, contentDescription = "Add budget", tint = BgPrimary)
+    AppScreenScaffold(
+        title = "Budget Planning",
+        subtitle = monthName,
+        onNavigateBack = onNavigateBack,
+        actions = {
+            IconButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, null, tint = AccentTeal)
             }
         }
     ) { padding ->
-
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = AccentTeal)
             }
-            return@Scaffold
+            return@AppScreenScaffold
         }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Budget Planning", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                    }
-                }
-                Text(monthName, fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(end = 8.dp))
-            }
-            }
             // ── Overview card ─────────────────────────────────────────────────
             item { BudgetOverviewCard(uiState.totalBudgeted, uiState.totalSpent) }
 

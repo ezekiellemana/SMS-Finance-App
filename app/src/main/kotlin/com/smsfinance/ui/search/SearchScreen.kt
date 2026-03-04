@@ -29,6 +29,7 @@ import com.smsfinance.ui.components.*
 import com.smsfinance.ui.dashboard.TransactionRow
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.SearchViewModel
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun SearchScreen(
@@ -42,17 +43,16 @@ fun SearchScreen(
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    Scaffold(
-        containerColor = BgPrimary,
+    AppScreenScaffold(
+        title = "Search",
+        subtitle = "Find transactions",
+        onNavigateBack = onNavigateBack
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 0.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                }
                 OutlinedTextField(
                     value = uiState.query,
                     onValueChange = { viewModel.setQuery(it) },

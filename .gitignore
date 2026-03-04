@@ -43,7 +43,7 @@ obj/
 *.so
 
 # Jetpack Compose / Kotlin
-build/
+build
 kotlin-tooling/
 
 # Kotlin Annotation Processing (KAPT)

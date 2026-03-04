@@ -21,6 +21,7 @@ import com.smsfinance.ui.components.*
 import com.smsfinance.ui.dashboard.TransactionRow
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.TransactionViewModel
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun TransactionListScreen(
@@ -33,38 +34,23 @@ fun TransactionListScreen(
     var selectedType by remember { mutableStateOf<TransactionType?>(null) }
     val hasFilter = selectedType != null
 
-    Scaffold(
-        containerColor = BgPrimary,
-    ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("All Transactions", fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge)
-                        if (!uiState.isLoading) {
-                            Text("${uiState.transactions.size} records",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-                IconButton(onClick = { showFilterDialog = true }) {
-                    BadgedBox(badge = {
-                        if (hasFilter) Badge(containerColor = AccentTeal) {}
-                    }) {
-                        Icon(Icons.Default.FilterList, "Filter",
-                            tint = if (hasFilter) AccentTeal
-                            else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+    AppScreenScaffold(
+        title = "All Transactions",
+        subtitle = if (!uiState.isLoading) "${uiState.transactions.size} records" else "",
+        onNavigateBack = onNavigateBack,
+        actions = {
+            IconButton(onClick = { showFilterDialog = true }) {
+                BadgedBox(badge = {
+                    if (hasFilter) Badge(containerColor = AccentTeal) {}
+                }) {
+                    Icon(Icons.Default.FilterList, "Filter",
+                        tint = if (hasFilter) AccentTeal
+                        else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+        }
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
             if (hasFilter) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                     FilterChip(
@@ -91,6 +77,23 @@ fun TransactionListScreen(
                         SwipeToDismissTransaction(tx, onDismiss = { viewModel.deleteTransaction(tx) }) {
                             TransactionRow(tx, privacyMode = false,
                                 onClick = { onNavigateToDetail(tx.id) })
+                        }
+                    }
+                    if (uiState.hasMore) {
+                        item {
+                            Box(Modifier.fillMaxWidth().padding(vertical = 8.dp), Alignment.Center) {
+                                OutlinedButton(
+                                    onClick = { viewModel.loadMore() },
+                                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                                        brush = androidx.compose.ui.graphics.SolidColor(AccentTeal)
+                                    )
+                                ) {
+                                    Icon(Icons.Default.ExpandMore, null,
+                                        Modifier.size(18.dp), AccentTeal)
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Load more", color = AccentTeal)
+                                }
+                            }
                         }
                     }
                     item { Spacer(Modifier.height(20.dp)) }

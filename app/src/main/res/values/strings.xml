@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SMS Finance Widget</string>
+    <string name="app_name">Smart Money</string>
     <string name="widget_small_label">Finance (Small)</string>
     <string name="widget_medium_label">Finance (Medium)</string>
     <string name="widget_small_description">Shows your balance and monthly summary</string>
@@ -10,7 +10,7 @@
     <string name="nav_alerts">Alerts</string>
     <string name="nav_predictions">AI Predictions</string>
     <string name="nav_settings">Settings</string>
-    <string name="dashboard_title">SMS Finance</string>
+    <string name="dashboard_title">Smart Money</string>
     <string name="estimated_balance">Estimated Balance</string>
     <string name="monthly_income">Monthly Income</string>
     <string name="monthly_expenses">Monthly Expenses</string>
@@ -68,7 +68,7 @@
     <string name="set_pin">Set PIN</string>
     <string name="enter_pin">Enter 4–6 digit PIN</string>
     <string name="cancel">Cancel</string>
-    <string name="app_name_pin">SMS Finance Widget</string>
+    <string name="app_name_pin">Smart Money</string>
     <string name="enter_your_pin">Enter your PIN</string>
     <string name="incorrect_pin">Incorrect PIN</string>
     <string name="spending_alerts">Spending Alerts</string>

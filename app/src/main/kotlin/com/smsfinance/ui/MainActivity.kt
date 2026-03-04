@@ -9,7 +9,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -59,6 +63,12 @@ import com.smsfinance.ui.transactions.TransactionListScreen
 import com.smsfinance.viewmodel.SettingsViewModel
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -102,6 +112,7 @@ class MainActivity : FragmentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         requestPermissions()
         setContent {
             val vm: SettingsViewModel = hiltViewModel()
@@ -149,7 +160,7 @@ class MainActivity : FragmentActivity() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) = onSuccess()
             })
         prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Unlock SMS Finance")
+            .setTitle("Unlock Smart Money")
             .setAllowedAuthenticators(
                 BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
             .build())
@@ -173,6 +184,7 @@ fun AppNavigation(
     val showBottomBar = currentRoute in bottomNavItems.map { it.route }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
                 SmartMoneyBottomBar(
@@ -296,35 +308,57 @@ fun SmartMoneyBottomBar(
     onNavigate: (String) -> Unit,
     onAddClick: () -> Unit
 ) {
-    // Items split: 2 left, FAB center, 2 right
     val leftItems  = bottomNavItems.take(2)
     val rightItems = bottomNavItems.drop(2)
+
+    // FAB breathing glow
+    val fabPulse = rememberInfiniteTransition(label = "fab")
+    val fabGlow by fabPulse.animateFloat(
+        initialValue = 0.35f, targetValue = 0.70f,
+        animationSpec = infiniteRepeatable(
+            tween(1800, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ), label = "fabGlow"
+    )
+    val fabScale by fabPulse.animateFloat(
+        initialValue = 1.00f, targetValue = 1.06f,
+        animationSpec = infiniteRepeatable(
+            tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ), label = "fabScale"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.Transparent)
+            .navigationBarsPadding()
     ) {
-        // Bar background — rounded top corners
+        // Solid bar background with rounded top corners + glow line
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .height(72.dp)
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(BrandSurface)
+                .height(90.dp)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .drawBehind {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            listOf(BrandTeal.copy(alpha = 0.30f), Color.Transparent),
+                            startY = 0f, endY = 8f
+                        )
+                    )
+                }
+                .background(Color(0xFF151E2E))
         )
 
         // Nav items row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
+                .height(90.dp)
                 .align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left 2 items
             leftItems.forEach { item ->
                 BottomBarItem(
                     item = item,
@@ -333,11 +367,7 @@ fun SmartMoneyBottomBar(
                     modifier = Modifier.weight(1f)
                 )
             }
-
-            // Center FAB placeholder (takes space so items spread correctly)
             Spacer(modifier = Modifier.weight(1f))
-
-            // Right 2 items
             rightItems.forEach { item ->
                 BottomBarItem(
                     item = item,
@@ -348,26 +378,49 @@ fun SmartMoneyBottomBar(
             }
         }
 
-        // Center FAB — floats above the bar
+        // Glowing FAB — floats above the bar
         Box(
             modifier = Modifier
-                .size(60.dp)
                 .align(Alignment.TopCenter)
-                .offset(y = (-8).dp)
-                .clip(CircleShape)
-                .background(BrandTeal)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onAddClick() },
+                .offset(y = (-12).dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add transaction",
-                tint = BrandDark,
-                modifier = Modifier.size(30.dp)
+            // Outer glow ring
+            Box(
+                modifier = Modifier
+                    .size(78.dp)
+                    .graphicsLayer { alpha = fabGlow }
+                    .background(
+                        Brush.radialGradient(
+                            listOf(BrandTeal.copy(0.45f), Color.Transparent)
+                        ),
+                        CircleShape
+                    )
             )
+            // FAB button
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .graphicsLayer { scaleX = fabScale; scaleY = fabScale }
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(BrandTeal, Color(0xFF00B8A0))
+                        )
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onAddClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add transaction",
+                    tint = Color(0xFF0A1628),
+                    modifier = Modifier.size(30.dp)
+                )
+            }
         }
     }
 }
@@ -380,14 +433,27 @@ private fun BottomBarItem(
     modifier: Modifier = Modifier
 ) {
     val iconColor by animateColorAsState(
-        targetValue = if (selected) BrandTeal else Color(0xFF6B7A99),
-        animationSpec = tween(200),
-        label = "iconColor"
+        targetValue = if (selected) BrandTeal else Color(0xFF4A5568),
+        animationSpec = tween(300), label = "iconColor"
     )
     val labelColor by animateColorAsState(
-        targetValue = if (selected) BrandTeal else Color(0xFF6B7A99),
-        animationSpec = tween(200),
-        label = "labelColor"
+        targetValue = if (selected) BrandTeal else Color(0xFF4A5568),
+        animationSpec = tween(300), label = "labelColor"
+    )
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1.15f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "iconScale"
+    )
+
+    // Selected glow pulse
+    val glowPulse = rememberInfiniteTransition(label = "navGlow")
+    val glowAlpha by glowPulse.animateFloat(
+        initialValue = if (selected) 0.15f else 0f,
+        targetValue = if (selected) 0.35f else 0f,
+        animationSpec = infiniteRepeatable(
+            tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ), label = "navGlowAlpha"
     )
 
     Column(
@@ -397,30 +463,49 @@ private fun BottomBarItem(
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 8.dp),
+            .padding(vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Active pill indicator
+        // Glowing icon container
         Box(
             modifier = Modifier
-                .size(width = 32.dp, height = 3.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(if (selected) BrandTeal else Color.Transparent)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Icon(
-            imageVector = item.icon,
-            contentDescription = null,
-            tint = iconColor,
-            modifier = Modifier.size(22.dp)
-        )
+                .size(46.dp)
+                .drawBehind {
+                    if (selected) {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                listOf(BrandTeal.copy(alpha = glowAlpha), Color.Transparent)
+                            ),
+                            radius = size.minDimension * 0.75f
+                        )
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            // Selected pill background
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(BrandTeal.copy(alpha = 0.12f), CircleShape)
+                )
+            }
+            Icon(
+                imageVector = item.icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier
+                    .size(26.dp)
+                    .graphicsLayer { scaleX = iconScale; scaleY = iconScale }
+            )
+        }
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = item.labelRes.let { androidx.compose.ui.res.stringResource(it) },
+            text = stringResource(item.labelRes),
             color = labelColor,
-            fontSize = 10.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            fontSize = 11.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1,
             textAlign = TextAlign.Center
         )

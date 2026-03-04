@@ -17,6 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -120,7 +123,7 @@ fun DashboardScreen(
                     item { EmptyState("📭", "No transactions yet",
                         "Financial SMS messages will appear here automatically") }
                 } else {
-                    items(uiState.recentTransactions.take(10)) { tx ->
+                    items(uiState.recentTransactions.take(3)) { tx ->
                         TransactionRow(tx, privacyMode, onClick = onNavigateToTransactions)
                     }
                 }
@@ -132,28 +135,52 @@ fun DashboardScreen(
 
 @Composable
 fun HeroBalanceCard(balance: Double, income: Double, expenses: Double, privacyMode: Boolean) {
-    val animBal by animateFloatAsState(balance.toFloat(), tween(1000, easing = EaseOutCubic), label = "bal")
+    val animBal by animateFloatAsState(balance.toFloat(), tween(1200, easing = EaseOutCubic), label = "bal")
+
+    // Breathing glow — slow infinite pulse on the radial glow alpha
+    val glowPulse = rememberInfiniteTransition(label = "glow")
+    val glowAlpha by glowPulse.animateFloat(
+        initialValue = 0.12f, targetValue = 0.28f,
+        animationSpec = infiniteRepeatable(
+            tween(2800, easing = FastOutSlowInEasing),
+            RepeatMode.Reverse
+        ), label = "glowAlpha"
+    )
+    // Subtle card scale breathe
+    val cardScale by glowPulse.animateFloat(
+        initialValue = 1.000f, targetValue = 1.004f,
+        animationSpec = infiniteRepeatable(
+            tween(3200, easing = FastOutSlowInEasing),
+            RepeatMode.Reverse
+        ), label = "cardScale"
+    )
+
     Box(
         modifier = Modifier.fillMaxWidth().height(215.dp)
+            .graphicsLayer { scaleX = cardScale; scaleY = cardScale }
             .clip(RoundedCornerShape(24.dp))
             .background(Brush.linearGradient(
                 listOf(Color(0xFF1A3040), Color(0xFF1E3A3A), Color(0xFF1F2E3A))
             ))
             .drawBehind {
-                // Teal glow top-right
+                // Breathing teal glow top-right
                 drawCircle(
                     brush = Brush.radialGradient(
-                        listOf(AccentTeal.copy(alpha = 0.18f), Color.Transparent),
+                        listOf(AccentTeal.copy(alpha = glowAlpha), Color.Transparent),
                         center = Offset(size.width * 0.85f, size.height * 0.15f),
-                        radius = size.width * 0.5f
+                        radius = size.width * 0.55f
+                    )
+                )
+                // Secondary subtle blue glow bottom-left
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(Color(0xFF1E90FF).copy(alpha = glowAlpha * 0.4f), Color.Transparent),
+                        center = Offset(size.width * 0.1f, size.height * 0.9f),
+                        radius = size.width * 0.4f
                     )
                 )
             }
     ) {
-        // Border ring
-        Box(Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp))
-            .background(Color.Transparent)
-        )
         Column(Modifier.fillMaxSize().padding(22.dp), Arrangement.SpaceBetween) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Top) {
                 Column {
@@ -164,32 +191,64 @@ fun HeroBalanceCard(balance: Double, income: Double, expenses: Double, privacyMo
                         color = TextWhite, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold
                     )
                 }
-                Surface(color = AccentTeal.copy(alpha = 0.15f), shape = RoundedCornerShape(50)) {
+                // Breathing "This Month" badge
+                val badgeAlpha by glowPulse.animateFloat(
+                    initialValue = 0.75f, targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse
+                    ), label = "badge"
+                )
+                Surface(
+                    color = AccentTeal.copy(alpha = 0.15f * badgeAlpha + 0.05f),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.graphicsLayer { alpha = badgeAlpha }
+                ) {
                     Text("This Month", color = AccentTeal, fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
                 }
             }
-            HorizontalDivider(color = Color(0xFF3A4558))
+            HorizontalDivider(color = Color(0xFF3A4558).copy(alpha = 0.6f))
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 HeroStat("Income", income, Icons.AutoMirrored.Filled.TrendingUp,
-                    AccentTeal, privacyMode)
+                    AccentTeal, privacyMode, glowPulse)
                 HeroStat("Expenses", expenses, Icons.AutoMirrored.Filled.TrendingDown,
-                    ErrorRed, privacyMode)
+                    ErrorRed, privacyMode, glowPulse)
                 val saved = income - expenses
                 HeroStat("Saved", saved, Icons.Default.Savings,
-                    if (saved >= 0) AccentLight else ErrorRed, privacyMode)
+                    if (saved >= 0) AccentLight else ErrorRed, privacyMode, glowPulse)
             }
         }
     }
 }
 
 @Composable
-private fun HeroStat(label: String, value: Double, icon: ImageVector, color: Color, privacy: Boolean) {
+private fun HeroStat(
+    label: String, value: Double, icon: ImageVector, color: Color, privacy: Boolean,
+    transition: InfiniteTransition? = null
+) {
+    // Icon breathes independently with slight offset per-stat via different durations
+    val iconScale by (transition ?: rememberInfiniteTransition(label = "s")).animateFloat(
+        initialValue = 0.92f, targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            tween(2400, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ), label = "iconScale"
+    )
+    val iconAlpha by (transition ?: rememberInfiniteTransition(label = "sa")).animateFloat(
+        initialValue = 0.6f, targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ), label = "iconAlpha"
+    )
     Column {
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            Icon(icon, null, tint = color.copy(0.8f), modifier = Modifier.size(12.dp))
+            Icon(icon, null,
+                tint = color.copy(iconAlpha),
+                modifier = Modifier.size(12.dp).graphicsLayer {
+                    scaleX = iconScale; scaleY = iconScale
+                }
+            )
             Text(label, color = TextSecondary, fontSize = 11.sp)
         }
         Spacer(Modifier.height(2.dp))
@@ -211,13 +270,33 @@ fun QuickActionsRow(onTransactions: () -> Unit, onCharts: () -> Unit) {
 @Composable
 private fun QuickAction(mod: Modifier, label: String, icon: ImageVector, color: Color, onClick: () -> Unit) {
     val haptic = LocalHapticFeedback.current
+    val pulse = rememberInfiniteTransition(label = "qa")
+    val iconGlow by pulse.animateFloat(
+        initialValue = 0.10f, targetValue = 0.22f,
+        animationSpec = infiniteRepeatable(
+            tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ), label = "qaGlow"
+    )
+    val iconScale by pulse.animateFloat(
+        initialValue = 0.95f, targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ), label = "qaScale"
+    )
     GlassCard(mod.clickable { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() },
         cornerRadius = 14.dp) {
         Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(0.12f)),
-                Alignment.Center) {
-                Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
+            Box(
+                Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
+                    .background(color.copy(iconGlow)),
+                Alignment.Center
+            ) {
+                Icon(icon, null, tint = color,
+                    modifier = Modifier.size(18.dp).graphicsLayer {
+                        scaleX = iconScale; scaleY = iconScale
+                    }
+                )
             }
             Text(label, style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold, color = TextWhite)

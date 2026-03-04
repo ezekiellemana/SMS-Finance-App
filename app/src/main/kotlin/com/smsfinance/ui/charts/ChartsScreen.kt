@@ -31,6 +31,7 @@ import com.smsfinance.viewmodel.ChartsViewModel
 import java.text.NumberFormat
 import java.util.*
 import kotlin.math.*
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun ChartsScreen(
@@ -42,31 +43,16 @@ fun ChartsScreen(
 
     LaunchedEffect(selectedPeriod) { viewModel.loadData(selectedPeriod) }
 
-    Scaffold(
+    AppScreenScaffold(
+        title = "Analytics",
+        subtitle = "Visual spending insights",
+        onNavigateBack = onNavigateBack
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Analytics", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                            Text("Visual spending insights", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-            }
             // Period selector
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

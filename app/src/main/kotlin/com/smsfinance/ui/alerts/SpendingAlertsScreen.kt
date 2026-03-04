@@ -32,6 +32,7 @@ import com.smsfinance.ui.theme.OrangeWarn
 import com.smsfinance.viewmodel.SpendingAlertsViewModel
 import java.text.NumberFormat
 import java.util.Locale
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun SpendingAlertsScreen(
@@ -42,43 +43,22 @@ fun SpendingAlertsScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingAlert by remember { mutableStateOf<SpendingAlert?>(null) }
 
-    Scaffold(
-        containerColor = BgPrimary,
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = AccentTeal,
-                contentColor = BgPrimary,
-                icon = { Icon(Icons.Default.Add, null) },
-                text = { Text("New Alert", fontWeight = FontWeight.Bold) }
-            )
+    AppScreenScaffold(
+        title = "Spending Alerts",
+        subtitle = "Set limits to stay on budget",
+        onNavigateBack = onNavigateBack,
+        actions = {
+            IconButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, null, tint = AccentTeal)
+            }
         }
     ) { padding ->
-
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Spending Alerts", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                            Text("Set limits to stay on budget", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
                 CircularProgressIndicator(color = AccentTeal, strokeWidth = 3.dp)
             }
-            return@Scaffold
+            return@AppScreenScaffold
         }
-
         if (uiState.alerts.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
                 EmptyState("🔔", "No alerts yet", "Tap + to create your first spending limit")
@@ -87,7 +67,7 @@ fun SpendingAlertsScreen(
             ScreenEnterAnimation {
                 LazyColumn(
                     Modifier.fillMaxSize().padding(padding),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.alerts, key = { it.id }) { alert ->
@@ -99,7 +79,7 @@ fun SpendingAlertsScreen(
                             onToggle = { viewModel.toggleAlert(alert) }
                         )
                     }
-                    item { Spacer(Modifier.height(80.dp)) }
+                    item { Spacer(Modifier.height(20.dp)) }
                 }
             }
         }

@@ -5,6 +5,11 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -213,3 +218,79 @@ fun EmptyState(emoji: String, title: String, subtitle: String) {
 fun fmtAmt(amount: Double): String =
     java.text.NumberFormat.getNumberInstance(java.util.Locale.US)
         .apply { maximumFractionDigits = 0 }.format(amount)
+
+// ── Shared Screen Scaffold ────────────────────────────────────────────────────
+// All sub-screens use this so they match the dashboard's size, insets, colors.
+//
+// Provides:
+//  • statusBarsPadding so content never hides under the status bar
+//  • BgPrimary background consistently
+//  • Standard header row (back arrow + title + subtitle + optional actions)
+//  • Content slot with correct horizontal/vertical padding
+
+
+@Composable
+fun AppScreenScaffold(
+    title: String,
+    subtitle: String = "",
+    onNavigateBack: () -> Unit,
+    actions: @Composable () -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit
+) {
+    Scaffold(
+        containerColor = com.smsfinance.ui.theme.BgPrimary,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .statusBarsPadding()
+        ) {
+            // ── Header — matches dashboard top spacing ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = com.smsfinance.ui.theme.TextWhite
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = com.smsfinance.ui.theme.TextWhite
+                        )
+                        if (subtitle.isNotEmpty()) {
+                            Text(
+                                text = subtitle,
+                                fontSize = 11.sp,
+                                color = AccentTeal
+                            )
+                        }
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    actions()
+                }
+            }
+
+            // ── Screen content ──
+            content(PaddingValues(horizontal = 16.dp, vertical = 8.dp))
+        }
+    }
+}

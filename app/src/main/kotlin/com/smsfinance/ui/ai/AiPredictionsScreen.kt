@@ -33,6 +33,7 @@ import com.smsfinance.util.AiPredictionEngine
 import com.smsfinance.viewmodel.AiPredictionsViewModel
 import java.text.NumberFormat
 import java.util.Locale
+import com.smsfinance.ui.components.AppScreenScaffold
 
 /**
  * AI Predictions screen — shows spending forecast, trends, and savings tips.
@@ -45,28 +46,16 @@ fun AiPredictionsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-    ) { padding ->
-
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("AI Insights", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                            Text("On-device spending analysis", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-                IconButton(onClick = { viewModel.runAnalysis() }) {
-                    Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+    AppScreenScaffold(
+        title = "AI Insights",
+        subtitle = "On-device spending analysis",
+        onNavigateBack = onNavigateBack,
+        actions = {
+            IconButton(onClick = { viewModel.runAnalysis() }) {
+                Icon(Icons.Default.Refresh, null, tint = AccentTeal)
             }
+        }
+    ) { padding ->
 
         when {
             uiState.isLoading || uiState.isAnalyzing -> {

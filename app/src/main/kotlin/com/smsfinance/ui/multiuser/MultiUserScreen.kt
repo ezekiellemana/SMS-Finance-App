@@ -29,6 +29,7 @@ import com.smsfinance.domain.model.PROFILE_COLORS
 import com.smsfinance.domain.model.UserProfile
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.MultiUserViewModel
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun MultiUserScreen(
@@ -40,47 +41,28 @@ fun MultiUserScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingProfile by remember { mutableStateOf<UserProfile?>(null) }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = AccentTeal
-            ) {
-                Icon(Icons.Default.PersonAdd, contentDescription = "Add profile", tint = BgPrimary)
+    AppScreenScaffold(
+        title = "Family Accounts",
+        subtitle = "Switch between family members",
+        onNavigateBack = onNavigateBack,
+        actions = {
+            IconButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.PersonAdd, null, tint = AccentTeal)
             }
         }
     ) { padding ->
-
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = AccentTeal)
             }
-            return@Scaffold
+            return@AppScreenScaffold
         }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Family Accounts", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                            Text("Switch between family members", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-            }
             // Active profile hero
             uiState.activeProfile?.let { active ->
                 item {

@@ -29,6 +29,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.CloudBackupViewModel
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun CloudBackupScreen(
@@ -55,32 +56,18 @@ fun CloudBackupScreen(
         } catch (e: ApiException) { /* cancelled or failed */ }
     }
 
-    Scaffold(
+    AppScreenScaffold(
+        title = "Cloud Backup",
+        subtitle = "Google Drive — your data, your account",
+        onNavigateBack = onNavigateBack
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Cloud Backup", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                            Text("Google Drive — your data, your account", fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
 
             // ── Hero card ─────────────────────────────────────────────────────
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),

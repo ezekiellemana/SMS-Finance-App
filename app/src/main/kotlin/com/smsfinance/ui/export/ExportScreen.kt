@@ -22,10 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.smsfinance.ui.theme.GreenPrimary
+import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.ExportViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.smsfinance.ui.components.AppScreenScaffold
 
 @Composable
 fun ExportScreen(
@@ -58,31 +59,17 @@ fun ExportScreen(
         }
     }
 
-    Scaffold(
+    AppScreenScaffold(
+        title = "Export Data",
+        subtitle = "Save as Excel or PDF",
+        onNavigateBack = onNavigateBack
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(padding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                    Column {
-                        Text("Export Data", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold)
-                        Text("Save as Excel or PDF", fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
 
             // ── Stats card ────────────────────────────────────────────────────
             Card(
@@ -231,7 +218,7 @@ fun ExportScreen(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         "Exported files will be shared via your phone's share menu. " +
-                                "You can send via WhatsApp, Gmail, save to Drive, or download locally.",
+                        "You can send via WhatsApp, Gmail, save to Drive, or download locally.",
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }

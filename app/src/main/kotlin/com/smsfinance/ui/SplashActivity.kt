@@ -11,6 +11,7 @@ import android.view.SurfaceView
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import com.smsfinance.R
 
@@ -29,7 +30,10 @@ class SplashActivity : FragmentActivity(), SurfaceHolder.Callback {
     private var launched = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Suppress Android 12+ system splash screen immediately
+        // Instantly dismiss Android 12+ system splash — video handles everything
+        installSplashScreen()
+
+        // Suppress any residual background flash
         window.setBackgroundDrawableResource(android.R.color.black)
 
         super.onCreate(savedInstanceState)
