@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Small Widget — fully flexible, no fixed heights, works on any cell size.
+  Uses layout_weight so content fills whatever space the launcher gives.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_small_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="12dp">
+
+    <!-- Top row: label + live dot -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SMART MONEY"
+            android:textColor="#99AAB4C3"
+            android:textSize="8sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08" />
+
+        <TextView
+            android:id="@+id/tv_live_dot"
+            android:layout_width="7dp"
+            android:layout_height="7dp"
+            android:background="#FF3DDAD7"
+            android:text=""
+            android:textSize="1sp" />
+
+    </LinearLayout>
+
+    <!-- Balance section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_balance_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Est. Balance"
+            android:textColor="#AAFFFFFF"
+            android:textSize="9sp" />
+
+        <TextView
+            android:id="@+id/tv_balance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TZS ---"
+            android:textColor="#FFFFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingTop="2dp" />
+
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@drawable/widget_divider"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Income / Expenses row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Income -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:background="@drawable/widget_row_bg"
+            android:padding="6dp"
+            android:layout_marginEnd="3dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="↑ INCOME"
+                android:textColor="#77AAB4C3"
+                android:textSize="7sp"
+                android:textAllCaps="true" />
+
+            <TextView
+                android:id="@+id/tv_income"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="---"
+                android:textColor="#FF3DDAD7"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+        </LinearLayout>
+
+        <!-- Expenses -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:background="@drawable/widget_row_bg"
+            android:padding="6dp"
+            android:layout_marginStart="3dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="↓ SPENT"
+                android:textColor="#77AAB4C3"
+                android:textSize="7sp"
+                android:textAllCaps="true" />
+
+            <TextView
+                android:id="@+id/tv_expenses"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="---"
+                android:textColor="#FFFF5C5C"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Last updated -->
+    <TextView
+        android:id="@+id/tv_last_updated"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="Tap to open"
+        android:textColor="#44AAB4C3"
+        android:textSize="7sp"
+        android:gravity="bottom" />
+
+</LinearLayout>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Main app theme — no action bar, no title bar -->
+    <style name="Theme.SMSFinanceWidget" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
+    <!-- Splash screen theme using androidx core-splashscreen -->
+    <style name="Theme.SMSFinanceWidget.Splash" parent="Theme.SplashScreen">
+        <!-- Background color of the splash screen -->
+        <item name="windowSplashScreenBackground">#00963F</item>
+        <!-- The animated icon or static icon shown in the center -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <!-- Duration of the icon animation (ms) -->
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <!-- Theme to switch to after splash is done -->
+        <item name="postSplashScreenTheme">@style/Theme.SMSFinanceWidget</item>
+    </style>
+    <!-- Video splash theme: full screen, no system splash icon, no action bar -->
+    <style name="Theme.SMSFinanceWidget.VideoSplash" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+    </style>
+
+</resources>
