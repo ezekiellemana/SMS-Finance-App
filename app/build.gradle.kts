@@ -27,13 +27,13 @@ android {
         }
     }
 
+    @Suppress("DEPRECATION")
+    kotlinOptions { jvmTarget = "17" }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
-
-    kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
 
     testOptions {
@@ -46,7 +46,6 @@ android {
 
     hilt {
         enableAggregatingTask = true
-        enableTransformForLocalTests = false
     }
 
     packaging {
@@ -113,9 +112,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
-    // Widget / Glance
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.material3)
+    // Widget — uses standard AppWidgetProvider
 
     // Charts
     implementation(libs.vico.compose.m3)

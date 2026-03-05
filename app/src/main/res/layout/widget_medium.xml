@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Medium Widget — fully flexible with layout_weight.
-  Every section fills proportional space regardless of launcher cell size.
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_medium_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_background"
+    android:background="#E61F2633"
     android:padding="12dp">
 
-    <!-- ── Header ─────────────────────────────────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -19,7 +14,6 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <!-- Left: name + balance -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -48,37 +42,20 @@
 
         </LinearLayout>
 
-        <!-- Right: income + expenses + dot -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="end">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_income_medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="6dp"
-                    android:layout_height="6dp"
-                    android:background="#FF3DDAD7"
-                    android:text=""
-                    android:textSize="1sp"
-                    android:layout_marginEnd="4dp" />
-
-                <TextView
-                    android:id="@+id/tv_income_medium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="↑ ---"
-                    android:textColor="#FF3DDAD7"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
+                android:text="↑ ---"
+                android:textColor="#FF3DDAD7"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_expense_medium"
@@ -94,15 +71,13 @@
 
     </LinearLayout>
 
-    <!-- Divider -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@drawable/widget_divider"
+        android:background="#33FFFFFF"
         android:layout_marginTop="2dp"
         android:layout_marginBottom="4dp" />
 
-    <!-- Recent activity label -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="0dp"
@@ -113,7 +88,6 @@
         android:letterSpacing="0.1"
         android:gravity="center_vertical" />
 
-    <!-- ── Transaction 1 ──────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/tx1_row"
         android:layout_width="match_parent"
@@ -121,7 +95,7 @@
         android:layout_weight="2"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/widget_row_bg"
+        android:background="#1AFFFFFF"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:layout_marginBottom="3dp">
@@ -176,7 +150,6 @@
 
     </LinearLayout>
 
-    <!-- ── Transaction 2 ──────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/tx2_row"
         android:layout_width="match_parent"
@@ -184,7 +157,7 @@
         android:layout_weight="2"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/widget_row_bg"
+        android:background="#1AFFFFFF"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:layout_marginBottom="3dp">
@@ -239,7 +212,6 @@
 
     </LinearLayout>
 
-    <!-- ── Transaction 3 ──────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/tx3_row"
         android:layout_width="match_parent"
@@ -247,7 +219,7 @@
         android:layout_weight="2"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="@drawable/widget_row_bg"
+        android:background="#1AFFFFFF"
         android:paddingStart="8dp"
         android:paddingEnd="8dp">
 

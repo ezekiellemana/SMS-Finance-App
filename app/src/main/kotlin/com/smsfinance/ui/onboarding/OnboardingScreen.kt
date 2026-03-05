@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -70,7 +71,7 @@ val onboardingPages = listOf(
         description = "Live balance, income and expense charts with AI-powered spending predictions and beautiful monthly trend breakdowns.",
         accentColor = AccentLight,
         features = listOf(
-            Icons.Default.ShowChart   to "Live balance",
+            Icons.AutoMirrored.Filled.ShowChart to "Live balance",
             Icons.Default.PieChart   to "Spending charts",
             Icons.Default.Psychology to "AI predictions"
         )

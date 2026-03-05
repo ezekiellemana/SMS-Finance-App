@@ -31,6 +31,7 @@ import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.CloudBackupViewModel
 import com.smsfinance.ui.components.AppScreenScaffold
 
+@Suppress("DEPRECATION")
 @Composable
 fun CloudBackupScreen(
     viewModel: CloudBackupViewModel = hiltViewModel(),
@@ -96,7 +97,7 @@ fun CloudBackupScreen(
                     Icon(Icons.Default.Shield, null, tint = AccentTeal, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("🔒 Privacy First — Your data goes directly to your own Google Drive " +
-                        "app folder. It is never stored on our servers.",
+                            "app folder. It is never stored on our servers.",
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 }
             }
@@ -218,7 +219,7 @@ fun CloudBackupScreen(
             icon = { Icon(Icons.Default.CloudDownload, null) },
             title = { Text("Restore from Backup?") },
             text = { Text("This will import transactions from your Google Drive backup. " +
-                "Existing transactions will not be deleted — restored transactions will be merged.") },
+                    "Existing transactions will not be deleted — restored transactions will be merged.") },
             confirmButton = {
                 Button(onClick = { viewModel.restore(); showRestoreConfirm = false }) { Text("Restore") }
             },

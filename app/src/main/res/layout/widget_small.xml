@@ -4,16 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_background"
-    android:padding="14dp"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="#E61F2633"
+    android:padding="12dp">
 
-    <!-- Header: app name + live dot -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.5"
+        android:layout_weight="1"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
@@ -22,27 +20,24 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="SMART MONEY"
-            android:textColor="#99AAB4C3"
+            android:textColor="#99FFFFFF"
             android:textSize="9sp"
-            android:textAllCaps="true"
-            android:letterSpacing="0.08"
-            android:fontFamily="sans-serif-medium" />
+            android:textAllCaps="true" />
 
         <TextView
             android:id="@+id/tv_live_dot"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
+            android:layout_width="7dp"
+            android:layout_height="7dp"
             android:background="#FF3DDAD7"
             android:text=""
             android:textSize="1sp" />
-
     </LinearLayout>
 
     <!-- Balance -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3.5"
+        android:layout_weight="3"
         android:orientation="vertical"
         android:gravity="center_vertical">
 
@@ -62,26 +57,22 @@
             android:textColor="#FFFFFFFF"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
             android:ellipsize="end"
-            android:maxLines="1"
-            android:paddingTop="2dp" />
-
+            android:maxLines="1" />
     </LinearLayout>
 
     <!-- Divider -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@drawable/widget_divider"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="6dp" />
+        android:background="#33FFFFFF"
+        android:layout_marginBottom="4dp" />
 
-    <!-- Income / Expenses row -->
+    <!-- Income / Expenses -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2.5"
+        android:layout_weight="2"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
@@ -91,17 +82,16 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center_vertical"
-            android:background="@drawable/widget_row_bg"
-            android:padding="7dp"
-            android:layout_marginEnd="4dp">
+            android:background="#1A3DDAD7"
+            android:padding="6dp"
+            android:layout_marginEnd="3dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="↑ INCOME"
-                android:textColor="#77AAB4C3"
-                android:textSize="8sp"
-                android:textAllCaps="true" />
+                android:text="IN"
+                android:textColor="#77FFFFFF"
+                android:textSize="8sp" />
 
             <TextView
                 android:id="@+id/tv_income"
@@ -113,7 +103,6 @@
                 android:textStyle="bold"
                 android:ellipsize="end"
                 android:maxLines="1" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -122,17 +111,16 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center_vertical"
-            android:background="@drawable/widget_row_bg"
-            android:padding="7dp"
-            android:layout_marginStart="4dp">
+            android:background="#1AFF5C5C"
+            android:padding="6dp"
+            android:layout_marginStart="3dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="↓ SPENT"
-                android:textColor="#77AAB4C3"
-                android:textSize="8sp"
-                android:textAllCaps="true" />
+                android:text="OUT"
+                android:textColor="#77FFFFFF"
+                android:textSize="8sp" />
 
             <TextView
                 android:id="@+id/tv_expenses"
@@ -144,9 +132,7 @@
                 android:textStyle="bold"
                 android:ellipsize="end"
                 android:maxLines="1" />
-
         </LinearLayout>
-
     </LinearLayout>
 
     <!-- Last updated -->
@@ -156,7 +142,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:text="Tap to open"
-        android:textColor="#44AAB4C3"
+        android:textColor="#44FFFFFF"
         android:textSize="8sp"
         android:gravity="bottom" />
 

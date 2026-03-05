@@ -10,8 +10,6 @@
     android:maxResizeHeight="400dp"
     android:updatePeriodMillis="1800000"
     android:previewImage="@drawable/widget_preview_medium"
-    android:previewLayout="@layout/widget_medium"
     android:initialLayout="@layout/widget_medium"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen"
-    android:widgetFeatures="reconfigurable" />
+    android:widgetCategory="home_screen" />

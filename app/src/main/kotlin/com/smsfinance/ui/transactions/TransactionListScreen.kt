@@ -84,7 +84,7 @@ fun TransactionListScreen(
                             Box(Modifier.fillMaxWidth().padding(vertical = 8.dp), Alignment.Center) {
                                 OutlinedButton(
                                     onClick = { viewModel.loadMore() },
-                                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                                    border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
                                         brush = androidx.compose.ui.graphics.SolidColor(AccentTeal)
                                     )
                                 ) {

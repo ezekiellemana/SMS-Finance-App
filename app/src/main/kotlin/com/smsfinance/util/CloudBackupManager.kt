@@ -32,6 +32,7 @@ import javax.inject.Singleton
  * Privacy: Data never passes through Anthropic/our servers.
  * It goes directly from the device to the user's own Google Drive.
  */
+@Suppress("DEPRECATION")
 @Singleton
 class CloudBackupManager @Inject constructor(
     @ApplicationContext private val context: Context
