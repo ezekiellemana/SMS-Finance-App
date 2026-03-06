@@ -38,6 +38,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.smsfinance.R
@@ -60,6 +61,7 @@ import com.smsfinance.ui.theme.SMSFinanceTheme
 import com.smsfinance.ui.transactions.AddTransactionScreen
 import com.smsfinance.ui.transactions.TransactionDetailScreen
 import com.smsfinance.ui.transactions.TransactionListScreen
+import com.smsfinance.util.SmsHistoryImporter
 import com.smsfinance.viewmodel.SettingsViewModel
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -71,6 +73,8 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 object Routes {
     const val PIN = "pin"
@@ -106,14 +110,26 @@ val bottomNavItems = listOf(
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
+    @Inject lateinit var smsHistoryImporter: SmsHistoryImporter
+
     private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()) { }
+        ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+            // If READ_SMS was just granted, import existing inbox in background
+            if (grants[Manifest.permission.READ_SMS] == true) {
+                lifecycleScope.launch { smsHistoryImporter.importIfNeeded() }
+            }
+        }
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestPermissions()
+        // If READ_SMS was already granted on a previous launch, run import now
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
+                == PackageManager.PERMISSION_GRANTED) {
+            lifecycleScope.launch { smsHistoryImporter.importIfNeeded() }
+        }
         setContent {
             val vm: SettingsViewModel = hiltViewModel()
             val darkMode by vm.darkMode.collectAsStateWithLifecycle()

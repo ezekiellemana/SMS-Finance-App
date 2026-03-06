@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.smsfinance"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.smsfinance"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 2
         versionName = "2.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -40,7 +40,6 @@ android {
         unitTests {
             isReturnDefaultValues = true
             isIncludeAndroidResources = false
-            all { it.failOnNoDiscoveredTests = false }
         }
     }
 
@@ -86,9 +85,6 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.window.size)
     implementation(libs.androidx.core.splashscreen)
-    implementation(libs.work.runtime.ktx)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.work.compiler)
     implementation(libs.androidx.material.icons.extended)
 
     // Navigation
@@ -112,8 +108,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
-    // Widget — uses standard AppWidgetProvider
-
     // Charts
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.core)
@@ -131,7 +125,7 @@ dependencies {
     // 📄 PDF export (iText)
     implementation(libs.itext.pdf)
 
-    // ☁️ WorkManager (background backup)
+    // ☁️ WorkManager & Hilt Integration
     implementation(libs.work.runtime.ktx)
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)

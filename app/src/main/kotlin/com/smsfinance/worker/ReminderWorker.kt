@@ -9,24 +9,27 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
-import com.smsfinance.data.database.AppDatabase
+import com.smsfinance.data.dao.RecurringTransactionDao
+import com.smsfinance.data.dao.UserProfileDao
 import com.smsfinance.ui.MainActivity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 /**
  * Runs daily via WorkManager.
- * Checks recurring transactions whose [nextExpected] falls within
- * [reminderDaysBefore] days and fires a reminder notification for each.
+ * Checks recurring transactions and fires a reminder notification.
  */
 @HiltWorker
 class ReminderWorker @AssistedInject constructor(
-    @Assisted private val context: Context,
-    @Assisted workerParams: WorkerParameters
-) : CoroutineWorker(context, workerParams) {
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val recurringDao: RecurringTransactionDao,
+    private val profileDao: UserProfileDao
+) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
         const val WORK_NAME = "daily_reminder_check"
@@ -58,27 +61,22 @@ class ReminderWorker @AssistedInject constructor(
         }
     }
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): ListenableWorker.Result {
         return try {
             createNotificationChannel()
             checkAndNotify()
-            Result.success()
+            ListenableWorker.Result.success()
         } catch (e: Exception) {
-            Result.retry()
+            ListenableWorker.Result.retry()
         }
     }
 
     private suspend fun checkAndNotify() {
-        val db = AppDatabase.getInstance(context)
-        val dao = db.recurringTransactionDao()
-        val profileDao = db.userProfileDao()
-
         val activeProfile = profileDao.getActiveProfileOnce() ?: return
         val now = System.currentTimeMillis()
 
-        // Get all active recurring transactions for this user
-        var activeList = listOf<com.smsfinance.data.entity.RecurringTransactionEntity>()
-        dao.getActive(activeProfile.id).collect { activeList = it }
+        // ✅ Use first() instead of collect{} — gets one emission and stops
+        val activeList = recurringDao.getActive(activeProfile.id).first()
 
         val dateFmt = SimpleDateFormat("EEE, dd MMM", Locale.getDefault())
 
@@ -86,7 +84,6 @@ class ReminderWorker @AssistedInject constructor(
             if (!recurring.reminderEnabled) return@forEach
             val nextExpected = recurring.nextExpected ?: return@forEach
 
-            // Check if due within reminderDaysBefore days
             val daysUntilDue = (nextExpected - now) / (1000 * 60 * 60 * 24)
             if (daysUntilDue in 0..recurring.reminderDaysBefore.toLong()) {
                 val typeLabel = if (recurring.type == "DEPOSIT") "income" else "payment"
@@ -103,15 +100,15 @@ class ReminderWorker @AssistedInject constructor(
     }
 
     private fun showReminder(id: Int, title: String, body: String) {
-        val intent = Intent(context, MainActivity::class.java).apply {
+        val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("navigate_to", "recurring")
         }
         val pendingIntent = PendingIntent.getActivity(
-            context, id, intent,
+            applicationContext, id, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val notification = NotificationCompat.Builder(context, CHANNEL_REMINDERS)
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_REMINDERS)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(body)
@@ -121,11 +118,12 @@ class ReminderWorker @AssistedInject constructor(
             .setAutoCancel(true)
             .build()
         try {
-            NotificationManagerCompat.from(context).notify(id, notification)
+            NotificationManagerCompat.from(applicationContext).notify(id, notification)
         } catch (_: SecurityException) {}
     }
 
     private fun createNotificationChannel() {
+        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
         val channel = NotificationChannel(
             CHANNEL_REMINDERS,
             "Transaction Reminders",
@@ -134,7 +132,6 @@ class ReminderWorker @AssistedInject constructor(
             description = "Reminders for upcoming recurring transactions"
             enableVibration(true)
         }
-        context.getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(channel)
+        notificationManager?.createNotificationChannel(channel)
     }
 }

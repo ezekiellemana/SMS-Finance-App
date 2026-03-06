@@ -26,6 +26,7 @@ class PreferencesManager @Inject constructor(
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val LANGUAGE        = stringPreferencesKey("language")
         val WIDGET_THEME    = stringPreferencesKey("widget_theme")
+        val SMS_HISTORY_IMPORTED = booleanPreferencesKey("sms_history_imported")
     }
 
     val privacyModeFlow: Flow<Boolean>      = context.dataStore.data.map { it[PRIVACY_MODE] ?: false }
@@ -52,4 +53,6 @@ class PreferencesManager @Inject constructor(
     suspend fun getWidgetTheme(): String          = context.dataStore.data.first()[WIDGET_THEME] ?: "GREEN_DARK"
     suspend fun setOnboardingDone()               = context.dataStore.edit { it[ONBOARDING_DONE] = true }
     suspend fun isOnboardingDone(): Boolean       = context.dataStore.data.first()[ONBOARDING_DONE] ?: false
+    suspend fun isSmsHistoryImported(): Boolean   = context.dataStore.data.first()[SMS_HISTORY_IMPORTED] ?: false
+    suspend fun setSmsHistoryImported(done: Boolean) = context.dataStore.edit { it[SMS_HISTORY_IMPORTED] = done }
 }

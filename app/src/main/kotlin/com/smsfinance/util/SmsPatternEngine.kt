@@ -373,8 +373,16 @@ object SmsPatternEngine {
 
     fun isFinancialSender(sender: String): Boolean {
         val up = sender.uppercase().trim()
+        // Exact match first (fastest + safest)
+        if (FINANCIAL_SENDERS.contains(up)) return true
+        // Partial match — only when the sender or known ID is long enough (≥4 chars)
+        // to avoid false matches like "TZ" matching "CRDBTZ"
         return FINANCIAL_SENDERS.any { known ->
-            up == known || up.contains(known) || known.contains(up)
+            if (up.length >= 4 && known.length >= 4) {
+                up.contains(known) || known.contains(up)
+            } else {
+                up == known
+            }
         }
     }
 
@@ -418,7 +426,7 @@ object SmsPatternEngine {
     fun getCategory(source: String): String = when {
         source.contains("Bank", ignoreCase = true)     -> "Banking"
         source.contains("Loan", ignoreCase = true) ||
-                source.contains("SONGESHA", ignoreCase = true) -> "Loan"
+        source.contains("SONGESHA", ignoreCase = true) -> "Loan"
         source.contains("Agent", ignoreCase = true)    -> "Cash"
         else                                           -> "Mobile Money"
     }

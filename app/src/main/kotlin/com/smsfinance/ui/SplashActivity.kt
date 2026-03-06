@@ -3,25 +3,22 @@ package com.smsfinance.ui
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.media.MediaPlayer
-import android.net.Uri
+import androidx.core.net.toUri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
-import android.os.Build
 import android.view.WindowManager
-import android.view.WindowInsetsController
 import android.widget.FrameLayout
+import androidx.activity.OnBackPressedCallback
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import com.smsfinance.R
 
 /**
  * Full-screen video splash screen.
- * - Suppresses Android 12+ system splash icon via windowSplashScreenBackground trick
- * - Uses FrameLayout container so video stays centered when scaled to fill screen
- * - Falls back to MainActivity immediately on any error
+ * Uses only WindowManager flags (no insetsController) for maximum device compatibility.
  */
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : FragmentActivity(), SurfaceHolder.Callback {
@@ -32,89 +29,67 @@ class SplashActivity : FragmentActivity(), SurfaceHolder.Callback {
     private var launched = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Instantly dismiss Android 12+ system splash — video handles everything
         installSplashScreen()
-
-        // Suppress any residual background flash
-        window.setBackgroundDrawableResource(android.R.color.black)
-
         super.onCreate(savedInstanceState)
 
-        // True full-screen — hide status bar + nav bar
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.let {
-                it.hide(android.view.WindowInsets.Type.statusBars() or
-                        android.view.WindowInsets.Type.navigationBars())
-                it.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-            )
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (
-                    View.SYSTEM_UI_FLAG_FULLSCREEN or
-                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    )
-        }
+        // Modern back gesture handling — replaces deprecated onBackPressed
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() { goToMain() }
+        })
 
-        // FrameLayout container — dark navy background fills any letterbox gaps
+        // Full-screen via WindowManager flags — works on ALL Android versions and OEMs
+        @Suppress("DEPRECATION")
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+        )
+
+        // Hide nav bar via systemUiVisibility — safe on all versions
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                )
+
+        // Dark navy background fills any letterbox gaps
         container = FrameLayout(this).apply {
             setBackgroundColor(0xFF05142A.toInt())
         }
 
-        // SurfaceView for video — starts filling container, will be scaled in onPrepared
         surfaceView = SurfaceView(this)
-        val lp = FrameLayout.LayoutParams(
+        container.addView(surfaceView, FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT,
             Gravity.CENTER
-        )
-        container.addView(surfaceView, lp)
+        ))
         setContentView(container)
-
         surfaceView.holder.addCallback(this)
     }
 
-    // ── SurfaceHolder.Callback ────────────────────────────────────────────────
-
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        playVideo(holder)
-    }
-
+    override fun surfaceCreated(holder: SurfaceHolder) { playVideo(holder) }
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
-
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-        releasePlayer()
-    }
-
-    // ── Video playback ────────────────────────────────────────────────────────
+    override fun surfaceDestroyed(holder: SurfaceHolder) { releasePlayer() }
 
     private fun playVideo(holder: SurfaceHolder) {
         try {
-            val uri = Uri.parse("android.resource://" + packageName + "/" + R.raw.splash_video)
+            val uri = "android.resource://$packageName/${R.raw.splash_video}".toUri()
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(applicationContext, uri)
                 setDisplay(holder)
                 isLooping = false
-                // Let us handle scaling manually for true fill
                 setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
-
-                setOnPreparedListener { mp ->
-                    mp.start()
-                    scaleVideoToFill(mp)
-                }
+                setOnPreparedListener { mp -> mp.start(); scaleVideoToFill(mp) }
                 setOnCompletionListener { goToMain() }
                 setOnErrorListener { _, _, _ -> goToMain(); true }
                 prepareAsync()
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             goToMain()
         }
     }
@@ -124,33 +99,27 @@ class SplashActivity : FragmentActivity(), SurfaceHolder.Callback {
         val vH = mp.videoHeight.coerceAtLeast(1).toFloat()
         val sW = container.width.coerceAtLeast(1).toFloat()
         val sH = container.height.coerceAtLeast(1).toFloat()
-
-        // Scale so entire video fits inside screen — no cropping
         val scale = minOf(sW / vW, sH / vH)
-        val newW = (vW * scale).toInt()
-        val newH = (vH * scale).toInt()
-
-        // Keep video centered inside the FrameLayout
-        val lp = FrameLayout.LayoutParams(newW, newH, Gravity.CENTER)
+        val lp = FrameLayout.LayoutParams(
+            (vW * scale).toInt(), (vH * scale).toInt(), Gravity.CENTER
+        )
         runOnUiThread { surfaceView.layoutParams = lp }
     }
-
-    // ── Navigation ────────────────────────────────────────────────────────────
 
     private fun goToMain() {
         if (launched || isFinishing || isDestroyed) return
         launched = true
         runOnUiThread {
-            val intent = Intent(this@SplashActivity, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(
+                Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+            )
             @Suppress("DEPRECATION")
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             finish()
         }
     }
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     override fun onDestroy() {
         super.onDestroy()
@@ -160,10 +129,5 @@ class SplashActivity : FragmentActivity(), SurfaceHolder.Callback {
     private fun releasePlayer() {
         mediaPlayer?.release()
         mediaPlayer = null
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        goToMain()
     }
 }
