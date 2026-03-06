@@ -1,18 +1,23 @@
+@file:Suppress("SpellCheckingInspection")
 package com.smsfinance.ui.onboarding
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,243 +25,349 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.smsfinance.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 
-// ── Brand Colors ──────────────────────────────────────────────────────────────
-private val BgPrimary     = Color(0xFF1F2633)
-private val BgSecondary   = Color(0xFF2C3546)
-private val AccentTeal    = Color(0xFF3DDAD7)
-private val AccentLight   = Color(0xFF5CE1E6)
-private val TextWhite     = Color(0xFFFFFFFF)
-private val TextSecondary = Color(0xFFAAB4C3)
+// ── Colors ────────────────────────────────────────────────────────────────────
+private val BgPrimary    = Color(0xFF1A2130)
+private val BgCard       = Color(0xFF212C40)
+private val BgSheet      = Color(0xFF1E2A3C)
+private val BgRow        = Color(0xFF263044)
+private val AccentTeal   = Color(0xFF3DDAD7)
+private val AccentLight  = Color(0xFF5CE1E6)
+private val TextWhite    = Color(0xFFFFFFFF)
+private val TextMuted    = Color(0xFF8A96A8)
+private val TextSoft     = Color(0xFFCDD5E0)
+private val GreenOk      = Color(0xFF43C59E)
 
-// ── Page Data ─────────────────────────────────────────────────────────────────
-data class OnboardingPage(
-    val icon: ImageVector,
-    val emoji: String,
-    val title: String,
-    val subtitle: String,
-    val description: String,
-    val accentColor: Color,
+// ── Sender data ───────────────────────────────────────────────────────────────
+data class SenderOption(val id: String, val displayName: String, val emoji: String, val category: String)
+
+val ALL_SENDERS = listOf(
+    SenderOption("NMB",      "NMB Bank",        "🏦", "Bank"),
+    SenderOption("CRDB",     "CRDB Bank",        "🏦", "Bank"),
+    SenderOption("NBC",      "NBC Bank",         "🏦", "Bank"),
+    SenderOption("EQUITY",   "Equity Bank",      "🏦", "Bank"),
+    SenderOption("STANBIC",  "Stanbic Bank",     "🏦", "Bank"),
+    SenderOption("ABSA",     "ABSA Bank",        "🏦", "Bank"),
+    SenderOption("EXIM",     "EXIM Bank",        "🏦", "Bank"),
+    SenderOption("DTB",      "DTB Bank",         "🏦", "Bank"),
+    SenderOption("MPESA",    "M-Pesa",           "📱", "Mobile Money"),
+    SenderOption("HALOPESA", "HaloPesa",         "📱", "Mobile Money"),
+    SenderOption("TIGOPESA", "Tigo Pesa",        "📱", "Mobile Money"),
+    SenderOption("AIRTEL",   "Airtel Money",     "📱", "Mobile Money"),
+    SenderOption("MIXX",     "Mixx by Yas",      "📱", "Mobile Money"),
+)
+
+// ── Info page model ───────────────────────────────────────────────────────────
+data class InfoPage(
+    val emoji: String, val title: String, val subtitle: String,
+    val description: String, val accent: Color,
     val features: List<Pair<ImageVector, String>>
 )
 
-val onboardingPages = listOf(
-    OnboardingPage(
-        icon = Icons.Default.Sms,
-        emoji = "📱",
-        title = "Auto SMS\nDetection",
-        subtitle = "Zero manual entry",
-        description = "Automatically reads financial messages from NMB, CRDB, M-Pesa, Airtel Money and 15+ providers. Every transaction captured instantly.",
-        accentColor = AccentTeal,
-        features = listOf(
+private val INFO_PAGES = listOf(
+    InfoPage("📱", "Auto SMS\nDetection", "Zero manual entry",
+        "Reads financial messages from NMB, CRDB, M-Pesa, Airtel and 15+ providers instantly.",
+        AccentTeal, listOf(
             Icons.Default.AccountBalance to "NMB & CRDB Bank",
             Icons.Default.PhoneAndroid   to "M-Pesa & Airtel",
-            Icons.Default.FlashOn        to "Instant capture"
-        )
-    ),
-    OnboardingPage(
-        icon = Icons.Default.Dashboard,
-        emoji = "📊",
-        title = "Smart\nDashboard",
-        subtitle = "Your finances at a glance",
-        description = "Live balance, income and expense charts with AI-powered spending predictions and beautiful monthly trend breakdowns.",
-        accentColor = AccentLight,
-        features = listOf(
-            Icons.AutoMirrored.Filled.ShowChart to "Live balance",
+            Icons.Default.FlashOn        to "Instant capture")),
+    InfoPage("📊", "Smart\nDashboard", "Your finances at a glance",
+        "Live balance, income and expense charts with AI-powered spending predictions.",
+        AccentLight, listOf(
+            Icons.AutoMirrored.Filled.ArrowForward to "Live balance",
             Icons.Default.PieChart   to "Spending charts",
-            Icons.Default.Psychology to "AI predictions"
-        )
-    ),
-    OnboardingPage(
-        icon = Icons.Default.Widgets,
-        emoji = "🏠",
-        title = "Home Screen\nWidget",
-        subtitle = "Always visible, always updated",
-        description = "Add the Finance Widget to your home screen. Instant access to your balance without opening the app — choose from 8 themes.",
-        accentColor = AccentTeal,
-        features = listOf(
-            Icons.Default.Bolt          to "Real-time balance",
-            Icons.Default.Palette       to "8 color themes",
-            Icons.Default.VisibilityOff to "Privacy mode"
-        )
-    ),
-    OnboardingPage(
-        icon = Icons.Default.Security,
-        emoji = "🔒",
-        title = "Private\n& Secure",
-        subtitle = "Your data stays on your phone",
-        description = "All processing happens locally on your device. Your SMS data is never sent to any server. Protect with PIN or biometrics.",
-        accentColor = AccentLight,
-        features = listOf(
+            Icons.Default.Psychology to "AI predictions")),
+    InfoPage("🔒", "Private\n& Secure", "Your data stays on your phone",
+        "Everything is processed locally. Your data is never sent to any server.",
+        AccentTeal, listOf(
             Icons.Default.PhoneLocked to "100% local",
             Icons.Default.Lock        to "Encrypted storage",
-            Icons.Default.Fingerprint to "Biometric auth"
-        )
-    )
+            Icons.Default.Fingerprint to "Biometric lock")),
 )
 
-// ── Main Screen ───────────────────────────────────────────────────────────────
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+private const val TOTAL_PAGES = 4
+
+// ── Root ──────────────────────────────────────────────────────────────────────
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class)
+@Suppress("DEPRECATION")
 @Composable
 fun OnboardingScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
     onFinished: () -> Unit
 ) {
-    val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
-    val scope = rememberCoroutineScope()
-    val isLastPage = pagerState.currentPage == onboardingPages.size - 1
-    val currentPage = onboardingPages[pagerState.currentPage]
+    val pagerState = rememberPagerState(pageCount = { TOTAL_PAGES })
+    val scope      = rememberCoroutineScope()
+    val isLast     = pagerState.currentPage == TOTAL_PAGES - 1
 
-    BoxWithConstraints(
-        Modifier
-            .fillMaxSize()
-            .background(BgPrimary)
-    ) {
-        val screenH = maxHeight
-        // Controls height reserved at the bottom for dots + buttons
-        val bottomBarH = if (screenH < 600.dp) 100.dp else 120.dp
+    var userName        by remember { mutableStateOf("") }
+    var selectedSenders by remember { mutableStateOf(setOf<String>()) }
+    var openingBalances by remember { mutableStateOf(mapOf<String, String>()) }
 
-        // Animated background glow
-        Box(
-            Modifier
-                .fillMaxSize()
-                .drawBehind {
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                currentPage.accentColor.copy(alpha = 0.12f),
-                                Color.Transparent
-                            ),
-                            center = Offset(size.width * 0.5f, size.height * 0.28f),
-                            radius = size.width * 0.85f
-                        )
-                    )
-                }
-        )
+    var sheetCategory by remember { mutableStateOf("Bank") }
+    var showSheet     by remember { mutableStateOf(false) }
+    val sheetState    = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-        // Pager fills everything above the bottom bar
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(screenH - bottomBarH)
-        ) { pageIndex ->
-            PageContent(
-                page = onboardingPages[pageIndex],
-                screenHeight = screenH
+    val accent = if (pagerState.currentPage == 1) AccentLight else AccentTeal
+
+    val canProceed = pagerState.currentPage != 2 || (
+            userName.isNotBlank() &&
+                    selectedSenders.isNotEmpty() &&
+                    selectedSenders.all { id ->
+                        (openingBalances[id]?.replace(",", "")?.toDoubleOrNull() ?: 0.0) > 0.0
+                    }
             )
-        }
 
-        // ── Bottom Controls ───────────────────────────────────────────────────
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(bottomBarH)
-                .padding(horizontal = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Dot indicators
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(onboardingPages.size) { index ->
-                    val isSelected = pagerState.currentPage == index
-                    val width by animateDpAsState(
-                        targetValue = if (isSelected) 24.dp else 6.dp,
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                        label = "dot_w"
+    Box(Modifier.fillMaxSize().background(BgPrimary)) {
+
+        // Soft ambient glow top-center
+        Box(Modifier.fillMaxSize().drawBehind {
+            drawCircle(
+                Brush.radialGradient(
+                    listOf(accent.copy(.08f), Color.Transparent),
+                    Offset(size.width * .5f, 0f), size.width * .9f
+                )
+            )
+        })
+
+        Column(Modifier.fillMaxSize()) {
+
+            // Pages
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                userScrollEnabled = false
+            ) { page ->
+                when (page) {
+                    2    -> SetupPage(
+                        userName        = userName,
+                        onNameChange    = { userName = it },
+                        selectedSenders = selectedSenders,
+                        openingBalances = openingBalances,
+                        onBalanceChange = { id, v -> openingBalances = openingBalances + (id to v) },
+                        onOpenSheet     = { cat -> sheetCategory = cat; showSheet = true }
                     )
-                    val dotColor by animateColorAsState(
-                        targetValue = if (isSelected) currentPage.accentColor
-                        else TextSecondary.copy(alpha = 0.4f),
-                        label = "dot_c"
-                    )
-                    Box(
-                        Modifier
-                            .height(6.dp)
-                            .width(width)
-                            .clip(CircleShape)
-                            .background(dotColor)
-                    )
+                    else -> InfoPageContent(INFO_PAGES[if (page < 2) page else 2])
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
-
-            // Buttons row
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // ── Bottom nav ────────────────────────────────────────────────────
+            Column(
+                Modifier.fillMaxWidth().background(BgPrimary)
+                    .padding(horizontal = 28.dp)
+                    .padding(top = 12.dp, bottom = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                if (!isLastPage) {
-                    TextButton(
-                        onClick = { settingsViewModel.setOnboardingDone(); onFinished() }
+                // Dots
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    repeat(TOTAL_PAGES) { i ->
+                        val sel = pagerState.currentPage == i
+                        val w by animateDpAsState(if (sel) 20.dp else 5.dp,
+                            spring(Spring.DampingRatioMediumBouncy), label = "dot$i")
+                        val c by animateColorAsState(
+                            if (sel) accent else TextMuted.copy(.3f), tween(300), label = "dotc$i")
+                        Box(Modifier.height(5.dp).width(w).clip(CircleShape).background(c))
+                    }
+                }
+
+                // Buttons row
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                    // Left side
+                    if (pagerState.currentPage == 2) {
+                        // Soft hint
+                        AnimatedVisibility(!canProceed,
+                            enter = fadeIn(tween(300)), exit = fadeOut(tween(200))) {
+                            val hint = when {
+                                userName.isBlank()        -> "Enter your name first"
+                                selectedSenders.isEmpty() -> "Select at least one service"
+                                else                      -> "Fill in all balances"
+                            }
+                            Text(hint, color = TextMuted, fontSize = 12.sp)
+                        }
+                        if (canProceed) Spacer(Modifier.width(1.dp))
+                    } else {
+                        TextButton(
+                            onClick = { settingsViewModel.setOnboardingDone(); onFinished() },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("Skip", color = TextMuted, fontSize = 14.sp)
+                        }
+                    }
+
+                    // Next / Get Started
+                    val btnScale by animateFloatAsState(
+                        if (canProceed) 1f else .97f, spring(Spring.DampingRatioMediumBouncy), label = "btn")
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                if (isLast) {
+                                    settingsViewModel.saveUserSetup(userName, selectedSenders.toList(), openingBalances)
+                                    settingsViewModel.setOnboardingDone()
+                                    onFinished()
+                                } else pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        },
+                        enabled = canProceed,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = accent,
+                            disabledContainerColor = accent.copy(.25f)
+                        ),
+                        modifier = Modifier.scale(btnScale).height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 28.dp)
                     ) {
                         Text(
-                            "Skip",
-                            color = TextSecondary,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium
+                            if (isLast) "Get Started" else "Next",
+                            color = Color(0xFF0D1B2A),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
+                            tint = Color(0xFF0D1B2A), modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Sender bottom sheet ───────────────────────────────────────────────────
+    if (showSheet) {
+        SenderSheet(
+            category        = sheetCategory,
+            selectedSenders = selectedSenders,
+            sheetState      = sheetState,
+            onSelect        = { id ->
+                // selecting removes it from the list — it "disappears" on tap
+                selectedSenders = selectedSenders + id
+            },
+            onDismiss       = {
+                scope.launch { sheetState.hide() }.invokeOnCompletion { showSheet = false }
+            }
+        )
+    }
+}
+
+// ── Sender sheet — tap to pick, disappears from list ─────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SenderSheet(
+    category: String,
+    selectedSenders: Set<String>,
+    sheetState: SheetState,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+
+    // Only show senders NOT yet selected — they disappear once tapped
+    val available = ALL_SENDERS.filter { s ->
+        s.category == category && s.id !in selectedSenders &&
+                (query.isBlank() || s.displayName.contains(query, ignoreCase = true))
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState       = sheetState,
+        containerColor   = BgSheet,
+        tonalElevation   = 0.dp,
+        dragHandle = {
+            Box(Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 2.dp),
+                Alignment.Center) {
+                Box(Modifier.width(32.dp).height(3.dp).clip(CircleShape)
+                    .background(TextMuted.copy(.3f)))
+            }
+        }
+    ) {
+        Column(
+            Modifier.fillMaxWidth()
+                .padding(horizontal = 22.dp)
+                .padding(bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        if (category == "Bank") "Choose your bank" else "Choose mobile money",
+                        fontWeight = FontWeight.Bold, fontSize = 17.sp, color = TextWhite
+                    )
+                    Text(
+                        if (available.isEmpty() && selectedSenders.isNotEmpty())
+                            "All added ✓"
+                        else "Tap to add · ${available.size} available",
+                        fontSize = 12.sp, color = if (available.isEmpty()) GreenOk else TextMuted
+                    )
+                }
+                IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                    Icon(Icons.Default.Close, null, tint = TextMuted, modifier = Modifier.size(18.dp))
+                }
+            }
+
+            // Search
+            OutlinedTextField(
+                value = query, onValueChange = { query = it },
+                placeholder = { Text("Search…", color = TextMuted, fontSize = 13.sp) },
+                leadingIcon  = { Icon(Icons.Default.Search, null, tint = TextMuted, modifier = Modifier.size(17.dp)) },
+                trailingIcon = {
+                    AnimatedVisibility(query.isNotEmpty(), enter = fadeIn(), exit = fadeOut()) {
+                        IconButton(onClick = { query = "" }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Close, null, tint = TextMuted, modifier = Modifier.size(14.dp))
+                        }
+                    }
+                },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor      = AccentTeal.copy(.5f),
+                    unfocusedBorderColor    = Color.Transparent,
+                    focusedTextColor        = TextWhite, unfocusedTextColor = TextWhite,
+                    cursorColor             = AccentTeal,
+                    focusedContainerColor   = BgRow, unfocusedContainerColor = BgRow
+                ),
+                shape  = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // List — only unselected items, max 3 visible then scroll
+            AnimatedContent(available.isEmpty(), label = "empty") { empty ->
+                if (empty) {
+                    Box(Modifier.fillMaxWidth().height(80.dp), Alignment.Center) {
+                        Text(
+                            if (query.isNotBlank()) "No match for \"$query\""
+                            else "All ${category.lowercase()}s added!",
+                            color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center
                         )
                     }
                 } else {
-                    Spacer(Modifier.width(1.dp))
-                }
-
-                Button(
-                    onClick = {
-                        if (isLastPage) {
-                            settingsViewModel.setOnboardingDone()
-                            onFinished()
-                        } else {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 260.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(available, key = { it.id }) { sender ->
+                            SenderSheetRow(sender = sender, onTap = {
+                                onSelect(sender.id)
+                                // auto-close when last item picked
+                                if (available.size == 1) onDismiss()
+                            })
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = currentPage.accentColor),
-                    shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp),
-                    elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp),
-                    modifier = Modifier.drawBehind {
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    currentPage.accentColor.copy(alpha = 0.35f),
-                                    Color.Transparent
-                                ),
-                                radius = size.maxDimension
-                            )
-                        )
-                    }
-                ) {
-                    Text(
-                        text = if (isLastPage) "Get Started" else "Continue",
-                        color = BgPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                    if (!isLastPage) {
-                        Spacer(Modifier.width(8.dp))
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward,
-                            null,
-                            tint = BgPrimary,
-                            modifier = Modifier.size(16.dp)
-                        )
                     }
                 }
             }
@@ -264,224 +375,508 @@ fun OnboardingScreen(
     }
 }
 
-// ── Individual Page ───────────────────────────────────────────────────────────
+// ── Sheet row — own composable (remember safety in LazyColumn) ─────────────────
 @Composable
-private fun PageContent(page: OnboardingPage, screenHeight: Dp) {
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(page) { visible = true }
-
-    // ── Adaptive sizing based on screen height ────────────────────────────────
-    // Compact  < 600dp  (small phones, e.g. Pixel 4a)
-    // Normal   600–700dp (Pixel 7, most mid-range)
-    // Large    > 700dp  (Pixel 7 Pro, tall phones)
-    val isCompact = screenHeight < 620.dp
-    val isNormal  = screenHeight in 620.dp..720.dp
-
-    val iconSize      = if (isCompact) 90.dp  else if (isNormal) 110.dp  else 130.dp
-    val innerIconSize = if (isCompact) 62.dp  else if (isNormal) 76.dp   else 90.dp
-    val emojiSize     = if (isCompact) 28.sp  else if (isNormal) 34.sp   else 40.sp
-    val titleSize     = if (isCompact) 26.sp  else if (isNormal) 30.sp   else 34.sp
-    val titleLineH    = if (isCompact) 32.sp  else if (isNormal) 36.sp   else 40.sp
-    val descSize      = if (isCompact) 13.sp  else 15.sp
-    val descLineH     = if (isCompact) 19.sp  else 23.sp
-    val subtitleSize  = if (isCompact) 11.sp  else 12.sp
-    val spacerIcon    = if (isCompact) 16.dp  else if (isNormal) 24.dp   else 36.dp
-    val spacerTitle   = if (isCompact) 6.dp   else 10.dp
-    val spacerSub     = if (isCompact) 14.dp  else 24.dp
-    val spacerDesc    = if (isCompact) 14.dp  else 32.dp
-    val topPad        = if (isCompact) 24.dp  else if (isNormal) 48.dp   else 72.dp
-    val featureVertPad = if (isCompact) 4.dp  else 8.dp
-    val featureIconSz  = if (isCompact) 30.dp else 36.dp
-
-    val iconScale by animateFloatAsState(
-        targetValue = if (visible) 1f else 0.6f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "icon_scale"
-    )
-    val contentAlpha by animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(400, easing = EaseOut),
-        label = "content_alpha"
-    )
-
-    // verticalScroll as safety net for very small/unusual screen sizes
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp)
-            .padding(top = topPad, bottom = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-
-        // ── Icon circle ───────────────────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .size(iconSize)
-                .graphicsLayer { scaleX = iconScale; scaleY = iconScale }
-                .drawBehind {
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                page.accentColor.copy(alpha = 0.25f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-                }
-                .clip(CircleShape)
-                .background(BgSecondary),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(innerIconSize)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                page.accentColor.copy(alpha = 0.2f),
-                                page.accentColor.copy(alpha = 0.05f)
-                            )
-                        )
-                    )
-                    .drawBehind {
-                        val sw = 1.5.dp.toPx()
-                        drawCircle(
-                            color = page.accentColor.copy(alpha = 0.6f),
-                            radius = size.minDimension / 2 - sw / 2,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(sw)
-                        )
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(page.emoji, fontSize = emojiSize)
-            }
-        }
-
-        Spacer(Modifier.height(spacerIcon))
-
-        // ── Title ─────────────────────────────────────────────────────────────
-        Text(
-            text = page.title,
-            fontSize = titleSize,
-            fontWeight = FontWeight.ExtraBold,
-            color = TextWhite,
-            textAlign = TextAlign.Center,
-            lineHeight = titleLineH,
-            modifier = Modifier.graphicsLayer { alpha = contentAlpha }
-        )
-
-        Spacer(Modifier.height(spacerTitle))
-
-        // ── Subtitle pill ─────────────────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(page.accentColor.copy(alpha = 0.15f))
-                .drawBehind {
-                    val sw = 1.dp.toPx()
-                    drawRoundRect(
-                        color = page.accentColor.copy(alpha = 0.4f),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(50.dp.toPx()),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(sw)
-                    )
-                }
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = page.subtitle,
-                color = page.accentColor,
-                fontSize = subtitleSize,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.5.sp
-            )
-        }
-
-        Spacer(Modifier.height(spacerSub))
-
-        // ── Description ───────────────────────────────────────────────────────
-        Text(
-            text = page.description,
-            fontSize = descSize,
-            color = TextSecondary,
-            textAlign = TextAlign.Center,
-            lineHeight = descLineH,
-            modifier = Modifier.graphicsLayer { alpha = contentAlpha }
-        )
-
-        Spacer(Modifier.height(spacerDesc))
-
-        // ── Feature rows ──────────────────────────────────────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(BgSecondary)
-                .padding(vertical = featureVertPad),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
-        ) {
-            page.features.forEachIndexed { i, (icon, label) ->
-                FeatureRow(
-                    icon = icon,
-                    label = label,
-                    accent = page.accentColor,
-                    iconBoxSize = featureIconSz,
-                    isCompact = isCompact
-                )
-                if (i < page.features.size - 1) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        thickness = 0.5.dp,
-                        color = TextSecondary.copy(alpha = 0.15f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FeatureRow(
-    icon: ImageVector,
-    label: String,
-    accent: Color,
-    iconBoxSize: Dp = 36.dp,
-    isCompact: Boolean = false
-) {
-    val vertPad = if (isCompact) 10.dp else 14.dp
+private fun SenderSheetRow(sender: SenderOption, onTap: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = vertPad),
+            .clip(RoundedCornerShape(13.dp))
+            .background(BgRow)
+            .clickable(remember { MutableInteractionSource() }, null) {
+                onTap()
+            }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        // Emoji badge
         Box(
-            modifier = Modifier
-                .size(iconBoxSize)
-                .clip(RoundedCornerShape(10.dp))
-                .background(accent.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, null, tint = accent, modifier = Modifier.size(16.dp))
-        }
+            Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+                .background(AccentTeal.copy(.08f)),
+            Alignment.Center
+        ) { Text(sender.emoji, fontSize = 18.sp) }
+
         Text(
-            text = label,
-            color = TextWhite,
-            fontSize = if (isCompact) 13.sp else 14.sp,
-            fontWeight = FontWeight.Medium
+            sender.displayName,
+            color = TextSoft, fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f)
         )
-        Spacer(Modifier.weight(1f))
-        Icon(
-            Icons.Default.Check,
-            null,
-            tint = accent,
-            modifier = Modifier.size(15.dp)
+
+        Icon(Icons.Default.Add, null, tint = AccentTeal.copy(.7f), modifier = Modifier.size(18.dp))
+    }
+}
+
+// ── Setup page ────────────────────────────────────────────────────────────────
+@Composable
+private fun SetupPage(
+    userName: String,
+    onNameChange: (String) -> Unit,
+    selectedSenders: Set<String>,
+    openingBalances: Map<String, String>,
+    onBalanceChange: (String, String) -> Unit,
+    onOpenSheet: (String) -> Unit
+) {
+    val scrollState = rememberScrollState()
+    val bankCount   = selectedSenders.count { id -> ALL_SENDERS.any { it.id == id && it.category == "Bank" } }
+    val mmCount     = selectedSenders.count { id -> ALL_SENDERS.any { it.id == id && it.category == "Mobile Money" } }
+    val filled      = selectedSenders.count { id -> (openingBalances[id]?.replace(",","")?.toDoubleOrNull() ?: 0.0) > 0.0 }
+    val allDone     = selectedSenders.isNotEmpty() && filled == selectedSenders.size
+
+    // Step tracker — which step is visually "active"
+    val activeStep = when {
+        userName.isBlank()        -> 0
+        selectedSenders.isEmpty() -> 1
+        !allDone                  -> 2
+        else                      -> 3
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        // Subtle radial glow behind content
+        Box(Modifier.fillMaxSize().drawBehind {
+            drawCircle(
+                Brush.radialGradient(
+                    listOf(AccentTeal.copy(.07f), Color.Transparent),
+                    Offset(size.width * .5f, size.height * .18f),
+                    size.width * .95f
+                )
+            )
+        })
+
+        Column(
+            Modifier.fillMaxSize().verticalScroll(scrollState)
+                .padding(horizontal = 24.dp)
+                .padding(top = 28.dp, bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
+
+            // ── Header ────────────────────────────────────────────────────────
+            val waveT = rememberInfiniteTransition(label = "wt")
+            val waveS by waveT.animateFloat(
+                1f, 1.15f, infiniteRepeatable(tween(1000, easing = EaseInOut), RepeatMode.Reverse), label = "ws")
+
+            Column(
+                Modifier.fillMaxWidth().padding(bottom = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("👋", fontSize = 44.sp, modifier = Modifier.scale(waveS))
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Let's set you up",
+                    fontSize = 26.sp, fontWeight = FontWeight.ExtraBold,
+                    color = TextWhite, textAlign = TextAlign.Center,
+                    letterSpacing = (-.3).sp
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Just 3 quick steps to get started",
+                    fontSize = 13.sp, color = TextMuted,
+                    fontStyle = FontStyle.Normal
+                )
+                // Step progress pills
+                Spacer(Modifier.height(16.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    repeat(3) { i ->
+                        val done   = i < activeStep
+                        val active = i == activeStep
+                        val w by animateDpAsState(
+                            if (active) 28.dp else if (done) 20.dp else 16.dp,
+                            spring(Spring.DampingRatioMediumBouncy), label = "pill$i"
+                        )
+                        val c by animateColorAsState(
+                            when { done -> GreenOk; active -> AccentTeal; else -> BgRow },
+                            tween(300), label = "pillc$i"
+                        )
+                        Box(Modifier.height(4.dp).width(w).clip(CircleShape).background(c))
+                    }
+                }
+            }
+
+            // ── Step 1 — Name ─────────────────────────────────────────────────
+            StepCard(
+                number  = "01",
+                title   = "What's your name?",
+                caption = "So we can personalise your dashboard",
+                done    = userName.isNotBlank(),
+                active  = activeStep == 0
+            ) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value          = userName,
+                    onValueChange  = onNameChange,
+                    placeholder    = {
+                        Text(
+                            "e.g. John Masai",
+                            color    = TextMuted.copy(.45f),
+                            fontSize = 15.sp,
+                            fontStyle = FontStyle.Italic
+                        )
+                    },
+                    singleLine     = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    leadingIcon    = {
+                        Icon(Icons.Default.Person, null,
+                            tint = if (userName.isNotBlank()) AccentTeal else TextMuted.copy(.5f),
+                            modifier = Modifier.size(20.dp))
+                    },
+                    trailingIcon   = {
+                        AnimatedVisibility(userName.isNotBlank(), enter = scaleIn(), exit = scaleOut()) {
+                            Icon(Icons.Default.CheckCircle, null,
+                                tint = GreenOk, modifier = Modifier.size(20.dp))
+                        }
+                    },
+                    colors         = stepFieldColors(userName.isNotBlank()),
+                    shape          = RoundedCornerShape(14.dp),
+                    modifier       = Modifier.fillMaxWidth()
+                )
+            }
+
+            StepSpacer()
+
+            // ── Step 2 — Services ─────────────────────────────────────────────
+            StepCard(
+                number  = "02",
+                title   = "Which services do you use?",
+                caption = "We'll only track SMS from these senders",
+                done    = selectedSenders.isNotEmpty(),
+                active  = activeStep == 1
+            ) {
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ServiceTile(
+                        emoji    = "🏦",
+                        title    = "Banks",
+                        subtitle = if (bankCount > 0) "$bankCount selected" else "NMB, CRDB, NBC…",
+                        selected = bankCount > 0,
+                        modifier = Modifier.weight(1f),
+                        onClick  = { onOpenSheet("Bank") }
+                    )
+                    ServiceTile(
+                        emoji    = "📱",
+                        title    = "Mobile Money",
+                        subtitle = if (mmCount > 0) "$mmCount selected" else "M-Pesa, Tigo…",
+                        selected = mmCount > 0,
+                        modifier = Modifier.weight(1f),
+                        onClick  = { onOpenSheet("Mobile Money") }
+                    )
+                }
+            }
+
+            StepSpacer()
+
+            // ── Step 3 — Balances ─────────────────────────────────────────────
+            AnimatedVisibility(
+                selectedSenders.isNotEmpty(),
+                enter = fadeIn(tween(350)) + expandVertically(tween(400, easing = EaseOut)),
+                exit  = fadeOut(tween(200)) + shrinkVertically(tween(200))
+            ) {
+                StepCard(
+                    number  = "03",
+                    title   = "Current balance per service",
+                    caption = "Enter what you have right now — we won't touch it",
+                    done    = allDone,
+                    active  = activeStep == 2
+                ) {
+                    Spacer(Modifier.height(4.dp))
+
+                    // Progress bar
+                    val prog by animateFloatAsState(
+                        if (selectedSenders.isEmpty()) 0f else filled.toFloat() / selectedSenders.size,
+                        tween(500), label = "prog"
+                    )
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 14.dp),
+                        Arrangement.SpaceBetween, Alignment.CenterVertically
+                    ) {
+                        Box(
+                            Modifier.weight(1f).height(3.dp)
+                                .clip(CircleShape).background(BgRow)
+                        ) {
+                            Box(
+                                Modifier.fillMaxWidth(prog).fillMaxHeight()
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(AccentTeal, if (allDone) GreenOk else AccentLight)
+                                        )
+                                    )
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        AnimatedContent(allDone, label = "sc") { done ->
+                            Text(
+                                if (done) "✓ All set" else "$filled / ${selectedSenders.size}",
+                                fontSize = 11.sp,
+                                color    = if (done) GreenOk else TextMuted,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    selectedSenders.forEach { id ->
+                        val sender = ALL_SENDERS.find { it.id == id } ?: return@forEach
+                        val value  = openingBalances[id] ?: ""
+                        val ok     = (value.replace(",", "").toDoubleOrNull() ?: 0.0) > 0.0
+                        BalanceRow(sender = sender, value = value, ok = ok) { new ->
+                            if (new.all { it.isDigit() || it == ',' || it == '.' })
+                                onBalanceChange(id, new)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    if (!allDone) {
+                        Spacer(Modifier.height(2.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Icon(Icons.Default.Info, null,
+                                tint = AccentTeal.copy(.5f), modifier = Modifier.size(11.dp))
+                            Text("All balances are required to continue",
+                                fontSize = 10.sp, color = TextMuted.copy(.55f))
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+// ── Step card ─────────────────────────────────────────────────────────────────
+@Composable
+private fun StepCard(
+    number: String, title: String, caption: String,
+    done: Boolean, active: Boolean,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val borderAlpha by animateFloatAsState(
+        if (active) .7f else if (done) .4f else .15f, tween(300), label = "ba")
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(BgCard)
+            .drawBehind {
+                // left accent stripe
+                val stripeW = 3.dp.toPx()
+                val color   = (if (done) GreenOk else AccentTeal).copy(borderAlpha)
+                drawRoundRect(
+                    color        = color,
+                    topLeft      = Offset(0f, 16.dp.toPx()),
+                    size         = androidx.compose.ui.geometry.Size(stripeW, size.height - 32.dp.toPx()),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(stripeW / 2)
+                )
+            }
+            .padding(horizontal = 18.dp, vertical = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Step number / done check
+            Box(
+                Modifier.size(30.dp).clip(CircleShape)
+                    .background(
+                        if (done) GreenOk.copy(.15f)
+                        else if (active) AccentTeal.copy(.12f)
+                        else BgRow
+                    ),
+                Alignment.Center
+            ) {
+                AnimatedContent(done, label = "ic$number") { isDone ->
+                    if (isDone)
+                        Icon(Icons.Default.Check, null, tint = GreenOk, modifier = Modifier.size(14.dp))
+                    else
+                        Text(number, fontSize = 9.sp, fontWeight = FontWeight.Bold,
+                            color = if (active) AccentTeal else TextMuted.copy(.6f))
+                }
+            }
+            Column(Modifier.weight(1f)) {
+                Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    color = if (done || active) TextWhite else TextMuted)
+                Text(caption, fontSize = 11.sp, color = TextMuted.copy(.7f))
+            }
+        }
+        content()
+    }
+}
+
+// ── Step connector line ───────────────────────────────────────────────────────
+@Composable
+private fun StepSpacer() {
+    Box(Modifier.fillMaxWidth().padding(start = 27.dp)) {
+        Box(Modifier.width(2.dp).height(16.dp).background(BgRow.copy(.8f)))
+    }
+}
+
+// ── Service tile ──────────────────────────────────────────────────────────────
+@Composable
+private fun ServiceTile(
+    emoji: String, title: String, subtitle: String,
+    selected: Boolean, modifier: Modifier, onClick: () -> Unit
+) {
+    val bg     by animateColorAsState(if (selected) AccentTeal.copy(.12f) else BgRow, tween(250), label = "stbg")
+    val border by animateColorAsState(if (selected) AccentTeal.copy(.5f) else Color.Transparent, tween(250), label = "stbd")
+    val scale  by animateFloatAsState(if (selected) 1.02f else 1f, spring(Spring.DampingRatioMediumBouncy), label = "stsc")
+
+    Column(
+        modifier = modifier
+            .scale(scale)
+            .clip(RoundedCornerShape(16.dp))
+            .background(bg)
+            .drawBehind {
+                if (selected) {
+                    drawRoundRect(
+                        color        = border,
+                        size         = this.size,
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx()),
+                        style        = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx())
+                    )
+                }
+            }
+            .clickable(remember { MutableInteractionSource() }, null, onClick = onClick)
+            .padding(vertical = 16.dp, horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        // Emoji in a soft circle
+        Box(
+            Modifier.size(44.dp).clip(CircleShape)
+                .background(if (selected) AccentTeal.copy(.15f) else BgCard),
+            Alignment.Center
+        ) {
+            Text(emoji, fontSize = 20.sp)
+        }
+        Text(title,
+            color = if (selected) AccentTeal else TextSoft,
+            fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(subtitle,
+            color = if (selected) GreenOk else TextMuted.copy(.7f),
+            fontSize = 10.sp, textAlign = TextAlign.Center,
+            maxLines = 1)
+    }
+}
+
+// ── Balance row ───────────────────────────────────────────────────────────────
+@Composable
+private fun BalanceRow(
+    sender: SenderOption, value: String, ok: Boolean,
+    onValueChange: (String) -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
+                .background(if (ok) GreenOk.copy(.12f) else BgRow),
+            Alignment.Center
+        ) { Text(sender.emoji, fontSize = 16.sp) }
+
+        OutlinedTextField(
+            value          = value,
+            onValueChange  = onValueChange,
+            placeholder    = { Text("TZS 0", color = TextMuted.copy(.4f), fontSize = 13.sp) },
+            label          = { Text(sender.displayName, fontSize = 10.sp) },
+            singleLine     = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            trailingIcon   = {
+                AnimatedVisibility(ok, enter = scaleIn(), exit = scaleOut()) {
+                    Icon(Icons.Default.CheckCircle, null,
+                        tint = GreenOk, modifier = Modifier.size(17.dp))
+                }
+            },
+            colors  = stepFieldColors(ok),
+            shape   = RoundedCornerShape(12.dp),
+            modifier = Modifier.weight(1f)
         )
+    }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+@Composable
+private fun stepFieldColors(filled: Boolean = false) = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor      = if (filled) GreenOk else AccentTeal,
+    unfocusedBorderColor    = if (filled) GreenOk.copy(.35f) else BgRow,
+    focusedLabelColor       = if (filled) GreenOk else AccentTeal,
+    unfocusedLabelColor     = TextMuted.copy(.6f),
+    focusedTextColor        = TextWhite, unfocusedTextColor = TextWhite,
+    cursorColor             = AccentTeal,
+    focusedContainerColor   = BgCard, unfocusedContainerColor = BgCard
+)
+
+// ── Info page ─────────────────────────────────────────────────────────────────
+@Composable
+private fun InfoPageContent(page: InfoPage) {
+    // Animate in on first composition — key on page so it re-triggers on page change
+    var triggered by remember(page) { mutableStateOf(false) }
+    LaunchedEffect(page) { triggered = true }
+    val alpha     by animateFloatAsState(if (triggered) 1f else 0f, tween(500), label = "a")
+    val slideY    by animateFloatAsState(if (triggered) 0f else 40f, tween(500, easing = EaseOut), label = "sy")
+    val iconScale by animateFloatAsState(if (triggered) 1f else .6f,
+        spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMediumLow), label = "is")
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 32.dp).padding(top = 60.dp, bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        // Big icon circle
+        Box(
+            Modifier.size(130.dp).scale(iconScale).clip(CircleShape)
+                .background(Brush.radialGradient(listOf(page.accent.copy(.18f), page.accent.copy(.04f)))),
+            Alignment.Center
+        ) {
+            Text(page.emoji, fontSize = 52.sp)
+        }
+
+        Spacer(Modifier.height(32.dp))
+
+        Text(page.title,
+            fontSize = 32.sp, fontWeight = FontWeight.ExtraBold,
+            color = TextWhite, textAlign = TextAlign.Center, lineHeight = 38.sp,
+            modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
+
+        Spacer(Modifier.height(8.dp))
+
+        // Pill badge
+        Box(Modifier.clip(CircleShape).background(page.accent.copy(.12f))
+            .padding(horizontal = 14.dp, vertical = 5.dp)) {
+            Text(page.subtitle, color = page.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        Text(page.description, fontSize = 15.sp, color = TextMuted,
+            textAlign = TextAlign.Center, lineHeight = 23.sp,
+            modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
+
+        Spacer(Modifier.height(36.dp))
+
+        // Feature list
+        Column(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(BgCard).padding(vertical = 4.dp)
+        ) {
+            page.features.forEachIndexed { i, (icon, label) ->
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
+                        .background(page.accent.copy(.10f)), Alignment.Center) {
+                        Icon(icon, null, tint = page.accent, modifier = Modifier.size(16.dp))
+                    }
+                    Text(label, color = TextSoft, fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Icon(Icons.Default.Check, null, tint = page.accent.copy(.7f), modifier = Modifier.size(14.dp))
+                }
+                if (i < page.features.size - 1)
+                    HorizontalDivider(Modifier.padding(horizontal = 20.dp), .5.dp, TextMuted.copy(.10f))
+            }
+        }
     }
 }
