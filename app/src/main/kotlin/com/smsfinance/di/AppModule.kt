@@ -46,9 +46,6 @@ object AppModule {
         SpendingAlertRepository(dao, txRepo)
 
     @Provides @Singleton
-    fun provideUserProfileRepository(dao: UserProfileDao): UserProfileRepository = UserProfileRepository(dao)
-
-    @Provides @Singleton
     fun provideBudgetRepository(dao: BudgetDao, txRepo: TransactionRepository): BudgetRepository =
         BudgetRepository(dao, txRepo)
 

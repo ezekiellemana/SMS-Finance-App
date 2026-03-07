@@ -11,6 +11,8 @@ import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.border
+import androidx.core.graphics.toColorInt
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
@@ -62,6 +64,9 @@ import com.smsfinance.ui.transactions.TransactionDetailScreen
 import com.smsfinance.ui.transactions.TransactionListScreen
 import com.smsfinance.util.SmsHistoryImporter
 import com.smsfinance.viewmodel.SettingsViewModel
+import com.smsfinance.viewmodel.MultiUserViewModel
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.activity.enableEdgeToEdge
@@ -202,12 +207,19 @@ fun AppNavigation(
     }
     val showBottomBar = currentRoute in bottomNavItems.map { it.route }
 
+    val multiUserVm: MultiUserViewModel = hiltViewModel()
+    val multiUserState by multiUserVm.uiState.collectAsStateWithLifecycle()
+    val activeProfile = multiUserState.activeProfile
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
                 SmartMoneyBottomBar(
-                    currentRoute = currentRoute,
+                    currentRoute    = currentRoute,
+                    profilePhotoUri = activeProfile?.photoUri,
+                    profileEmoji    = activeProfile?.avatarEmoji ?: "👤",
+                    profileColor    = activeProfile?.color ?: "#00C853",
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -325,47 +337,65 @@ private val BrandSurface = Color(0xFF2C3546)
 @Composable
 fun SmartMoneyBottomBar(
     currentRoute: String?,
+    profilePhotoUri: String?,
+    profileEmoji: String,
+    profileColor: String,
     onNavigate: (String) -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Transparent)
             .navigationBarsPadding()
     ) {
-        // Bar background — rounded top corners + teal glow line
+        // Bar surface with top glow line
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .height(72.dp)
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .height(88.dp)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(Color(0xFF0F1825))
                 .drawBehind {
+                    // Teal top border glow
+                    drawRect(
+                        brush = Brush.horizontalGradient(
+                            listOf(
+                                Color.Transparent,
+                                BrandTeal.copy(alpha = 0.6f),
+                                BrandTeal.copy(alpha = 0.8f),
+                                BrandTeal.copy(alpha = 0.6f),
+                                Color.Transparent
+                            )
+                        ),
+                        topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        size = androidx.compose.ui.geometry.Size(size.width, 1.5f)
+                    )
+                    // Subtle inner glow below the line
                     drawRect(
                         brush = Brush.verticalGradient(
-                            listOf(BrandTeal.copy(alpha = 0.28f), Color.Transparent),
-                            startY = 0f, endY = 6f
+                            listOf(BrandTeal.copy(alpha = 0.08f), Color.Transparent),
+                            startY = 0f, endY = size.height * 0.4f
                         )
                     )
                 }
-                .background(Color(0xFF151E2E))
         )
 
-        // 5 equal nav items
+        // Nav items row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
-                .align(Alignment.BottomCenter),
+                .height(88.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             bottomNavItems.forEach { item ->
                 BottomBarItem(
-                    item     = item,
-                    selected = currentRoute == item.route,
-                    onClick  = { onNavigate(item.route) },
-                    modifier = Modifier.weight(1f)
+                    item            = item,
+                    selected        = currentRoute == item.route,
+                    onClick         = { onNavigate(item.route) },
+                    profilePhotoUri = if (item.route == Routes.MULTI_USER) profilePhotoUri else null,
+                    profileEmoji    = if (item.route == Routes.MULTI_USER) profileEmoji else null,
+                    profileColor    = if (item.route == Routes.MULTI_USER) profileColor else null,
+                    modifier        = Modifier.weight(1f)
                 )
             }
         }
@@ -377,84 +407,153 @@ private fun BottomBarItem(
     item: BottomNavItem,
     selected: Boolean,
     onClick: () -> Unit,
+    profilePhotoUri: String?,
+    profileEmoji: String?,
+    profileColor: String?,
     modifier: Modifier = Modifier
 ) {
+    val isProfileTab = profileEmoji != null
+
     val iconColor by animateColorAsState(
-        targetValue = if (selected) BrandTeal else Color(0xFF4A5568),
-        animationSpec = tween(300), label = "iconColor"
+        targetValue = if (selected) BrandTeal else Color(0xFF3A4556),
+        animationSpec = tween(250), label = "iconColor"
     )
-    val labelColor by animateColorAsState(
-        targetValue = if (selected) BrandTeal else Color(0xFF4A5568),
-        animationSpec = tween(300), label = "labelColor"
-    )
-    val iconScale by animateFloatAsState(
-        targetValue = if (selected) 1.15f else 1.0f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
-        label = "iconScale"
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.12f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "scale"
     )
 
-    // Selected glow pulse
-    val glowPulse = rememberInfiniteTransition(label = "navGlow")
-    val glowAlpha by glowPulse.animateFloat(
-        initialValue = if (selected) 0.15f else 0f,
-        targetValue = if (selected) 0.35f else 0f,
-        animationSpec = infiniteRepeatable(
-            tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse
-        ), label = "navGlowAlpha"
-    )
+    if (isProfileTab) {
+        // ── Profile tab — noticeably larger, floating above the bar ──────────
+        val accentColor = runCatching {
+            Color(profileColor!!.toColorInt())
+        }.getOrElse { BrandTeal }
 
-    Column(
-        modifier = modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-            .padding(vertical = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Glowing icon container
+        val ringColor by animateColorAsState(
+            targetValue = if (selected) BrandTeal else Color(0xFF3A4556),
+            animationSpec = tween(250), label = "ring"
+        )
+
         Box(
-            modifier = Modifier
-                .size(46.dp)
-                .drawBehind {
-                    if (selected) {
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                listOf(BrandTeal.copy(alpha = glowAlpha), Color.Transparent)
-                            ),
-                            radius = size.minDimension * 0.75f
-                        )
-                    }
-                },
+            modifier = modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick
+                ),
             contentAlignment = Alignment.Center
         ) {
-            // Selected pill background
-            if (selected) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
+                // Outer glow ring when selected
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
-                        .background(BrandTeal.copy(alpha = 0.12f), CircleShape)
+                        .size(62.dp)
+                        .drawBehind {
+                            if (selected) {
+                                drawCircle(
+                                    brush = Brush.radialGradient(
+                                        listOf(BrandTeal.copy(alpha = 0.28f), Color.Transparent),
+                                        radius = size.minDimension * 1.0f
+                                    )
+                                )
+                            }
+                        }
+                        .graphicsLayer { scaleX = scale; scaleY = scale },
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Ring border
+                    Box(
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, ringColor, CircleShape)
+                            .padding(3.dp)
+                            .clip(CircleShape)
+                            .background(accentColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (!profilePhotoUri.isNullOrBlank()) {
+                            AsyncImage(
+                                model              = profilePhotoUri,
+                                contentDescription = null,
+                                contentScale       = ContentScale.Crop,
+                                modifier           = Modifier.fillMaxSize().clip(CircleShape)
+                            )
+                        } else {
+                            Text(text = profileEmoji ?: "👤", fontSize = 26.sp)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    text       = stringResource(item.labelRes),
+                    color      = if (selected) BrandTeal else Color(0xFF3A4556),
+                    fontSize   = 11.5.sp,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                    maxLines   = 1,
+                    textAlign  = TextAlign.Center
                 )
             }
-            Icon(
-                imageVector = item.icon,
-                contentDescription = null,
-                tint = iconColor,
+        }
+
+    } else {
+        // ── Regular tab ───────────────────────────────────────────────────────
+        Column(
+            modifier = modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick
+                )
+                .padding(vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
                 modifier = Modifier
-                    .size(26.dp)
-                    .graphicsLayer { scaleX = iconScale; scaleY = iconScale }
+                    .size(50.dp)
+                    .drawBehind {
+                        if (selected) {
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    listOf(BrandTeal.copy(alpha = 0.14f), Color.Transparent),
+                                    radius = size.minDimension * 0.85f
+                                )
+                            )
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                if (selected) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(BrandTeal.copy(alpha = 0.12f), CircleShape)
+                    )
+                }
+                Icon(
+                    imageVector        = item.icon,
+                    contentDescription = null,
+                    tint               = iconColor,
+                    modifier           = Modifier
+                        .size(32.dp)
+                        .graphicsLayer { scaleX = scale; scaleY = scale }
+                )
+            }
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text       = stringResource(item.labelRes),
+                color      = if (selected) BrandTeal else Color(0xFF3A4556),
+                fontSize   = 11.5.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                maxLines   = 1,
+                textAlign  = TextAlign.Center
             )
         }
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = stringResource(item.labelRes),
-            color = labelColor,
-            fontSize = 11.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            maxLines = 1,
-            textAlign = TextAlign.Center
-        )
     }
 }

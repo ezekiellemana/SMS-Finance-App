@@ -1,8 +1,10 @@
 package com.smsfinance.viewmodel
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.smsfinance.repository.UserProfileRepository
 import com.smsfinance.util.LocaleHelper
 import com.smsfinance.util.PreferencesManager
 import com.smsfinance.widget.WidgetUpdateManager
@@ -23,6 +25,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val prefs: PreferencesManager,
     private val widgetUpdateManager: WidgetUpdateManager,
+    private val userProfileRepository: UserProfileRepository,
     @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -82,7 +85,7 @@ class SettingsViewModel @Inject constructor(
     fun setLanguage(lang: String, context: Context) = viewModelScope.launch {
         prefs.setLanguage(lang)
         context.getSharedPreferences("app_language", Context.MODE_PRIVATE)
-            .edit().putString("language", lang).apply()
+            .edit { putString("language", lang) }
         // Recreate the Activity so the new locale takes effect immediately
         (context as? android.app.Activity)?.recreate()
     }
@@ -109,9 +112,11 @@ class SettingsViewModel @Inject constructor(
         prefs.setSetupCompletedAt(System.currentTimeMillis())
         prefs.setSelectedSenders(JSONArray(selectedSenders).toString())
 
+        // Sync the name into the active DB profile immediately so Family
+        // Accounts shows the real name without needing a re-install.
+        userProfileRepository.syncActiveProfileName()
+
         // Opening balances are stored purely in DataStore — NOT as transactions.
-        // This keeps them separate from real SMS-derived transactions so they
-        // never appear in history or distort income/expense calculations.
         val balancesJson = JSONObject()
         openingBalances.forEach { (senderId, balStr) ->
             val amount = balStr.replace(",", "").toDoubleOrNull() ?: return@forEach

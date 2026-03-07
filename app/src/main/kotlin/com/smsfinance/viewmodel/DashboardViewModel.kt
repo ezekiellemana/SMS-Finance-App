@@ -39,54 +39,38 @@ class DashboardViewModel @Inject constructor(
 
     private fun observeData() {
         viewModelScope.launch {
-
-            // ── Read identity + opening balance ────────────────────────────────
-            // Opening balance is typed by the user during onboarding.
-            // Stored in DataStore ONLY — never as a Room transaction.
-            // Must NEVER be changed by any SMS import.
-            val userName       = prefs.getUserName()
-            val openingBalance = parseOpeningBalances(prefs.getOpeningBalances())
-
-            // ── Gate for balance calculation ───────────────────────────────────
-            // newTxStart = the moment the user finished onboarding.
-            // Only transactions AFTER this timestamp affect the running balance,
-            // because everything before is already captured in openingBalance.
-            // On first install (setupAt == 0) we use Long.MIN_VALUE so the first
-            // batch of imported SMS all contribute to the balance correctly.
-            val setupAt    = prefs.getSetupCompletedAt()
-            val newTxStart = if (setupAt > 0L) setupAt else Long.MIN_VALUE
-
-            // Emit name + opening balance immediately so UI shows something
-            _uiState.update { it.copy(userName = userName, openingBalance = openingBalance) }
-
             try {
-                // 5-way combine for fully reactive real-time dashboard:
-                //  1. newIncome    — deposits after onboarding  → feeds balance formula
-                //  2. newExpenses  — withdrawals after onboarding → feeds balance formula
-                //  3. allIncome    — ALL deposits ever          → hero Income stat
-                //  4. allExpenses  — ALL withdrawals ever       → hero Expenses stat
-                //  5. allTx        — every transaction          → recent activity list
-                // All 5 are Room Flows — any DB write (live SMS or import) re-emits instantly.
+                // ── Fully reactive pipeline ─────────────────────────────────────────
+                // DataStore flows (userName, openingBalances, setupAt) re-emit the
+                // moment onboarding writes them → balance appears instantly.
+                // Room flows (allIncome, allExpenses, allTx) re-emit on every DB write.
+                // We nest two combine() calls because Kotlin's typed overload caps at 5.
+
+                val prefsFlow: Flow<Triple<String, String, Long>> = combine(
+                    prefs.userNameFlow,
+                    prefs.openingBalancesFlow,
+                    prefs.setupCompletedAtFlow
+                ) { name, balJson, setupAt -> Triple(name, balJson, setupAt) }
+
                 combine(
-                    repository.getTotalIncome(newTxStart, Long.MAX_VALUE),
-                    repository.getTotalExpenses(newTxStart, Long.MAX_VALUE),
+                    prefsFlow,
                     repository.getTotalIncome(Long.MIN_VALUE, Long.MAX_VALUE),
                     repository.getTotalExpenses(Long.MIN_VALUE, Long.MAX_VALUE),
                     repository.getAllTransactions()
-                ) { newIncome, newExpenses, allIncome, allExpenses, allTx ->
+                ) { (userName, balancesJson, setupAt), allIncome, allExpenses, allTx ->
 
-                    // Balance = what user had + every deposit since onboarding
-                    //                        − every withdrawal since onboarding
-                    val currentBalance = openingBalance + newIncome - newExpenses
-
-                    // Chart data for current month
-                    val monthRange = getMonthRange()
-                    // (chart is derived from allTx inline to avoid extra combine layer)
-                    val chartData = buildChartData(allTx, monthRange)
+                    val openingBalance = parseOpeningBalances(balancesJson)
+                    // Only count transactions after onboarding toward the running balance.
+                    // setupAt == 0 means first-install with no onboarding timestamp —
+                    // include all transactions in that case.
+                    val newTxStart  = if (setupAt > 0L) setupAt else Long.MIN_VALUE
+                    val newIncome   = allTx.filter { it.type.name == "DEPOSIT"    && it.date >= newTxStart }.sumOf { it.amount }
+                    val newExpenses = allTx.filter { it.type.name == "WITHDRAWAL" && it.date >= newTxStart }.sumOf { it.amount }
+                    val balance     = openingBalance + newIncome - newExpenses
 
                     DashboardUiState(
                         summary = FinancialSummary(
-                            estimatedBalance = currentBalance,
+                            estimatedBalance = balance,
                             monthlyIncome    = newIncome,
                             monthlyExpenses  = newExpenses,
                             transactionCount = allTx.size
@@ -94,7 +78,7 @@ class DashboardViewModel @Inject constructor(
                         allTimeIncome      = allIncome,
                         allTimeExpenses    = allExpenses,
                         recentTransactions = allTx,
-                        chartData          = chartData,
+                        chartData          = buildChartData(allTx, getMonthRange()),
                         userName           = userName,
                         openingBalance     = openingBalance,
                         isLoading          = false

@@ -42,6 +42,8 @@ class PreferencesManager @Inject constructor(
     val widgetThemeFlow:      Flow<String>  = context.dataStore.data.map { it[WIDGET_THEME]      ?: "GREEN_DARK" }
     val onboardingDoneFlow:   Flow<Boolean> = context.dataStore.data.map { it[ONBOARDING_DONE]   ?: false }
     val userNameFlow:         Flow<String>  = context.dataStore.data.map { it[USER_NAME]         ?: "" }
+    val openingBalancesFlow:  Flow<String>  = context.dataStore.data.map { it[OPENING_BALANCES]  ?: "{}" }
+    val setupCompletedAtFlow: Flow<Long>    = context.dataStore.data.map { it[SETUP_COMPLETED_AT] ?: 0L }
 
     // ── One-shot reads (suspend) ──────────────────────────────────────────────
     suspend fun getPinHash(): String?       = context.dataStore.data.first()[PIN_HASH]
