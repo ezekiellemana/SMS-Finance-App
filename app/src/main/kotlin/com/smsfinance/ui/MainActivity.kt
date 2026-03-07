@@ -13,7 +13,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -67,11 +66,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.navigationBars
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -132,6 +127,7 @@ class MainActivity : FragmentActivity() {
             lifecycleScope.launch { smsHistoryImporter.importIfNeeded() }
         }
         setContent {
+            @Suppress("DEPRECATION")
             val vm: SettingsViewModel = hiltViewModel()
             val darkMode by vm.darkMode.collectAsStateWithLifecycle()
             val pinEnabled by vm.pinEnabled.collectAsStateWithLifecycle()

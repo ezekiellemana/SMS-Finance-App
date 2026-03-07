@@ -306,7 +306,8 @@ fun BigFab(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    accentColor: Color = AccentTeal
+    accentColor: Color = AccentTeal,
+    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.Add
 ) {
     val pulse = rememberInfiniteTransition(label = "fabPulse")
     val glow  by pulse.animateFloat(
@@ -348,7 +349,7 @@ fun BigFab(
         ) {
             IconButton(onClick = onClick, modifier = Modifier.fillMaxSize()) {
                 Icon(
-                    Icons.Default.Add, contentDescription = label,
+                    icon, contentDescription = label,
                     tint = Color(0xFF0A1628),
                     modifier = Modifier.size(32.dp)
                 )

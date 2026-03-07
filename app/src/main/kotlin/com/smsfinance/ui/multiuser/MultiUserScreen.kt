@@ -30,12 +30,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -56,7 +58,7 @@ fun MultiUserScreen(
 ) {
     val uiState      by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog  by remember { mutableStateOf(false) }
-    var editingProfile by remember { mutableStateOf<UserProfile?>(null) }
+    var editingProfile by remember { mutableStateOf(null as UserProfile?) }
 
     Scaffold(
         containerColor = BgPrimary,
@@ -151,7 +153,7 @@ fun MultiUserScreen(
 // ── Active profile hero card ──────────────────────────────────────────────────
 @Composable
 fun ActiveProfileHeroCard(profile: UserProfile) {
-    val accentColor = runCatching { Color(android.graphics.Color.parseColor(profile.color)) }
+    val accentColor = runCatching { Color(profile.color.toColorInt()) }
         .getOrElse { AccentTeal }
 
     val pulse = rememberInfiniteTransition(label = "heroGlow")
@@ -204,7 +206,7 @@ fun ProfileCard(
     onDelete: () -> Unit,
     canDelete: Boolean
 ) {
-    val accentColor = runCatching { Color(android.graphics.Color.parseColor(profile.color)) }
+    val accentColor = runCatching { Color(profile.color.toColorInt()) }
         .getOrElse { AccentTeal }
     val bg by animateColorAsState(
         if (isActive) accentColor.copy(.10f) else Color(0xFF1C2740),
@@ -290,7 +292,7 @@ fun ProfileDialog(
     var name          by remember { mutableStateOf(existing?.name ?: "") }
     var selectedEmoji by remember { mutableStateOf(existing?.avatarEmoji ?: "👤") }
     var selectedColor by remember { mutableStateOf(existing?.color ?: "#00C853") }
-    var photoUri      by remember { mutableStateOf<String?>(existing?.photoUri) }
+    var photoUri      by remember { mutableStateOf(existing?.photoUri as String?) }
     var nameError     by remember { mutableStateOf(false) }
 
     // Photo picker launcher — copies the chosen image into app-private files
@@ -335,7 +337,7 @@ fun ProfileDialog(
                 ) {
                     // Current avatar / photo preview
                     val accentC = runCatching {
-                        Color(android.graphics.Color.parseColor(selectedColor))
+                        Color(selectedColor.toColorInt())
                     }.getOrElse { AccentTeal }
 
                     Box(contentAlignment = Alignment.BottomEnd) {
@@ -451,7 +453,7 @@ fun ProfileDialog(
                         color = TextSecondary)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(PROFILE_COLORS) { hex ->
-                            val c = runCatching { Color(android.graphics.Color.parseColor(hex)) }
+                            val c = runCatching { Color(hex.toColorInt()) }
                                 .getOrElse { AccentTeal }
                             Box(
                                 Modifier.size(34.dp).shadow(

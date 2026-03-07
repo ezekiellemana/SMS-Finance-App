@@ -1,120 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Swahili translations for SMS Finance Widget -->
 <resources>
-    <string name="app_name">Smart Money</string>
-    <string name="widget_small_label">Finance (Small)</string>
-    <string name="widget_medium_label">Finance (Medium)</string>
-    <string name="widget_small_description">Shows your balance and monthly summary</string>
-    <string name="widget_medium_description">Shows balance summary and last 3 transactions</string>
-    <string name="nav_dashboard">Dashboard</string>
-    <string name="nav_transactions">Transactions</string>
-    <string name="nav_alerts">Alerts</string>
-    <string name="nav_predictions">AI Predictions</string>
-    <string name="nav_settings">Settings</string>
-    <string name="dashboard_title">Smart Money</string>
-    <string name="estimated_balance">Estimated Balance</string>
-    <string name="monthly_income">Monthly Income</string>
-    <string name="monthly_expenses">Monthly Expenses</string>
-    <string name="recent_transactions">Recent Transactions</string>
-    <string name="view_all">View All</string>
-    <string name="this_month">This Month</string>
-    <string name="no_transactions">No transactions yet</string>
-    <string name="no_transactions_sub">Financial SMS will appear here automatically</string>
-    <string name="deposit">Deposit</string>
-    <string name="withdrawal">Withdrawal</string>
-    <string name="income">Income</string>
-    <string name="expense">Expense</string>
-    <string name="balance">Balance</string>
-    <string name="transaction_details">Transaction Details</string>
-    <string name="source">Source</string>
-    <string name="type">Type</string>
-    <string name="date">Date</string>
-    <string name="reference">Reference</string>
-    <string name="original_sms">Original SMS</string>
-    <string name="delete_transaction">Delete Transaction</string>
-    <string name="manual_entry">Manual Entry</string>
-    <string name="received">Received</string>
-    <string name="sent">Sent</string>
-    <string name="add_transaction">Add Transaction</string>
-    <string name="amount_tzs">Amount (TZS)</string>
-    <string name="source_hint">Source (e.g. NMB Bank)</string>
-    <string name="description_optional">Description (optional)</string>
-    <string name="save_transaction">Save Transaction</string>
-    <string name="invalid_amount">Enter a valid amount</string>
-    <string name="filter_transactions">Filter Transactions</string>
-    <string name="transaction_type">Transaction Type</string>
-    <string name="deposits">Deposits</string>
-    <string name="withdrawals">Withdrawals</string>
-    <string name="apply">Apply</string>
-    <string name="clear">Clear</string>
-    <string name="no_transactions_found">No transactions found</string>
-    <string name="settings_title">Settings</string>
-    <string name="privacy">Privacy</string>
-    <string name="privacy_mode">Privacy Mode</string>
-    <string name="privacy_mode_desc">Hide amounts on widget and dashboard</string>
-    <string name="security">Security</string>
-    <string name="biometric_auth">Biometric Authentication</string>
-    <string name="biometric_auth_desc">Use fingerprint or face to unlock</string>
-    <string name="pin_lock">PIN Lock</string>
-    <string name="pin_set">PIN is set</string>
-    <string name="pin_not_set">Set a PIN to protect the app</string>
-    <string name="appearance">Appearance</string>
-    <string name="dark_mode">Dark Mode</string>
-    <string name="dark_mode_desc">Use dark color scheme</string>
-    <string name="language">Language</string>
-    <string name="language_desc">Choose your preferred language</string>
-    <string name="about">About</string>
-    <string name="app_version">Version 1.0.0</string>
-    <string name="privacy_note">All data is processed locally on your device. No SMS data is ever transmitted externally.</string>
-    <string name="set_pin">Set PIN</string>
-    <string name="enter_pin">Enter 4–6 digit PIN</string>
-    <string name="cancel">Cancel</string>
-    <string name="app_name_pin">Smart Money</string>
-    <string name="enter_your_pin">Enter your PIN</string>
-    <string name="incorrect_pin">Incorrect PIN</string>
-    <string name="spending_alerts">Spending Alerts</string>
-    <string name="alerts_subtitle">Set spending limits to stay aware of your budget</string>
-    <string name="add_alert">Add Alert</string>
-    <string name="no_alerts">No alerts set</string>
-    <string name="no_alerts_sub">Tap + to add your first spending alert</string>
-    <string name="alert_name">Alert Name</string>
-    <string name="alert_name_hint">e.g. Monthly Food</string>
-    <string name="limit_amount">Limit Amount (TZS)</string>
-    <string name="alert_period">Period</string>
-    <string name="period_daily">Daily</string>
-    <string name="period_weekly">Weekly</string>
-    <string name="period_monthly">Monthly</string>
-    <string name="save_alert">Save Alert</string>
-    <string name="delete_alert">Delete Alert</string>
-    <string name="alert_triggered_title">Spending Alert!</string>
-    <string name="alert_triggered_body">You have reached %1$s%% of your %2$s limit</string>
-    <string name="spending_progress">Spending Progress</string>
-    <string name="of_limit">of limit</string>
-    <string name="limit">Limit</string>
-    <string name="spent">Spent</string>
-    <string name="remaining">Remaining</string>
-    <string name="edit_alert">Edit Alert</string>
-    <string name="ai_predictions">AI Predictions</string>
-    <string name="ai_subtitle">AI analysis of your spending habits</string>
-    <string name="predicted_expenses">Predicted Expenses</string>
-    <string name="next_month">Next Month</string>
-    <string name="prediction_based">Based on %1$d months of data</string>
-    <string name="spending_insights">Spending Insights</string>
-    <string name="top_expense_category">Top Expense Source</string>
-    <string name="avg_daily_spending">Avg. Daily Spending</string>
-    <string name="avg_monthly_income">Avg. Monthly Income</string>
-    <string name="savings_potential">Savings Potential</string>
-    <string name="trend_increasing">📈 Your spending is increasing this month</string>
-    <string name="trend_decreasing">📉 Great! Your spending is decreasing this month</string>
-    <string name="trend_stable">📊 Your spending is stable this month</string>
-    <string name="not_enough_data">Not enough data for predictions</string>
-    <string name="not_enough_data_sub">Keep using the app for at least 2 weeks to get accurate predictions</string>
-    <string name="monthly_forecast">Monthly Forecast</string>
-    <string name="analyze_spending">Analyze Spending</string>
-    <string name="prediction_tip">Savings Tip</string>
-    <string name="generating_analysis">Analyzing your data…</string>
-    <string name="notification_channel_alerts">Spending Alerts</string>
-    <string name="notification_channel_transactions">New Transactions</string>
-    <string name="new_transaction_detected">New Transaction Detected</string>
-    <string name="language_english">English</string>
+    <string name="app_name">Kidijitali cha Fedha</string>
+
+    <!-- Widget labels -->
+    <string name="widget_small_label">Fedha (Ndogo)</string>
+    <string name="widget_medium_label">Fedha (Kati)</string>
+    <string name="widget_small_description">Inaonyesha salio na muhtasari wa mwezi</string>
+    <string name="widget_medium_description">Inaonyesha muhtasari na miamala 3 ya hivi karibuni</string>
+
+    <!-- Dashboard -->
+    <string name="nav_dashboard">Dashibodi</string>
+    <string name="nav_transactions">Miamala</string>
+    <string name="nav_alerts">Tahadhari</string>
+    <string name="nav_predictions">Utabiri wa AI</string>
+    <string name="nav_profile">Wasifu</string>
+    <string name="nav_settings">Mipangilio</string>
+
+    <string name="dashboard_title">Fedha za SMS</string>
+    <string name="estimated_balance">Salio Lililokadiriwa</string>
+    <string name="monthly_income">Mapato ya Mwezi</string>
+    <string name="monthly_expenses">Matumizi ya Mwezi</string>
+    <string name="recent_transactions">Miamala ya Hivi Karibuni</string>
+    <string name="view_all">Ona Yote</string>
+    <string name="this_month">Mwezi Huu</string>
+    <string name="no_transactions">Hakuna miamala bado</string>
+    <string name="no_transactions_sub">Ujumbe wa fedha wa SMS utaonekana hapa kiotomatiki</string>
+
+    <!-- Transaction types -->
+    <string name="deposit">Amana</string>
+    <string name="withdrawal">Kutoa</string>
+    <string name="income">Mapato</string>
+    <string name="expense">Matumizi</string>
+    <string name="balance">Salio</string>
+
+    <!-- Transaction detail -->
+    <string name="transaction_details">Maelezo ya Muamala</string>
+    <string name="source">Chanzo</string>
+    <string name="type">Aina</string>
+    <string name="date">Tarehe</string>
+    <string name="reference">Kumbukumbu</string>
+    <string name="original_sms">Ujumbe wa Asili wa SMS</string>
+    <string name="delete_transaction">Futa Muamala</string>
+    <string name="manual_entry">Kuingizwa kwa Mkono</string>
+    <string name="received">Imepokewa</string>
+    <string name="sent">Imetumwa</string>
+
+    <!-- Add transaction -->
+    <string name="add_transaction">Ongeza Muamala</string>
+    <string name="amount_tzs">Kiasi (TZS)</string>
+    <string name="source_hint">Chanzo (mf. Benki ya NMB)</string>
+    <string name="description_optional">Maelezo (hiari)</string>
+    <string name="save_transaction">Hifadhi Muamala</string>
+    <string name="invalid_amount">Ingiza kiasi halali</string>
+
+    <!-- Filters -->
+    <string name="filter_transactions">Chuja Miamala</string>
+    <string name="transaction_type">Aina ya Muamala</string>
+    <string name="deposits">Amana</string>
+    <string name="withdrawals">Kutoa</string>
+    <string name="apply">Tumia</string>
+    <string name="clear">Futa</string>
+    <string name="no_transactions_found">Hakuna miamala iliyopatikana</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Mipangilio</string>
+    <string name="privacy">Faragha</string>
+    <string name="privacy_mode">Hali ya Faragha</string>
+    <string name="privacy_mode_desc">Ficha kiasi kwenye kidijitali na dashibodi</string>
+    <string name="security">Usalama</string>
+    <string name="biometric_auth">Uthibitisho wa Biometri</string>
+    <string name="biometric_auth_desc">Tumia kidole au uso kufungua</string>
+    <string name="pin_lock">Kufuli cha PIN</string>
+    <string name="pin_set">PIN imewekwa</string>
+    <string name="pin_not_set">Weka PIN kulinda programu</string>
+    <string name="appearance">Mwonekano</string>
+    <string name="dark_mode">Hali ya Giza</string>
+    <string name="dark_mode_desc">Tumia mpango wa rangi za giza</string>
+    <string name="language">Lugha</string>
+    <string name="language_desc">Chagua lugha unayopendelea</string>
+    <string name="about">Kuhusu</string>
+    <string name="app_version">Toleo 1.0.0</string>
+    <string name="privacy_note">Data yote inashughulikiwa ndani ya simu yako. Hakuna data ya SMS inayotumwa nje.</string>
+    <string name="set_pin">Weka PIN</string>
+    <string name="enter_pin">Ingiza PIN ya tarakimu 4–6</string>
+    <string name="cancel">Ghairi</string>
+
+    <!-- PIN Screen -->
+    <string name="app_name_pin">Kidijitali cha Fedha</string>
+    <string name="enter_your_pin">Ingiza PIN yako</string>
+    <string name="incorrect_pin">PIN si sahihi</string>
+
+    <!-- Alerts -->
+    <string name="spending_alerts">Tahadhari za Matumizi</string>
+    <string name="alerts_subtitle">Weka mipaka ya matumizi ili uwe na ufahamu</string>
+    <string name="add_alert">Ongeza Tahadhari</string>
+    <string name="no_alerts">Hakuna tahadhari zilizowekwa</string>
+    <string name="no_alerts_sub">Gusa + kuongeza tahadhari yako ya kwanza</string>
+    <string name="alert_name">Jina la Tahadhari</string>
+    <string name="alert_name_hint">mf. Chakula cha Mwezi</string>
+    <string name="limit_amount">Kiasi cha Kikomo (TZS)</string>
+    <string name="alert_period">Kipindi</string>
+    <string name="period_daily">Kila Siku</string>
+    <string name="period_weekly">Kila Wiki</string>
+    <string name="period_monthly">Kila Mwezi</string>
+    <string name="save_alert">Hifadhi Tahadhari</string>
+    <string name="delete_alert">Futa Tahadhari</string>
+    <string name="alert_triggered_title">Tahadhari ya Matumizi!</string>
+    <string name="alert_triggered_body">Umefika %1$s%% ya kikomo chako cha %2$s</string>
+    <string name="spending_progress">Maendeleo ya Matumizi</string>
+    <string name="of_limit">ya kikomo</string>
+    <string name="limit">Kikomo</string>
+    <string name="spent">Imetumika</string>
+    <string name="remaining">Iliyobaki</string>
+    <string name="edit_alert">Hariri Tahadhari</string>
+
+    <!-- AI Predictions -->
+    <string name="ai_predictions">Utabiri wa AI</string>
+    <string name="ai_subtitle">Uchambuzi wa akili ya bandia wa tabia zako za matumizi</string>
+    <string name="predicted_expenses">Matumizi Yanayotabiriwa</string>
+    <string name="next_month">Mwezi Ujao</string>
+    <string name="prediction_based">Imetegemea data ya miezi %1$d iliyopita</string>
+    <string name="spending_insights">Maarifa ya Matumizi</string>
+    <string name="top_expense_category">Chanzo Kikuu cha Matumizi</string>
+    <string name="avg_daily_spending">Wastani wa Matumizi ya Kila Siku</string>
+    <string name="avg_monthly_income">Wastani wa Mapato ya Kila Mwezi</string>
+    <string name="savings_potential">Uwezekano wa Akiba</string>
+    <string name="trend_increasing">📈 Matumizi yako yanaongezeka mwezi huu</string>
+    <string name="trend_decreasing">📉 Vizuri! Matumizi yako yanapungua mwezi huu</string>
+    <string name="trend_stable">📊 Matumizi yako ni thabiti mwezi huu</string>
+    <string name="not_enough_data">Data haitoshi kwa utabiri</string>
+    <string name="not_enough_data_sub">Endelea kutumia programu kwa angalau wiki 2 ili kupata utabiri sahihi</string>
+    <string name="monthly_forecast">Utabiri wa Kila Mwezi</string>
+    <string name="analyze_spending">Changanua Matumizi</string>
+    <string name="prediction_tip">Kidokezo cha Akiba</string>
+    <string name="generating_analysis">Inachambua data yako…</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_alerts">Tahadhari za Matumizi</string>
+    <string name="notification_channel_transactions">Miamala Mipya</string>
+    <string name="new_transaction_detected">Muamala Mpya Umegunduliwa</string>
+
+    <!-- Language selection -->
+    <string name="language_english">Kiingereza</string>
     <string name="language_swahili">Kiswahili</string>
 </resources>

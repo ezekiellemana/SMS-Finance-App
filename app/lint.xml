@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Suppress spell-checker false positives in Swahili translation file.
+         Android Studio's spell checker has no Swahili dictionary. -->
+    <issue id="Typos">
+        <ignore path="src/main/res/values-sw/strings.xml" />
+    </issue>
+
+    <!-- nav_profile is defined in values-sw/strings.xml — suppress stale
+         "not translated" warnings that appear before a clean Gradle sync. -->
+    <issue id="MissingTranslation">
+        <ignore path="src/main/res/values-sw/strings.xml" />
+    </issue>
+</lint>
