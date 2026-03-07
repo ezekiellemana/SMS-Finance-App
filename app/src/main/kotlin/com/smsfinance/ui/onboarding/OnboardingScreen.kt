@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.smsfinance.viewmodel.SettingsViewModel
-import kotlin.math.abs
 import kotlinx.coroutines.launch
 
 // ── Colors ────────────────────────────────────────────────────────────────────
@@ -64,11 +63,15 @@ val ALL_SENDERS = listOf(
     SenderOption("ABSA",     "ABSA Bank",        "🏦", "Bank"),
     SenderOption("EXIM",     "EXIM Bank",        "🏦", "Bank"),
     SenderOption("DTB",      "DTB Bank",         "🏦", "Bank"),
-    SenderOption("MPESA",    "M-Pesa",           "📱", "Mobile Money"),
-    SenderOption("HALOPESA", "HaloPesa",         "📱", "Mobile Money"),
-    SenderOption("TIGOPESA", "Tigo Pesa",        "📱", "Mobile Money"),
-    SenderOption("AIRTEL",   "Airtel Money",     "📱", "Mobile Money"),
-    SenderOption("MIXX",     "Mixx by Yas",      "📱", "Mobile Money"),
+    SenderOption("MPESA",     "M-Pesa",                        "📱", "Mobile Money"),
+    SenderOption("MIXX",      "Mixx by Yas (formerly Tigo Pesa)", "📱", "Mobile Money"),
+    SenderOption("AIRTEL",    "Airtel Money",                  "📱", "Mobile Money"),
+    SenderOption("HALOPESA",  "HaloPesa",                      "📱", "Mobile Money"),
+    SenderOption("TPESA",     "T-Pesa",                        "📱", "Mobile Money"),
+    SenderOption("AZAMPESA",  "AzamPesa",                      "📱", "Mobile Money"),
+    SenderOption("SELCOMPESA","SelcomPesa",                     "📱", "Mobile Money"),
+    SenderOption("EZYPESA",   "EzyPesa",                       "📱", "Mobile Money"),
+    SenderOption("NALA",      "NALA",                          "📱", "Mobile Money"),
 )
 
 // ── Info page model ───────────────────────────────────────────────────────────
@@ -151,20 +154,29 @@ fun OnboardingScreen(
                 state    = pagerState,
                 modifier = Modifier.weight(1f),
                 userScrollEnabled = pagerState.currentPage != 2 || canProceed,
-                pageSpacing = 20.dp
+                pageSpacing = 16.dp,
+                beyondViewportPageCount = 1
             ) { page ->
+                val pageOffset = (pagerState.currentPage - page) +
+                        pagerState.currentPageOffsetFraction
+                val absOffset = kotlin.math.abs(pageOffset).coerceIn(0f, 1f)
+
                 Box(
                     Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
                         .graphicsLayer {
-                            // Read offset inside graphicsLayer to avoid @FrequentlyChangingValue warning
-                            val offset = (pagerState.currentPage - page) +
-                                    pagerState.currentPageOffsetFraction
-                            val clamped = abs(offset).coerceIn(0f, 1f)
-                            alpha  = 1f - clamped
-                            scaleX = 0.88f + 0.12f * (1f - clamped)
-                            scaleY = 0.88f + 0.12f * (1f - clamped)
+                            // Smooth fade
+                            alpha = 1f - (absOffset * 0.65f)
+                            // Gentle scale — incoming page grows in, outgoing shrinks
+                            val scale = 0.90f + 0.10f * (1f - absOffset)
+                            scaleX = scale
+                            scaleY = scale
+                            // Subtle depth: outgoing page moves slightly back
+                            translationX = pageOffset * 24.dp.toPx()
+                            // Rotation tilt for polish
+                            rotationY = pageOffset * -4f
+                            cameraDistance = 12f * density
                         }
                 ) {
                     when (page) {
@@ -637,9 +649,8 @@ private fun SetupPage(
                         val sender = ALL_SENDERS.find { it.id == id } ?: return@forEach
                         val value  = openingBalances[id] ?: ""
                         val ok     = (value.replace(",", "").toDoubleOrNull() ?: 0.0) > 0.0
-                        BalanceRow(sender = sender, value = value, ok = ok) { new ->
-                            if (new.all { it.isDigit() || it == ',' || it == '.' })
-                                onBalanceChange(id, new)
+                        BalanceRow(sender = sender, value = value, ok = ok) { raw ->
+                            onBalanceChange(id, raw)
                         }
                         Spacer(Modifier.height(8.dp))
                     }
@@ -784,6 +795,23 @@ private fun BalanceRow(
     sender: SenderOption, value: String, ok: Boolean,
     onValueChange: (String) -> Unit
 ) {
+    // Format raw digits into "100,000" style as the user types.
+    // `value` stored in state is always the raw digit string ("100000").
+    // The field shows the formatted version; trailing separator is stripped on confirm.
+    fun formatAmount(raw: String): String {
+        val digits = raw.filter { it.isDigit() }
+        if (digits.isEmpty()) return ""
+        return try {
+            val number = digits.toLong()
+            "%,d".format(number)
+        } catch (_: NumberFormatException) { digits }
+    }
+
+    fun parseRaw(formatted: String): String =
+        formatted.filter { it.isDigit() }
+
+    val displayed = formatAmount(value)
+
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -796,12 +824,24 @@ private fun BalanceRow(
         ) { Text(sender.emoji, fontSize = 16.sp) }
 
         OutlinedTextField(
-            value          = value,
-            onValueChange  = onValueChange,
-            placeholder    = { Text("TZS 0", color = TextMuted.copy(.4f), fontSize = 13.sp) },
+            value          = displayed,
+            onValueChange  = { typed ->
+                // Strip everything but digits from what user typed, store raw
+                val raw = parseRaw(typed)
+                // Guard against absurdly large numbers
+                if (raw.length <= 15) onValueChange(raw)
+            },
+            placeholder    = { Text("e.g. 100,000/=", color = TextMuted.copy(.4f), fontSize = 13.sp) },
             label          = { Text(sender.displayName, fontSize = 10.sp) },
             singleLine     = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            // Show "/=" suffix inside the field when there is a value
+            suffix         = {
+                if (displayed.isNotEmpty()) {
+                    Text("/=", color = if (ok) GreenOk else TextMuted.copy(.5f),
+                        fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+            },
             trailingIcon   = {
                 AnimatedVisibility(ok, enter = scaleIn(), exit = scaleOut()) {
                     Icon(Icons.Default.CheckCircle, null,

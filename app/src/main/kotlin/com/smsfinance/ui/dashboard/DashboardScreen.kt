@@ -5,8 +5,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,10 +19,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.core.graphics.toColorInt
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -116,7 +116,7 @@ fun DashboardScreen(
     val profileAccent: Color = remember(multiState.activeProfile?.color) {
         runCatching {
             val hex = multiState.activeProfile?.color ?: return@runCatching AccentTeal
-            Color(android.graphics.Color.parseColor(hex))
+            Color(hex.toColorInt())
         }.getOrElse { AccentTeal }
     }
 
@@ -189,56 +189,64 @@ fun DashboardScreen(
 
             Spacer(Modifier.height(10.dp))
 
-            // ── RECENT ACTIVITY — fills remaining space, scrolls internally ───
-            Column(
-                Modifier.fillMaxWidth().weight(1f)
-                    .padding(horizontal = 16.dp)
+            // ── RECENT ACTIVITY — no scroll, fits exactly what the screen has left ──
+            // BoxWithConstraints measures the remaining height and shows only as many
+            // cards as fit, keeping the layout flush on every screen size.
+            BoxWithConstraints(
+                Modifier.fillMaxWidth().weight(1f).padding(horizontal = 16.dp)
             ) {
-                // Header — static, doesn't scroll
-                Row(
-                    Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    Arrangement.SpaceBetween, Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Recent Activity",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold, color = TextWhite)
-                        if (uiState.recentTransactions.isNotEmpty()) {
-                            Text(
-                                "${uiState.recentTransactions.size} transaction" +
-                                        if (uiState.recentTransactions.size > 1) "s" else "",
-                                fontSize = 11.sp, color = TextSecondary
-                            )
-                        }
-                    }
-                    if (uiState.recentTransactions.size > 5) {
-                        TextButton(onClick = onNavigateToTransactions,
-                            contentPadding = PaddingValues(0.dp)) {
-                            Text("See all", color = AccentTeal, fontSize = 13.sp)
-                            Spacer(Modifier.width(3.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
-                                Modifier.size(13.dp), AccentTeal)
-                        }
-                    }
-                }
+                // Each card is ~72dp tall + 9dp gap; header row is ~52dp
+                val cardH   = 72.dp
+                val gapH    = 9.dp
+                val headerH = 52.dp
+                val available = maxHeight - headerH
+                val maxCards = if (available > 0.dp) {
+                    ((available + gapH) / (cardH + gapH)).toInt().coerceAtLeast(1)
+                } else 1
+                val visibleTx = uiState.recentTransactions.take(maxCards)
 
-                // Scrollable transaction list — fills the remaining space exactly
-                if (uiState.recentTransactions.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        EmptyState("📭", "No transactions yet",
-                            "Financial SMS messages will appear here automatically")
-                    }
-                } else {
-                    LazyColumn(
-                        Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(9.dp),
-                        contentPadding = PaddingValues(bottom = 90.dp)
+                Column(Modifier.fillMaxWidth()) {
+                    // Header row
+                    Row(
+                        Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                        Arrangement.SpaceBetween, Alignment.CenterVertically
                     ) {
-                        itemsIndexed(
-                            uiState.recentTransactions,
-                            key = { _, tx -> tx.id }
-                        ) { _, tx ->
-                            TransactionRow(tx, privacyMode, profileAccent, onClick = onNavigateToTransactions)
+                        Column {
+                            Text("Recent Activity",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold, color = TextWhite)
+                            if (uiState.recentTransactions.isNotEmpty()) {
+                                Text(
+                                    "${uiState.recentTransactions.size} transaction" +
+                                            if (uiState.recentTransactions.size > 1) "s" else "",
+                                    fontSize = 11.sp, color = TextSecondary
+                                )
+                            }
+                        }
+                        // "See all" link whenever there are more transactions than visible
+                        if (uiState.recentTransactions.size > maxCards) {
+                            TextButton(onClick = onNavigateToTransactions,
+                                contentPadding = PaddingValues(0.dp)) {
+                                Text("See all", color = AccentTeal, fontSize = 13.sp)
+                                Spacer(Modifier.width(3.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
+                                    Modifier.size(13.dp), AccentTeal)
+                            }
+                        }
+                    }
+
+                    // Transaction cards — exactly as many as fit, no scroll
+                    if (uiState.recentTransactions.isEmpty()) {
+                        Box(Modifier.fillMaxWidth(), Alignment.Center) {
+                            EmptyState("📭", "No transactions yet",
+                                "Financial SMS messages will appear here automatically")
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                            visibleTx.forEach { tx ->
+                                TransactionRow(tx, privacyMode, profileAccent,
+                                    onClick = onNavigateToTransactions)
+                            }
                         }
                     }
                 }
