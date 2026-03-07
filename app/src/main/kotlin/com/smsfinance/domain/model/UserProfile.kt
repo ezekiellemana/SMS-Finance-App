@@ -7,7 +7,8 @@ data class UserProfile(
     val color: String = "#00C853",
     val isActive: Boolean = false,
     val pinHash: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val photoUri: String? = null      // URI to photo saved in app-private storage
 )
 
 val DEFAULT_AVATARS = listOf("👨", "👩", "👦", "👧", "👴", "👵", "🧑", "👤")

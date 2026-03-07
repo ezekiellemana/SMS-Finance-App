@@ -35,5 +35,9 @@ data class UserProfileEntity(
     val pinHash: String? = null,
 
     @ColumnInfo(name = "created_at")
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    /** Local file URI for profile photo (copied into app-private storage) */
+    @ColumnInfo(name = "photo_uri")
+    val photoUri: String? = null
 )

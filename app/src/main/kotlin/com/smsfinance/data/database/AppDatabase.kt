@@ -16,7 +16,7 @@ import com.smsfinance.data.entity.*
         RecurringTransactionEntity::class,
         InvestmentEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

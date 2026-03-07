@@ -13,14 +13,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -70,6 +72,7 @@ fun GlassCard(
     ) { Column(content = content) }
 }
 
+@Suppress("unused")
 @Composable
 fun GradientCard(
     modifier: Modifier = Modifier,
@@ -187,6 +190,7 @@ fun PulsingDot(color: Color = AccentTeal, size: Dp = 8.dp) {
     Box(Modifier.size(size).background(color.copy(alpha = alpha), CircleShape))
 }
 
+@Suppress("unused")
 @Composable
 fun LabelDivider(label: String) {
     Row(
@@ -292,5 +296,71 @@ fun AppScreenScaffold(
             // ── Screen content ──
             content(PaddingValues(horizontal = 16.dp, vertical = 8.dp))
         }
+    }
+}
+
+// ── Shared big pulsing FAB used across all list screens ──────────────────────
+@Suppress("unused")
+@Composable
+fun BigFab(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    accentColor: Color = AccentTeal
+) {
+    val pulse = rememberInfiniteTransition(label = "fabPulse")
+    val glow  by pulse.animateFloat(
+        .45f, .88f,
+        infiniteRepeatable(tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "fabG"
+    )
+    val scale by pulse.animateFloat(
+        .97f, 1.03f,
+        infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "fabS"
+    )
+
+    Box(modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
+        // Outer glow ring
+        Box(
+            Modifier.size(84.dp)
+                .graphicsLayer { alpha = glow }
+                .background(
+                    Brush.radialGradient(
+                        listOf(accentColor.copy(.55f), Color.Transparent)
+                    ),
+                    CircleShape
+                )
+        )
+        // FAB circle
+        Box(
+            Modifier
+                .size(66.dp)
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .shadow(18.dp, CircleShape)
+                .clip(CircleShape)
+                .background(
+                    Brush.linearGradient(
+                        listOf(accentColor, accentColor.copy(.75f))
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onClick, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    Icons.Default.Add, contentDescription = label,
+                    tint = Color(0xFF0A1628),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+        // Label below
+        Text(
+            label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = accentColor.copy(.85f),
+            modifier = Modifier.align(Alignment.BottomCenter).offset(y = 54.dp)
+        )
     }
 }

@@ -52,9 +52,9 @@ class UserProfileRepository @Inject constructor(
 
     // ── Mappers ───────────────────────────────────────────────────────────────
     private fun UserProfileEntity.toDomain() = UserProfile(
-        id, name, avatarEmoji, color, isActive, pinHash, createdAt
+        id, name, avatarEmoji, color, isActive, pinHash, createdAt, photoUri
     )
     private fun UserProfile.toEntity() = UserProfileEntity(
-        id, name, avatarEmoji, color, isActive, pinHash, createdAt
+        id, name, avatarEmoji, color, isActive, pinHash, createdAt, photoUri
     )
 }

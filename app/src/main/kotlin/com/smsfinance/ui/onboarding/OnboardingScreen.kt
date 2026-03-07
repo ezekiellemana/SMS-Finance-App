@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.smsfinance.viewmodel.SettingsViewModel
+import kotlin.math.abs
 import kotlinx.coroutines.launch
 
 // ── Colors ────────────────────────────────────────────────────────────────────
@@ -147,28 +148,45 @@ fun OnboardingScreen(
 
             // Pages
             HorizontalPager(
-                state = pagerState,
+                state    = pagerState,
                 modifier = Modifier.weight(1f),
-                userScrollEnabled = false
+                userScrollEnabled = pagerState.currentPage != 2 || canProceed,
+                pageSpacing = 20.dp
             ) { page ->
-                when (page) {
-                    2    -> SetupPage(
-                        userName        = userName,
-                        onNameChange    = { userName = it },
-                        selectedSenders = selectedSenders,
-                        openingBalances = openingBalances,
-                        onBalanceChange = { id, v -> openingBalances = openingBalances + (id to v) },
-                        onOpenSheet     = { cat -> sheetCategory = cat; showSheet = true }
-                    )
-                    else -> InfoPageContent(INFO_PAGES[if (page < 2) page else 2])
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .graphicsLayer {
+                            // Read offset inside graphicsLayer to avoid @FrequentlyChangingValue warning
+                            val offset = (pagerState.currentPage - page) +
+                                    pagerState.currentPageOffsetFraction
+                            val clamped = abs(offset).coerceIn(0f, 1f)
+                            alpha  = 1f - clamped
+                            scaleX = 0.88f + 0.12f * (1f - clamped)
+                            scaleY = 0.88f + 0.12f * (1f - clamped)
+                        }
+                ) {
+                    when (page) {
+                        2    -> SetupPage(
+                            userName        = userName,
+                            onNameChange    = { userName = it },
+                            selectedSenders = selectedSenders,
+                            openingBalances = openingBalances,
+                            onBalanceChange = { id, v -> openingBalances = openingBalances + (id to v) },
+                            onOpenSheet     = { cat -> sheetCategory = cat; showSheet = true }
+                        )
+                        else -> InfoPageContent(INFO_PAGES[if (page < 2) page else 2])
+                    }
                 }
             }
 
             // ── Bottom nav ────────────────────────────────────────────────────
             Column(
                 Modifier.fillMaxWidth().background(BgPrimary)
+                    .navigationBarsPadding()
                     .padding(horizontal = 28.dp)
-                    .padding(top = 12.dp, bottom = 32.dp),
+                    .padding(top = 12.dp, bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
@@ -295,8 +313,9 @@ private fun SenderSheet(
     ) {
         Column(
             Modifier.fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(horizontal = 22.dp)
-                .padding(bottom = 36.dp),
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Header
@@ -446,6 +465,7 @@ private fun SetupPage(
 
         Column(
             Modifier.fillMaxSize().verticalScroll(scrollState)
+                .imePadding()
                 .padding(horizontal = 24.dp)
                 .padding(top = 28.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
@@ -795,7 +815,7 @@ private fun BalanceRow(
     }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+
 @Composable
 private fun stepFieldColors(filled: Boolean = false) = OutlinedTextFieldDefaults.colors(
     focusedBorderColor      = if (filled) GreenOk else AccentTeal,
@@ -806,6 +826,7 @@ private fun stepFieldColors(filled: Boolean = false) = OutlinedTextFieldDefaults
     cursorColor             = AccentTeal,
     focusedContainerColor   = BgCard, unfocusedContainerColor = BgCard
 )
+
 
 // ── Info page ─────────────────────────────────────────────────────────────────
 @Composable
@@ -820,7 +841,7 @@ private fun InfoPageContent(page: InfoPage) {
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = 32.dp).padding(top = 60.dp, bottom = 16.dp),
+            .padding(horizontal = 28.dp).padding(top = 24.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {

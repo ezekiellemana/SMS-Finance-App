@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -64,7 +65,7 @@ private fun buildGreeting(name: String): GreetingData {
             "Good evening${if (first.isNotBlank()) ", $first" else ""}",
             "🌇", "Here's how your day looked financially"
         )
-        else      -> GreetingData(
+        else -> GreetingData(
             "Hey${if (first.isNotBlank()) ", $first" else ""}",
             "🌙", "Late night — your finances are safe"
         )
@@ -110,7 +111,6 @@ fun DashboardScreen(
 
     Scaffold(containerColor = BgPrimary) { padding ->
 
-        // Show greeting card immediately using cached userName even while loading
         if (uiState.isLoading && uiState.userName.isBlank()) {
             Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
                 CircularProgressIndicator(color = AccentTeal, strokeWidth = 3.dp)
@@ -118,115 +118,116 @@ fun DashboardScreen(
             return@Scaffold
         }
 
-        ScreenEnterAnimation {
-            // Single LazyColumn — recent activity rows are direct items, no nested scroll
-            LazyColumn(
-                Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        // ── Fixed outer column — top section static, transactions scroll ──────
+        Column(
+            Modifier.fillMaxSize().padding(padding)
+        ) {
+
+            // ── TOP STATIC SECTION — never scrolls ────────────────────────────
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(11.dp)
             ) {
+                Spacer(Modifier.height(4.dp))
 
-                // ── Top bar ───────────────────────────────────────────────────
-                item(key = "topbar") {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        Arrangement.SpaceBetween, Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            PulsingDot(size = 9.dp)
-                            Column {
-                                Text("Smart Money",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold, color = TextWhite)
-                                Text("Auto-tracking active", fontSize = 11.sp, color = AccentTeal)
-                            }
-                        }
-                        Row {
-                            IconButton(onClick = { privacyMode = !privacyMode }) {
-                                Icon(if (privacyMode) Icons.Default.VisibilityOff
-                                else Icons.Default.Visibility,
-                                    null, tint = TextSecondary)
-                            }
-                            IconButton(onClick = onNavigateToCharts) {
-                                Icon(Icons.Default.BarChart, null, tint = TextSecondary)
-                            }
-                            IconButton(onClick = onNavigateToSearch) {
-                                Icon(Icons.Default.Search, null, tint = TextSecondary)
-                            }
-                            IconButton(onClick = onNavigateToSettings) {
-                                Icon(Icons.Default.Settings, null, tint = TextSecondary)
-                            }
-                        }
-                    }
-                }
-
-                // ── Greeting ──────────────────────────────────────────────────
-                item(key = "greeting") {
-                    GreetingCard(uiState.userName)
-                }
-
-                // ── Hero balance card ─────────────────────────────────────────
-                item(key = "hero") {
-                    HeroBalanceCard(
-                        balance        = uiState.summary.estimatedBalance,
-                        income         = uiState.summary.monthlyIncome,
-                        expenses       = uiState.summary.monthlyExpenses,
-                        privacyMode    = privacyMode
-                    )
-                }
-
-                // ── Quick actions ─────────────────────────────────────────────
-                item(key = "actions") {
-                    QuickActionsRow(onNavigateToTransactions, onNavigateToCharts)
-                }
-
-                // ── Chart ─────────────────────────────────────────────────────
-                if (uiState.chartData.isNotEmpty()) {
-                    item(key = "chart") {
-                        MiniBarChartCard(uiState.chartData, privacyMode)
-                    }
-                }
-
-                // ── Recent Activity header ────────────────────────────────────
-                item(key = "activity_header") {
-                    Row(Modifier.fillMaxWidth().padding(top = 4.dp),
-                        Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                // Top bar
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PulsingDot(size = 9.dp)
                         Column {
-                            Text("Recent Activity",
-                                style = MaterialTheme.typography.titleMedium,
+                            Text("Smart Money",
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold, color = TextWhite)
-                            if (uiState.recentTransactions.isNotEmpty()) {
-                                Text(
-                                    "${uiState.recentTransactions.size} transaction${if (uiState.recentTransactions.size > 1) "s" else ""}",
-                                    fontSize = 11.sp, color = TextSecondary
-                                )
-                            }
+                            Text("Auto-tracking active", fontSize = 11.sp, color = AccentTeal)
                         }
-                        if (uiState.recentTransactions.size > 5) {
-                            TextButton(onClick = onNavigateToTransactions) {
-                                Text("See all", color = AccentTeal,
-                                    style = MaterialTheme.typography.labelLarge)
-                                Spacer(Modifier.width(2.dp))
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
-                                    Modifier.size(14.dp), AccentTeal)
-                            }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
+                        IconButton(onClick = { privacyMode = !privacyMode }) {
+                            Icon(if (privacyMode) Icons.Default.VisibilityOff
+                            else Icons.Default.Visibility, null, tint = TextSecondary)
+                        }
+                        IconButton(onClick = onNavigateToCharts) {
+                            Icon(Icons.Default.BarChart, null, tint = TextSecondary)
+                        }
+                        IconButton(onClick = onNavigateToSearch) {
+                            Icon(Icons.Default.Search, null, tint = TextSecondary)
+                        }
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(Icons.Default.Settings, null, tint = TextSecondary)
                         }
                     }
                 }
 
-                // ── Transactions — direct items, no nested scroll ─────────────
+                // Greeting
+                GreetingCard(uiState.userName)
+
+                // Hero balance
+                HeroBalanceCard(
+                    balance     = uiState.summary.estimatedBalance,
+                    income      = uiState.allTimeIncome,
+                    expenses    = uiState.allTimeExpenses,
+                    isLoading   = uiState.isLoading,
+                    privacyMode = privacyMode
+                )
+
+                // Quick actions
+                QuickActionsRow(onNavigateToTransactions, onNavigateToCharts)
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // ── RECENT ACTIVITY — fills remaining space, scrolls internally ───
+            Column(
+                Modifier.fillMaxWidth().weight(1f)
+                    .padding(horizontal = 16.dp)
+            ) {
+                // Header — static, doesn't scroll
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                    Arrangement.SpaceBetween, Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Recent Activity",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold, color = TextWhite)
+                        if (uiState.recentTransactions.isNotEmpty()) {
+                            Text(
+                                "${uiState.recentTransactions.size} transaction" +
+                                        if (uiState.recentTransactions.size > 1) "s" else "",
+                                fontSize = 11.sp, color = TextSecondary
+                            )
+                        }
+                    }
+                    if (uiState.recentTransactions.size > 5) {
+                        TextButton(onClick = onNavigateToTransactions,
+                            contentPadding = PaddingValues(0.dp)) {
+                            Text("See all", color = AccentTeal, fontSize = 13.sp)
+                            Spacer(Modifier.width(3.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
+                                Modifier.size(13.dp), AccentTeal)
+                        }
+                    }
+                }
+
+                // Scrollable transaction list — fills the remaining space exactly
                 if (uiState.recentTransactions.isEmpty()) {
-                    item(key = "empty") {
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
                         EmptyState("📭", "No transactions yet",
                             "Financial SMS messages will appear here automatically")
                     }
                 } else {
-                    itemsIndexed(
-                        uiState.recentTransactions,
-                        key = { _, tx -> tx.id }
-                    ) { _, tx ->
-                        TransactionRow(tx, privacyMode, onClick = onNavigateToTransactions)
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(9.dp),
+                        contentPadding = PaddingValues(bottom = 90.dp)
+                    ) {
+                        itemsIndexed(
+                            uiState.recentTransactions,
+                            key = { _, tx -> tx.id }
+                        ) { _, tx ->
+                            TransactionRow(tx, privacyMode, onClick = onNavigateToTransactions)
+                        }
                     }
                 }
             }
@@ -238,47 +239,40 @@ fun DashboardScreen(
 @Composable
 private fun GreetingCard(userName: String) {
     val greet = remember(userName) { buildGreeting(userName) }
-
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
     val cardAlpha by animateFloatAsState(if (visible) 1f else 0f, tween(500), label = "ga")
-    val cardSlide by animateFloatAsState(if (visible) 0f else 12f, tween(500, easing = EaseOut), label = "gs")
+    val cardSlide by animateFloatAsState(if (visible) 0f else 10f, tween(500, easing = EaseOut), label = "gs")
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        Modifier.fillMaxWidth()
             .graphicsLayer { alpha = cardAlpha; translationY = cardSlide }
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(18.dp))
             .background(Brush.linearGradient(listOf(Color(0xFF1E2D42), Color(0xFF1B2E38))))
             .drawBehind {
                 drawCircle(
                     Brush.radialGradient(
-                        listOf(AccentTeal.copy(.10f), Color.Transparent),
-                        Offset(size.width * .85f, size.height * .3f), size.width * .55f
+                        listOf(AccentTeal.copy(.09f), Color.Transparent),
+                        Offset(size.width * .85f, size.height * .3f), size.width * .5f
                     )
                 )
             }
-            .padding(horizontal = 18.dp, vertical = 14.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            // Emoji badge
-            Box(Modifier.size(46.dp).clip(CircleShape).background(AccentTeal.copy(.10f)),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(Modifier.size(42.dp).clip(CircleShape).background(AccentTeal.copy(.10f)),
                 Alignment.Center) {
                 val emojiScale by rememberInfiniteTransition(label = "emj")
                     .animateFloat(1f, 1.10f,
-                        infiniteRepeatable(tween(2400, easing = EaseInOut), RepeatMode.Reverse),
-                        label = "es")
-                Text(greet.emoji, fontSize = 20.sp, modifier = Modifier.scale(emojiScale))
+                        infiniteRepeatable(tween(2400, easing = EaseInOut), RepeatMode.Reverse), label = "es")
+                Text(greet.emoji, fontSize = 18.sp, modifier = Modifier.scale(emojiScale))
             }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 TypewriterText(
-                    text        = greet.greeting,
-                    charDelayMs = 42L,
-                    style       = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight    = FontWeight.SemiBold,
-                        letterSpacing = .2.sp
-                    ),
+                    text = greet.greeting, charDelayMs = 42L,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.SemiBold, letterSpacing = .2.sp),
                     color = TextWhite
                 )
                 var subVisible by remember(greet.greeting) { mutableStateOf(false) }
@@ -286,7 +280,7 @@ private fun GreetingCard(userName: String) {
                     delay(greet.greeting.length * 42L + 150L); subVisible = true
                 }
                 val subAlpha by animateFloatAsState(if (subVisible) 1f else 0f, tween(500), label = "sub")
-                Text(greet.message, fontSize = 12.sp,
+                Text(greet.message, fontSize = 11.sp,
                     color = TextSecondary.copy(alpha = subAlpha), fontStyle = FontStyle.Italic)
             }
         }
@@ -297,101 +291,140 @@ private fun GreetingCard(userName: String) {
 @Composable
 fun HeroBalanceCard(
     balance: Double,
-    income: Double, expenses: Double, privacyMode: Boolean
+    income: Double,
+    expenses: Double,
+    isLoading: Boolean,
+    privacyMode: Boolean
 ) {
-    val animBal    by animateFloatAsState(balance.toFloat(), tween(1200, easing = EaseOutCubic), label = "bal")
-    val glowPulse  = rememberInfiniteTransition(label = "glow")
-    val glowAlpha  by glowPulse.animateFloat(.10f, .26f,
+    val animBal   by animateFloatAsState(balance.toFloat(), tween(1200, easing = EaseOutCubic), label = "bal")
+    val animInc   by animateFloatAsState(income.toFloat(),  tween(900,  easing = EaseOutCubic), label = "inc")
+    val animExp   by animateFloatAsState(expenses.toFloat(),tween(900,  easing = EaseOutCubic), label = "exp")
+
+    val glowPulse = rememberInfiniteTransition(label = "glow")
+    val glowAlpha by glowPulse.animateFloat(.09f, .24f,
         infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "ga")
-    val cardScale  by glowPulse.animateFloat(1.000f, 1.003f,
+    val cardScale by glowPulse.animateFloat(1.000f, 1.003f,
         infiniteRepeatable(tween(3200, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "cs")
+
+    // Shimmer sweep for loading state
+    val shimmer = rememberInfiniteTransition(label = "shim")
+    val shimX  by shimmer.animateFloat(
+        -1f, 2f,
+        infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Restart),
+        label = "sx"
+    )
 
     Box(
         Modifier.fillMaxWidth()
             .graphicsLayer { scaleX = cardScale; scaleY = cardScale }
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(22.dp))
             .background(Brush.linearGradient(
                 listOf(Color(0xFF1A3040), Color(0xFF1E3A3A), Color(0xFF1F2E3A))
             ))
             .drawBehind {
+                // Ambient glow orb — top-right corner
                 drawCircle(
                     Brush.radialGradient(
                         listOf(AccentTeal.copy(glowAlpha), Color.Transparent),
                         Offset(size.width * .82f, size.height * .18f), size.width * .55f
                     )
                 )
+                // Shimmer sweep — only while loading
+                if (isLoading) {
+                    drawRect(
+                        Brush.linearGradient(
+                            listOf(
+                                Color.Transparent,
+                                Color.White.copy(.07f),
+                                Color.Transparent
+                            ),
+                            start = Offset(size.width * shimX, 0f),
+                            end   = Offset(size.width * (shimX + .4f), size.height)
+                        )
+                    )
+                }
             }
-            .padding(horizontal = 22.dp, vertical = 22.dp)
+            .padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
 
-            // Opening balance label
-            Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Box(Modifier.size(6.dp).clip(CircleShape).background(AccentTeal.copy(.6f)))
-                Text("Current Balance", fontSize = 12.sp, color = TextSecondary,
-                    fontWeight = FontWeight.Medium, letterSpacing = .5.sp)
+            // ── Balance label + number ─────────────────────────────────────────
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    // Dot: pulsing green when live, muted while loading
+                    Box(
+                        Modifier.size(6.dp).clip(CircleShape)
+                            .background(if (isLoading) TextSecondary.copy(.4f) else AccentTeal.copy(.7f))
+                    )
+                    Text(
+                        if (isLoading) "Calculating balance…" else "Current Balance",
+                        fontSize = 11.sp, color = TextSecondary,
+                        fontWeight = FontWeight.Medium, letterSpacing = .5.sp
+                    )
+                }
+                AnimatedContent(privacyMode, label = "bv") { hidden ->
+                    if (isLoading) {
+                        // Skeleton placeholder — same line height as the real number
+                        Box(
+                            Modifier
+                                .width(180.dp).height(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(TextSecondary.copy(.12f))
+                        )
+                    } else {
+                        Text(
+                            if (hidden) "TZS ••••••" else "TZS ${fmtAmt(animBal.toDouble())}",
+                            fontSize = 30.sp, fontWeight = FontWeight.ExtraBold,
+                            color = TextWhite, letterSpacing = (-.3).sp
+                        )
+                    }
+                }
             }
 
-            // Main balance number
-            AnimatedContent(privacyMode, label = "balanceVisibility") { hidden ->
-                Text(
-                    if (hidden) "TZS ••••••"
-                    else "TZS ${fmtAmt(animBal.toDouble())}",
-                    fontSize = 34.sp, fontWeight = FontWeight.ExtraBold,
-                    color = TextWhite, letterSpacing = (-.5).sp
+            // Thin divider
+            Box(Modifier.fillMaxWidth().height(.5.dp).background(TextSecondary.copy(.12f)))
+
+            // ── Income / Expenses — all-time SMS totals ────────────────────────
+            Row(Modifier.fillMaxWidth()) {
+                StatItem(
+                    icon     = Icons.AutoMirrored.Filled.TrendingUp,
+                    label    = "Total Income",
+                    value    = if (privacyMode) "••••"
+                    else if (isLoading) "—"
+                    else "TZS ${fmtAmt(animInc.toDouble())}",
+                    color    = AccentTeal,
+                    modifier = Modifier.weight(1f)
+                )
+                Box(
+                    Modifier.width(.5.dp).height(38.dp)
+                        .background(TextSecondary.copy(.15f))
+                        .align(Alignment.CenterVertically)
+                )
+                StatItem(
+                    icon     = Icons.AutoMirrored.Filled.TrendingDown,
+                    label    = "Total Expenses",
+                    value    = if (privacyMode) "••••"
+                    else if (isLoading) "—"
+                    else "TZS ${fmtAmt(animExp.toDouble())}",
+                    color    = ErrorRed,
+                    modifier = Modifier.weight(1f).padding(start = 14.dp)
                 )
             }
-
-            // Divider
-            Box(Modifier.fillMaxWidth().height(.5.dp).background(TextSecondary.copy(.15f)))
-
-            // Stats row — Income and Expenses from ALL SMS transactions
-            Row(
-                Modifier.fillMaxWidth(),
-                Arrangement.spacedBy(0.dp)
-            ) {
-                // Income
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp))
-                            .background(AccentTeal.copy(.15f)), Alignment.Center) {
-                            Icon(Icons.AutoMirrored.Filled.TrendingUp, null,
-                                tint = AccentTeal, modifier = Modifier.size(10.dp))
-                        }
-                        Text("Income", fontSize = 11.sp, color = TextSecondary)
-                    }
-                    Text(
-                        if (privacyMode) "••••" else "TZS ${fmtAmt(income)}",
-                        fontSize = 14.sp, fontWeight = FontWeight.Bold, color = AccentTeal
-                    )
-                }
-
-                // Vertical separator
-                Box(Modifier.width(.5.dp).height(36.dp).background(TextSecondary.copy(.15f))
-                    .align(Alignment.CenterVertically))
-
-                Spacer(Modifier.width(16.dp))
-
-                // Expenses
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp))
-                            .background(ErrorRed.copy(.15f)), Alignment.Center) {
-                            Icon(Icons.AutoMirrored.Filled.TrendingDown, null,
-                                tint = ErrorRed, modifier = Modifier.size(10.dp))
-                        }
-                        Text("Expenses", fontSize = 11.sp, color = TextSecondary)
-                    }
-                    Text(
-                        if (privacyMode) "••••" else "TZS ${fmtAmt(expenses)}",
-                        fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ErrorRed
-                    )
-                }
-            }
         }
+    }
+}
+
+@Composable
+private fun StatItem(icon: ImageVector, label: String, value: String, color: Color, modifier: Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Box(Modifier.size(15.dp).clip(RoundedCornerShape(4.dp)).background(color.copy(.15f)), Alignment.Center) {
+                Icon(icon, null, tint = color, modifier = Modifier.size(9.dp))
+            }
+            Text(label, fontSize = 10.sp, color = TextSecondary, letterSpacing = .3.sp)
+        }
+        Text(value, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = color)
     }
 }
 
@@ -410,7 +443,7 @@ private fun QuickAction(
 ) {
     val haptic = LocalHapticFeedback.current
     val pulse  = rememberInfiniteTransition(label = "qa")
-    val glow   by pulse.animateFloat(.08f, .20f,
+    val glow   by pulse.animateFloat(.08f, .18f,
         infiniteRepeatable(tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "qg")
     val sc     by pulse.animateFloat(.96f, 1.04f,
         infiniteRepeatable(tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "qs")
@@ -418,70 +451,16 @@ private fun QuickAction(
     GlassCard(modifier.clickable {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick()
     }, cornerRadius = 14.dp) {
-        Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(glow)),
+            Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(glow)),
                 Alignment.Center) {
                 Icon(icon, null, tint = color,
-                    modifier = Modifier.size(18.dp).graphicsLayer { scaleX = sc; scaleY = sc })
+                    modifier = Modifier.size(17.dp).graphicsLayer { scaleX = sc; scaleY = sc })
             }
             Text(label, style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold, color = TextWhite)
         }
-    }
-}
-
-// ── Mini bar chart ────────────────────────────────────────────────────────────
-@Composable
-fun MiniBarChartCard(data: List<com.smsfinance.domain.model.ChartDataPoint>, privacyMode: Boolean) {
-    GlassCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                Text("This Month", style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold, color = TextWhite)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ChartDot(AccentTeal, "Income")
-                    ChartDot(ErrorRed, "Expense")
-                }
-            }
-            Spacer(Modifier.height(14.dp))
-            if (privacyMode) {
-                Box(Modifier.fillMaxWidth().height(80.dp), Alignment.Center) {
-                    Text("Hidden in privacy mode", color = TextSecondary,
-                        style = MaterialTheme.typography.bodySmall)
-                }
-            } else {
-                val maxVal = data.maxOfOrNull { maxOf(it.income, it.expense) }?.coerceAtLeast(1f) ?: 1f
-                Row(Modifier.fillMaxWidth().height(80.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.Bottom) {
-                    data.takeLast(14).forEach { pt ->
-                        val animI by animateFloatAsState(pt.income / maxVal * 70,
-                            tween(700, easing = EaseOutCubic), label = "i")
-                        val animE by animateFloatAsState(pt.expense / maxVal * 70,
-                            tween(700, easing = EaseOutCubic), label = "e")
-                        Column(horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Bottom, modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.Bottom,
-                                horizontalArrangement = Arrangement.spacedBy(1.dp)) {
-                                Box(Modifier.width(4.dp).height(animI.coerceAtLeast(2f).dp)
-                                    .background(AccentTeal, RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)))
-                                Box(Modifier.width(4.dp).height(animE.coerceAtLeast(2f).dp)
-                                    .background(ErrorRed, RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ChartDot(color: Color, label: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        Box(Modifier.size(7.dp).background(color, CircleShape))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
     }
 }
 
@@ -492,47 +471,68 @@ fun TransactionRow(transaction: Transaction, privacyMode: Boolean, onClick: () -
     val haptic      = LocalHapticFeedback.current
     val accentColor = if (isDeposit) AccentTeal else ErrorRed
 
-    GlassCard(
-        Modifier.fillMaxWidth().clickable {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick()
-        }, cornerRadius = 16.dp
+    // Colored card background — subtle tint of the accent
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        accentColor.copy(.10f),
+                        accentColor.copy(.05f),
+                        Color(0xFF1E2840)
+                    )
+                )
+            )
+            .clickable { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(Modifier.fillMaxWidth().padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(Modifier.size(44.dp).clip(RoundedCornerShape(13.dp))
-                .background(accentColor.copy(.12f)), Alignment.Center) {
-                Icon(
-                    if (isDeposit) Icons.AutoMirrored.Filled.CallReceived
-                    else Icons.AutoMirrored.Filled.CallMade,
-                    null, tint = accentColor, modifier = Modifier.size(20.dp)
-                )
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(transaction.source,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold, maxLines = 1, color = TextWhite)
-                Text(formatDate(transaction.date),
-                    style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-            }
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        // Round colored icon circle
+        Box(
+            Modifier.size(42.dp).clip(CircleShape).background(accentColor.copy(.18f)),
+            Alignment.Center
+        ) {
+            Icon(
+                if (isDeposit) Icons.AutoMirrored.Filled.CallReceived
+                else Icons.AutoMirrored.Filled.CallMade,
+                null, tint = accentColor, modifier = Modifier.size(18.dp)
+            )
+        }
+
+        // Source + date
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(transaction.source,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold, maxLines = 1, color = TextWhite)
+            Text(formatDate(transaction.date),
+                style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+        }
+
+        // Amount + small circle badge
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                if (privacyMode) "••••"
+                else "${if (isDeposit) "+" else "-"} TZS ${fmtAmt(transaction.amount)}",
+                fontWeight = FontWeight.Bold, color = accentColor, fontSize = 13.sp
+            )
+            // Small circle badge (not square)
+            Box(
+                Modifier.size(22.dp).clip(CircleShape).background(accentColor.copy(.18f)),
+                Alignment.Center
+            ) {
                 Text(
-                    if (privacyMode) "••••"
-                    else "${if (isDeposit) "+" else "-"} TZS ${fmtAmt(transaction.amount)}",
-                    fontWeight = FontWeight.Bold, color = accentColor, fontSize = 14.sp
+                    if (isDeposit) "IN" else "OUT",
+                    fontSize = 6.sp, fontWeight = FontWeight.ExtraBold, color = accentColor
                 )
-                Surface(color = accentColor.copy(.1f), shape = RoundedCornerShape(4.dp)) {
-                    Text(if (isDeposit) "IN" else "OUT", fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold, color = accentColor,
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp))
-                }
             }
         }
     }
 }
 
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 private fun formatDate(ts: Long): String =
-    SimpleDateFormat("dd MMM, HH:mm", Locale.US).format(Date(ts))
-
-private fun fmtAmt(amt: Double): String = String.format(Locale.US, "%,.0f", amt)
+    SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).format(Date(ts))

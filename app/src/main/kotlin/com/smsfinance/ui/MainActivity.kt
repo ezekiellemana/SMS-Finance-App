@@ -103,6 +103,7 @@ data class BottomNavItem(val route: String, val labelRes: Int, val icon: ImageVe
 val bottomNavItems = listOf(
     BottomNavItem(Routes.DASHBOARD,      R.string.nav_dashboard,    Icons.Default.Home),
     BottomNavItem(Routes.TRANSACTIONS,   R.string.nav_transactions, Icons.Default.Receipt),
+    BottomNavItem(Routes.MULTI_USER,     R.string.nav_profile,      Icons.Default.AccountCircle),
     BottomNavItem(Routes.ALERTS,         R.string.nav_alerts,       Icons.Default.Notifications),
     BottomNavItem(Routes.AI_PREDICTIONS, R.string.nav_predictions,  Icons.Default.Psychology),
 )
@@ -114,11 +115,11 @@ class MainActivity : FragmentActivity() {
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()) { grants ->
-            // If READ_SMS was just granted, import existing inbox in background
-            if (grants[Manifest.permission.READ_SMS] == true) {
-                lifecycleScope.launch { smsHistoryImporter.importIfNeeded() }
-            }
+        // If READ_SMS was just granted, import existing inbox in background
+        if (grants[Manifest.permission.READ_SMS] == true) {
+            lifecycleScope.launch { smsHistoryImporter.importIfNeeded() }
         }
+    }
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,7 +128,7 @@ class MainActivity : FragmentActivity() {
         requestPermissions()
         // If READ_SMS was already granted on a previous launch, run import now
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
-                == PackageManager.PERMISSION_GRANTED) {
+            == PackageManager.PERMISSION_GRANTED) {
             lifecycleScope.launch { smsHistoryImporter.importIfNeeded() }
         }
         setContent {
@@ -210,8 +211,7 @@ fun AppNavigation(
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true; restoreState = true
                         }
-                    },
-                    onAddClick = { navController.navigate(Routes.ADD_TRANSACTION) }
+                    }
                 )
             }
         }
@@ -242,8 +242,9 @@ fun AppNavigation(
             }
             composable(Routes.TRANSACTIONS) {
                 TransactionListScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onNavigateToDetail = { id -> navController.navigate("transaction_detail/$id") }
+                    onNavigateBack    = { navController.popBackStack() },
+                    onNavigateToDetail = { id -> navController.navigate("transaction_detail/$id") },
+                    onNavigateToAdd   = { navController.navigate(Routes.ADD_TRANSACTION) }
                 )
             }
             composable(Routes.TRANSACTION_DETAIL) { back ->
@@ -311,130 +312,58 @@ fun AppNavigation(
 }
 
 // ── Smart Money Bottom App Bar ────────────────────────────────────────────────
-// Layout: [Home] [Transactions] [+ FAB] [Alerts] [AI]
-// The FAB sits in the center cutout of the BottomAppBar.
+// Layout: [Home] [Transactions] [Profile] [Alerts] [AI]
 
-private val BrandTeal   = Color(0xFF3DDAD7)
-private val BrandDark   = Color(0xFF1F2633)
+private val BrandTeal    = Color(0xFF3DDAD7)
+@Suppress("unused")
+private val BrandDark    = Color(0xFF1F2633)
+@Suppress("unused")
 private val BrandSurface = Color(0xFF2C3546)
 
 @Composable
 fun SmartMoneyBottomBar(
     currentRoute: String?,
-    onNavigate: (String) -> Unit,
-    onAddClick: () -> Unit
+    onNavigate: (String) -> Unit
 ) {
-    val leftItems  = bottomNavItems.take(2)
-    val rightItems = bottomNavItems.drop(2)
-
-    // FAB breathing glow
-    val fabPulse = rememberInfiniteTransition(label = "fab")
-    val fabGlow by fabPulse.animateFloat(
-        initialValue = 0.35f, targetValue = 0.70f,
-        animationSpec = infiniteRepeatable(
-            tween(1800, easing = FastOutSlowInEasing), RepeatMode.Reverse
-        ), label = "fabGlow"
-    )
-    val fabScale by fabPulse.animateFloat(
-        initialValue = 1.00f, targetValue = 1.06f,
-        animationSpec = infiniteRepeatable(
-            tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse
-        ), label = "fabScale"
-    )
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.Transparent)
             .navigationBarsPadding()
     ) {
-        // Solid bar background with rounded top corners + glow line
+        // Bar background — rounded top corners + teal glow line
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .height(90.dp)
-                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .height(72.dp)
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .drawBehind {
                     drawRect(
                         brush = Brush.verticalGradient(
-                            listOf(BrandTeal.copy(alpha = 0.30f), Color.Transparent),
-                            startY = 0f, endY = 8f
+                            listOf(BrandTeal.copy(alpha = 0.28f), Color.Transparent),
+                            startY = 0f, endY = 6f
                         )
                     )
                 }
                 .background(Color(0xFF151E2E))
         )
 
-        // Nav items row
+        // 5 equal nav items
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(90.dp)
+                .height(72.dp)
                 .align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            leftItems.forEach { item ->
+            bottomNavItems.forEach { item ->
                 BottomBarItem(
-                    item = item,
+                    item     = item,
                     selected = currentRoute == item.route,
-                    onClick = { onNavigate(item.route) },
+                    onClick  = { onNavigate(item.route) },
                     modifier = Modifier.weight(1f)
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            rightItems.forEach { item ->
-                BottomBarItem(
-                    item = item,
-                    selected = currentRoute == item.route,
-                    onClick = { onNavigate(item.route) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        // Glowing FAB — floats above the bar
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = (-12).dp),
-            contentAlignment = Alignment.Center
-        ) {
-            // Outer glow ring
-            Box(
-                modifier = Modifier
-                    .size(78.dp)
-                    .graphicsLayer { alpha = fabGlow }
-                    .background(
-                        Brush.radialGradient(
-                            listOf(BrandTeal.copy(0.45f), Color.Transparent)
-                        ),
-                        CircleShape
-                    )
-            )
-            // FAB button
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .graphicsLayer { scaleX = fabScale; scaleY = fabScale }
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(BrandTeal, Color(0xFF00B8A0))
-                        )
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onAddClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add transaction",
-                    tint = Color(0xFF0A1628),
-                    modifier = Modifier.size(30.dp)
                 )
             }
         }

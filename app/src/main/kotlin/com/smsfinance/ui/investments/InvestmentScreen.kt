@@ -3,7 +3,6 @@ package com.smsfinance.ui.investments
 import android.app.DatePickerDialog
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,13 +33,14 @@ import com.smsfinance.domain.model.Investment
 import com.smsfinance.domain.model.InvestmentType
 import com.smsfinance.domain.model.PROFILE_COLORS
 import com.smsfinance.ui.theme.*
-import com.smsfinance.ui.theme.ErrorRed
 import com.smsfinance.viewmodel.InvestmentViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import com.smsfinance.ui.components.AppScreenScaffold
+import com.smsfinance.ui.components.BigFab
+import com.smsfinance.ui.components.BigFab
 
+@Suppress("DEPRECATION")
 @Composable
 fun InvestmentScreen(
     viewModel: InvestmentViewModel = hiltViewModel(),
@@ -50,49 +50,64 @@ fun InvestmentScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editingItem by remember { mutableStateOf<Investment?>(null) }
 
-    AppScreenScaffold(
-        title = "Investments",
-        subtitle = "Track savings goals & portfolio",
-        onNavigateBack = onNavigateBack,
-        actions = {
-            IconButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, null, tint = AccentTeal)
+    Scaffold(
+        containerColor = BgPrimary,
+        topBar = {
+            Row(
+                Modifier.fillMaxWidth().statusBarsPadding()
+                    .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                Arrangement.SpaceBetween, Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Investments", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
+                    Text("Track savings goals & portfolio", fontSize = 11.sp, color = TextSecondary)
+                }
+                Spacer(Modifier.width(48.dp))
             }
         }
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            // Portfolio summary
-            if (!uiState.isLoading) {
-                item { PortfolioSummaryCard(uiState.totalValue, uiState.totalInvested,
-                    uiState.totalGain, uiState.totalGainPercent) }
-            }
-
-            // Empty state
-            if (uiState.investments.isEmpty() && !uiState.isLoading) {
-                item {
-                    Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.AutoMirrored.Filled.TrendingUp, null, Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
-                            Spacer(Modifier.height(12.dp))
-                            Text("No investments yet", style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                            Text("Add savings goals, fixed deposits, shares\nor any investment to track",
-                                fontSize = 13.sp, textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (!uiState.isLoading) {
+                    item { PortfolioSummaryCard(uiState.totalValue, uiState.totalInvested,
+                        uiState.totalGain, uiState.totalGainPercent) }
+                }
+                if (uiState.investments.isEmpty() && !uiState.isLoading) {
+                    item {
+                        Box(Modifier.fillMaxWidth().padding(vertical = 56.dp), Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text("📈", fontSize = 52.sp)
+                                Text("No investments yet", fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold, color = TextWhite)
+                                Text("Add savings goals, fixed deposits, shares\nor any investment to track",
+                                    fontSize = 13.sp, textAlign = TextAlign.Center, color = TextSecondary)
+                            }
                         }
                     }
                 }
+                items(uiState.investments, key = { it.id }) { inv ->
+                    InvestmentCard(inv, onEdit = { editingItem = inv }, onDelete = { viewModel.delete(inv) })
+                }
             }
 
-            // Investment cards
-            items(uiState.investments, key = { it.id }) { inv ->
-                InvestmentCard(inv,
-                    onEdit = { editingItem = inv },
-                    onDelete = { viewModel.delete(inv) })
-            }
+            // Big FAB
+            BigFab(
+                label   = "Add Investment",
+                onClick = { showAddDialog = true },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 28.dp),
+                accentColor = AccentLight
+            )
         }
     }
 
@@ -138,7 +153,7 @@ fun PortfolioSummaryCard(totalValue: Double, totalInvested: Double, gain: Double
 @Composable
 fun InvestmentCard(inv: Investment, onEdit: () -> Unit, onDelete: () -> Unit) {
     val animProg by animateFloatAsState(inv.progressToTarget.toFloat(), label = "prog")
-    val color = runCatching { Color(android.graphics.Color.parseColor(inv.color)) }.getOrDefault(AccentTeal)
+    val color = runCatching { Color(android.graphics.Color.parseColor(inv.color)) }.getOrElse { AccentTeal }
     val isProfit = inv.isProfit
     val dateFmt = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
@@ -202,6 +217,7 @@ fun InvestmentCard(inv: Investment, onEdit: () -> Unit, onDelete: () -> Unit) {
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -213,7 +229,7 @@ fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDism
     var target by remember { mutableStateOf(existing?.targetAmount?.let { "%.0f".format(it) } ?: "") }
     var rate by remember { mutableStateOf(existing?.interestRate?.let { "%.1f".format(it) } ?: "") }
     var institution by remember { mutableStateOf(existing?.institution ?: "") }
-    var startDate by remember { mutableStateOf(existing?.startDate ?: System.currentTimeMillis()) }
+    var startDate by remember { mutableLongStateOf(existing?.startDate ?: System.currentTimeMillis()) }
     var maturityDate by remember { mutableStateOf(existing?.maturityDate) }
     var selectedColor by remember { mutableStateOf(existing?.color ?: "#00C853") }
 
@@ -275,13 +291,13 @@ fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDism
                 Text("Color", style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     PROFILE_COLORS.forEach { hex ->
-                        val c = runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(AccentTeal)
+                        val c = runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrElse { AccentTeal }
                         Box(Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)).background(c)
                             .then(if (selectedColor == hex) Modifier else Modifier)
                             .padding(if (selectedColor == hex) 2.dp else 0.dp)) {
                             Box(Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp)).background(c)
                                 .let { m -> if (selectedColor == hex) m.background(Color.White.copy(0.3f)) else m }) {}
-    
+
                         }
                     }
                 }

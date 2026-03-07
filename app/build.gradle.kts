@@ -7,39 +7,52 @@ plugins {
 }
 
 android {
-    namespace = "com.smsfinance"
-    compileSdk = 36
+    namespace   = "com.smsfinance"
+    compileSdk  = 35
 
     defaultConfig {
-        applicationId = "com.smsfinance"
-        minSdk = 26
-        targetSdk = 36
-        versionCode = 2
-        versionName = "2.0.0"
+        applicationId          = "com.smsfinance"
+        minSdk                 = 26
+        targetSdk              = 35
+        versionCode            = 2
+        versionName            = "2.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        multiDexEnabled = true
+        multiDexEnabled        = true
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
-    @Suppress("DEPRECATION")
-    kotlinOptions { jvmTarget = "17" }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility         = JavaVersion.VERSION_17
+        targetCompatibility         = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
+
     buildFeatures { compose = true }
 
     testOptions {
         unitTests {
-            isReturnDefaultValues = true
-            isIncludeAndroidResources = false
+            isReturnDefaultValues      = true
+            isIncludeAndroidResources  = false
+            all { it.failOnNoDiscoveredTests = false }
+        }
+    }
+
+    // Source sets must live inside android {} to avoid receiver-type errors
+    sourceSets {
+        getByName("main") {
+            java.setSrcDirs(listOf("src/main/kotlin"))
+        }
+        getByName("test") {
+            java.setSrcDirs(listOf("src/test/kotlin"))
         }
     }
 
@@ -67,25 +80,31 @@ android {
     }
 }
 
-// Explicitly register Kotlin test source directory
-android.sourceSets.getByName("test").java.srcDirs("src/test/kotlin")
+// Use compilerOptions (replaces deprecated kotlinOptions)
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
 
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring(libs.android.desugarJdkLibs)
 
-    // Compose BOM
+    // Compose BOM — all compose artifacts versioned from here
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.window.size)
-    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.material.icons.extended)
+
+    // Splash screen
+    implementation(libs.androidx.core.splashscreen)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -99,6 +118,10 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+
+    // Hilt + WorkManager integration (declared once — no duplicate)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
 
     // Security / Biometric
     implementation(libs.androidx.security.crypto)
@@ -118,24 +141,25 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
-    // 📊 Excel export (Apache POI)
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+
+    // Excel export (Apache POI)
     implementation(libs.apache.poi)
     implementation(libs.apache.poi.ooxml)
 
-    // 📄 PDF export (iText)
+    // PDF export (iText)
     implementation(libs.itext.pdf)
 
-    // ☁️ WorkManager & Hilt Integration
-    implementation(libs.work.runtime.ktx)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.work.compiler)
-
-    // ☁️ Google Drive API
+    // Google Drive API
     implementation(libs.google.api.drive)
     implementation(libs.google.api.client.android)
 
-    // 👥 Google Sign-In (for multi-user / cloud)
+    // Google Sign-In
     implementation(libs.google.play.auth)
+
+    // Image loading (profile photos)
+    implementation(libs.coil.compose)
 
     // Testing
     testImplementation(libs.junit)
