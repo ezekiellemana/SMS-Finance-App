@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import androidx.core.content.edit
 import javax.inject.Singleton
+import org.json.JSONObject
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "sms_finance_prefs")
 
@@ -62,9 +64,39 @@ class PreferencesManager @Inject constructor(
     suspend fun setSmsHistoryImported(done: Boolean) = context.dataStore.edit { it[SMS_HISTORY_IMPORTED] = done }
     suspend fun setUserName(name: String)            = context.dataStore.edit { it[USER_NAME]            = name }
     suspend fun setSelectedSenders(json: String)     = context.dataStore.edit { it[SELECTED_SENDERS]     = json }
-    suspend fun setOpeningBalances(json: String)      = context.dataStore.edit { it[OPENING_BALANCES]      = json }
+    suspend fun setOpeningBalances(json: String) {
+        context.dataStore.edit { it[OPENING_BALANCES] = json }
+        // Mirror total opening balance to SharedPreferences so widgets can read it
+        // without DataStore (widgets have no Hilt injection context)
+        mirrorOpeningBalanceToWidgetPrefs(json)
+    }
+
     suspend fun getSetupCompletedAt(): Long    = context.dataStore.data.first()[SETUP_COMPLETED_AT] ?: 0L
     suspend fun getUserName(): String          = context.dataStore.data.first()[USER_NAME]        ?: ""
+    @Suppress("unused")
     suspend fun getOpeningBalances(): String   = context.dataStore.data.first()[OPENING_BALANCES]  ?: "{}"
-    suspend fun setSetupCompletedAt(ts: Long)             = context.dataStore.edit { it[SETUP_COMPLETED_AT]   = ts }
+
+    suspend fun setSetupCompletedAt(ts: Long) {
+        context.dataStore.edit { it[SETUP_COMPLETED_AT] = ts }
+        // Mirror to SharedPreferences for widget access
+        context.getSharedPreferences("smart_money_prefs", Context.MODE_PRIVATE)
+            .edit { putLong("widget_setup_at", ts) }
+    }
+
+    /**
+     * Sums all opening balances across all services and writes the total
+     * into SharedPreferences under "widget_opening_balance_tzs".
+     * Called every time opening balances are updated in onboarding or settings.
+     */
+    private fun mirrorOpeningBalanceToWidgetPrefs(openingBalancesJson: String) {
+        val total = try {
+            val obj = JSONObject(openingBalancesJson)
+            var sum = 0.0
+            obj.keys().forEach { key -> sum += obj.optDouble(key, 0.0) }
+            sum
+        } catch (_: Exception) { 0.0 }
+
+        context.getSharedPreferences("smart_money_prefs", Context.MODE_PRIVATE)
+            .edit { putFloat("widget_opening_balance_tzs", total.toFloat()) }
+    }
 }

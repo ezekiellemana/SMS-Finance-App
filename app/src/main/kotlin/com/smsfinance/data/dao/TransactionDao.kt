@@ -68,6 +68,16 @@ interface TransactionDao {
     @Query("SELECT COALESCE(SUM(amount), 0.0) FROM transactions WHERE type = 'WITHDRAWAL' AND date BETWEEN :startDate AND :endDate")
     suspend fun getTotalExpensesDirect(startDate: Long, endDate: Long): Double?
 
+    /** All income AFTER a timestamp — widget balance uses opening balance + this */
+    @Suppress("unused")
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM transactions WHERE type = 'DEPOSIT' AND date > :afterTimestamp")
+    suspend fun getTotalIncomeAfter(afterTimestamp: Long): Double?
+
+    /** All expenses AFTER a timestamp — widget balance uses opening balance - this */
+    @Suppress("unused")
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM transactions WHERE type = 'WITHDRAWAL' AND date > :afterTimestamp")
+    suspend fun getTotalExpensesAfter(afterTimestamp: Long): Double?
+
     /** Count of all transactions */
     @Query("SELECT COUNT(*) FROM transactions")
     fun getTransactionCount(): Flow<Int>
@@ -134,5 +144,3 @@ data class DailyTotal(
     val income: Double,
     val expense: Double
 )
-
-

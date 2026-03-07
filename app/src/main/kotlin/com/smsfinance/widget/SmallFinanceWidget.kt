@@ -3,86 +3,123 @@ package com.smsfinance.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import com.smsfinance.R
 import com.smsfinance.domain.model.WidgetTheme
 import com.smsfinance.ui.MainActivity
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Small (2×2) home screen widget.
+ *
+ * Shows:
+ *  - Estimated balance  (opening balance + new income − new expenses since setupAt)
+ *  - Monthly income
+ *  - Monthly expenses
+ *  - Last-updated timestamp
+ *
+ * Data is loaded via [WidgetDataLoader] which mirrors the exact balance formula
+ * used by DashboardViewModel, reading opening balances from SharedPreferences
+ * (mirrored there by PreferencesManager on every save).
+ */
 class SmallFinanceWidget : AppWidgetProvider() {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        appWidgetIds.forEach { id -> updateWidget(context, appWidgetManager, id) }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        val mgr = AppWidgetManager.getInstance(context)
+        val ids = mgr.getAppWidgetIds(ComponentName(context, SmallFinanceWidget::class.java))
+        onUpdate(context, mgr, ids)
+    }
+
+    private fun updateWidget(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int
+    ) {
         val appCtx = context.applicationContext
+        showPlaceholder(appCtx, appWidgetManager, appWidgetId)
 
-        // Show safe placeholder immediately
-        val placeholder = RemoteViews(appCtx.packageName, R.layout.widget_small)
-        placeholder.setTextViewText(R.id.tv_balance, "Loading...")
-        placeholder.setTextViewText(R.id.tv_income, "---")
-        placeholder.setTextViewText(R.id.tv_expenses, "---")
-        placeholder.setTextViewText(R.id.tv_last_updated, "Smart Money")
-        placeholder.setOnClickPendingIntent(R.id.widget_small_root, makePendingIntent(appCtx, appWidgetId))
-        appWidgetManager.updateAppWidget(appWidgetId, placeholder)
-
-        GlobalScope.launch(Dispatchers.IO) {
-            val views = RemoteViews(appCtx.packageName, R.layout.widget_small)
-            views.setOnClickPendingIntent(R.id.widget_small_root, makePendingIntent(appCtx, appWidgetId))
+        scope.launch {
             try {
-                val prefs = appCtx.getSharedPreferences("smart_money_prefs", Context.MODE_PRIVATE)
-                val theme = WidgetTheme.entries.firstOrNull {
-                    it.name == prefs.getString("widget_theme", WidgetTheme.SMART_DARK.name)
-                } ?: WidgetTheme.SMART_DARK
-                val privacy = prefs.getBoolean("privacy_mode", false)
+                val theme   = resolveTheme(WidgetDataLoader.widgetThemeName(appCtx))
+                val privacy = WidgetDataLoader.isPrivacyOn(appCtx)
+                val data    = WidgetDataLoader.load(appCtx, recentCount = 1)
 
-                views.setTextColor(R.id.tv_balance, theme.textColor)
-                views.setTextColor(R.id.tv_income, theme.accentColor)
-                views.setTextColor(R.id.tv_expenses, 0xFFFF5C5C.toInt())
+                val views = RemoteViews(appCtx.packageName, R.layout.widget_small)
+
+                // Theme background drawable — must use setInt / setBackgroundResource
+                // because setBackgroundColor crashes on some launchers (Samsung, MIUI)
+                views.setInt(R.id.widget_small_root, "setBackgroundResource",
+                    WidgetThemeHelper.bgDrawable(theme))
+
+                views.setTextColor(R.id.tv_balance,  theme.textColor)
+                views.setTextColor(R.id.tv_income,   theme.accentColor)
+                views.setTextColor(R.id.tv_expenses, WidgetThemeHelper.expenseColor())
 
                 if (privacy) {
-                    views.setTextViewText(R.id.tv_balance, "TZS ••••••")
-                    views.setTextViewText(R.id.tv_income, "••••")
-                    views.setTextViewText(R.id.tv_expenses, "••••")
+                    views.setTextViewText(R.id.tv_balance,      "TZS \u2022\u2022\u2022\u2022\u2022\u2022")
+                    views.setTextViewText(R.id.tv_income,       "\u2022\u2022\u2022\u2022")
+                    views.setTextViewText(R.id.tv_expenses,     "\u2022\u2022\u2022\u2022")
                     views.setTextViewText(R.id.tv_last_updated, "Privacy on")
                 } else {
-                    val db = com.smsfinance.data.database.AppDatabase.getInstance(appCtx)
-                    val (start, end) = monthRange()
-                    val income = db.transactionDao().getTotalIncomeDirect(start, end) ?: 0.0
-                    val expenses = db.transactionDao().getTotalExpensesDirect(start, end) ?: 0.0
-                    views.setTextViewText(R.id.tv_balance, fmt(income - expenses))
-                    views.setTextViewText(R.id.tv_income, fmt(income))
-                    views.setTextViewText(R.id.tv_expenses, fmt(expenses))
+                    views.setTextViewText(R.id.tv_balance,  WidgetDataLoader.fmtTzs(data.balance))
+                    views.setTextViewText(R.id.tv_income,   WidgetDataLoader.fmtShort(data.income))
+                    views.setTextViewText(R.id.tv_expenses, WidgetDataLoader.fmtShort(data.expenses))
                     views.setTextViewText(R.id.tv_last_updated,
                         "Updated ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())}")
                 }
-            } catch (e: Exception) {
-                views.setTextViewText(R.id.tv_balance, "TZS 0")
-                views.setTextViewText(R.id.tv_income, "0")
-                views.setTextViewText(R.id.tv_expenses, "0")
-                views.setTextViewText(R.id.tv_last_updated, "Tap to open")
+
+                views.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(appCtx, appWidgetId))
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+
+            } catch (_: Exception) {
+                showError(appCtx, appWidgetManager, appWidgetId)
             }
-            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
 
-    private fun makePendingIntent(context: Context, widgetId: Int): PendingIntent =
+    private fun showPlaceholder(ctx: Context, mgr: AppWidgetManager, id: Int) {
+        val views = RemoteViews(ctx.packageName, R.layout.widget_small)
+        views.setTextViewText(R.id.tv_balance,      "Loading...")
+        views.setTextViewText(R.id.tv_income,       "---")
+        views.setTextViewText(R.id.tv_expenses,     "---")
+        views.setTextViewText(R.id.tv_last_updated, "Smart Money")
+        views.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(ctx, id))
+        mgr.updateAppWidget(id, views)
+    }
+
+    private fun showError(ctx: Context, mgr: AppWidgetManager, id: Int) {
+        try {
+            val views = RemoteViews(ctx.packageName, R.layout.widget_small)
+            views.setTextViewText(R.id.tv_balance,      "TZS 0")
+            views.setTextViewText(R.id.tv_income,       "0")
+            views.setTextViewText(R.id.tv_expenses,     "0")
+            views.setTextViewText(R.id.tv_last_updated, "Tap to open")
+            views.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(ctx, id))
+            mgr.updateAppWidget(id, views)
+        } catch (_: Exception) {}
+    }
+
+    private fun makeIntent(context: Context, widgetId: Int): PendingIntent =
         PendingIntent.getActivity(
             context, widgetId,
             Intent(context, MainActivity::class.java).apply {
@@ -91,17 +128,6 @@ class SmallFinanceWidget : AppWidgetProvider() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-    private fun monthRange(): Pair<Long, Long> {
-        val cal = Calendar.getInstance().apply {
-            set(Calendar.DAY_OF_MONTH, 1)
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }
-        val start = cal.timeInMillis
-        cal.add(Calendar.MONTH, 1)
-        return start to cal.timeInMillis
-    }
-
-    private fun fmt(amount: Double) =
-        "TZS ${NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 0 }.format(amount)}"
+    private fun resolveTheme(name: String): WidgetTheme =
+        WidgetTheme.entries.firstOrNull { it.name == name } ?: WidgetTheme.SMART_DARK
 }

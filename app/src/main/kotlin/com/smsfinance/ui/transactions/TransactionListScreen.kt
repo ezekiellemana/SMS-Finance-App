@@ -7,6 +7,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.core.graphics.toColorInt
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -49,10 +51,15 @@ fun TransactionListScreen(
     var selectedType by remember { mutableStateOf<TransactionType?>(null) }
     val hasFilter = selectedType != null
 
+    // Track list scroll — when user has scrolled past the first item the FAB
+    // moves to the top-right corner so it never covers content.
+    val listState = rememberLazyListState()
+    val isScrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+
     val profileAccent: Color = remember(multiState.activeProfile?.color) {
         runCatching {
             val hex = multiState.activeProfile?.color ?: return@runCatching AccentTeal
-            Color(android.graphics.Color.parseColor(hex))
+            Color(hex.toColorInt())
         }.getOrElse { AccentTeal }
     }
 
@@ -86,6 +93,19 @@ fun TransactionListScreen(
                             tint = if (hasFilter) AccentTeal else TextSecondary)
                     }
                 }
+                // Add button moves here when list is scrolled (BigFab would cover content)
+                if (isScrolled) {
+                    IconButton(onClick = onNavigateToAdd) {
+                        Icon(Icons.Default.Add, "Add transaction",
+                            tint = AccentTeal,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(AccentTeal.copy(alpha = 0.15f))
+                                .padding(4.dp)
+                        )
+                    }
+                }
             }
         }
     ) { scaffoldPadding ->
@@ -114,6 +134,7 @@ fun TransactionListScreen(
                     }
                     else -> Box(Modifier.fillMaxSize()) {
                         LazyColumn(
+                            state = listState,
                             contentPadding = PaddingValues(
                                 start  = 16.dp,
                                 end    = 16.dp,
@@ -147,16 +168,19 @@ fun TransactionListScreen(
                 }
             }
 
-            // ── BigFab ────────────────────────────────────────────────────────
-            BigFab(
-                onClick   = onNavigateToAdd,
-                icon      = Icons.Default.Add,
-                label     = "Add Transaction",
-                accentColor = AccentTeal,
-                modifier  = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp)
-            )
+            // BigFab — only shown when at the top of the list.
+            // When the user scrolls down it moves to the top-right corner of the screen.
+            if (!isScrolled) {
+                BigFab(
+                    onClick   = onNavigateToAdd,
+                    icon      = Icons.Default.Add,
+                    label     = "Add Transaction",
+                    accentColor = AccentTeal,
+                    modifier  = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp)
+                )
+            }
         }
     }
 
@@ -172,7 +196,8 @@ fun TransactionListScreen(
                         FilterChip(
                             selected = selectedType == TransactionType.DEPOSIT,
                             onClick = {
-                                selectedType = if (selectedType == TransactionType.DEPOSIT)
+                                val current = selectedType
+                                selectedType = if (current == TransactionType.DEPOSIT)
                                     null else TransactionType.DEPOSIT
                             },
                             label = { Text("💚  Deposits") }
@@ -180,7 +205,8 @@ fun TransactionListScreen(
                         FilterChip(
                             selected = selectedType == TransactionType.WITHDRAWAL,
                             onClick = {
-                                selectedType = if (selectedType == TransactionType.WITHDRAWAL)
+                                val current = selectedType
+                                selectedType = if (current == TransactionType.WITHDRAWAL)
                                     null else TransactionType.WITHDRAWAL
                             },
                             label = { Text("🔴  Withdrawals") }
@@ -268,12 +294,21 @@ fun SwipeToDismissTransaction(
     onDismiss: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState()
-    LaunchedEffect(dismissState.currentValue) {
-        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) onDismiss()
-    }
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            // Only EndToStart (swipe left) triggers dismiss — ignore StartToEnd (swipe right)
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDismiss()
+                true
+            } else {
+                false
+            }
+        }
+    )
     SwipeToDismissBox(
         state = dismissState,
+        enableDismissFromStartToEnd = false,   // no right swipe
+        enableDismissFromEndToStart = true,    // left swipe → delete
         backgroundContent = {
             Box(Modifier.fillMaxSize().padding(end = 20.dp), Alignment.CenterEnd) {
                 GlassCard {
