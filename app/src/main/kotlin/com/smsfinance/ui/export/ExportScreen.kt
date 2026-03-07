@@ -1,4 +1,5 @@
 package com.smsfinance.ui.export
+import com.smsfinance.R
 
 import android.app.DatePickerDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -87,9 +89,9 @@ fun ExportScreen(
                             modifier = Modifier.size(36.dp))
                         Spacer(Modifier.width(12.dp))
                         Column {
-                            Text("${uiState.transactionCount} transactions",
+                            Text(stringResource(R.string.transactions_available, uiState.transactionCount),
                                 color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                            Text("available for export", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
+                            Text(stringResource(R.string.available_for_export), color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
                         }
                     }
                 }
@@ -98,7 +100,7 @@ fun ExportScreen(
             // ── Date range picker ─────────────────────────────────────────────
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Date Range", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(stringResource(R.string.date_range), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     Spacer(Modifier.height(10.dp))
 
                     // Quick range chips
@@ -174,7 +176,7 @@ fun ExportScreen(
             }
 
             // ── Export buttons ────────────────────────────────────────────────
-            Text("Choose Format", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(stringResource(R.string.choose_format), fontWeight = FontWeight.Bold, fontSize = 15.sp)
 
             ExportButton(
                 icon = Icons.Default.TableChart,
@@ -218,7 +220,7 @@ fun ExportScreen(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         "Exported files will be shared via your phone's share menu. " +
-                        "You can send via WhatsApp, Gmail, save to Drive, or download locally.",
+                                "You can send via WhatsApp, Gmail, save to Drive, or download locally.",
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }

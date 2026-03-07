@@ -1,4 +1,5 @@
 package com.smsfinance.ui.investments
+import com.smsfinance.R
 
 import android.app.DatePickerDialog
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,11 +18,13 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,7 +40,6 @@ import com.smsfinance.viewmodel.InvestmentViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import com.smsfinance.ui.components.BigFab
 import com.smsfinance.ui.components.BigFab
 
 @Suppress("DEPRECATION")
@@ -62,8 +64,8 @@ fun InvestmentScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Investments", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
-                    Text("Track savings goals & portfolio", fontSize = 11.sp, color = TextSecondary)
+                    Text(stringResource(R.string.investments), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
+                    Text(stringResource(R.string.investments_sub), fontSize = 11.sp, color = TextSecondary)
                 }
                 Spacer(Modifier.width(48.dp))
             }
@@ -85,9 +87,9 @@ fun InvestmentScreen(
                             Column(horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Text("📈", fontSize = 52.sp)
-                                Text("No investments yet", fontSize = 18.sp,
+                                Text(stringResource(R.string.no_investments_yet), fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold, color = TextWhite)
-                                Text("Add savings goals, fixed deposits, shares\nor any investment to track",
+                                Text(stringResource(R.string.no_investments_sub),
                                     fontSize = 13.sp, textAlign = TextAlign.Center, color = TextSecondary)
                             }
                         }
@@ -131,7 +133,7 @@ fun PortfolioSummaryCard(totalValue: Double, totalInvested: Double, gain: Double
                 else listOf(Color(0xFFB71C1C), Color(0xFFC62828))
             )).padding(20.dp)) {
             Column {
-                Text("Portfolio Overview", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
+                Text(stringResource(R.string.portfolio_overview), color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
                 Text("TZS ${fmt(totalValue)}", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,7 +146,7 @@ fun PortfolioSummaryCard(totalValue: Double, totalInvested: Double, gain: Double
                         color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)
                 }
                 Spacer(Modifier.height(8.dp))
-                Text("Invested: TZS ${fmt(totalInvested)}", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                Text(stringResource(R.string.invested_label, fmt(totalInvested)), color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
             }
         }
     }
@@ -153,7 +155,7 @@ fun PortfolioSummaryCard(totalValue: Double, totalInvested: Double, gain: Double
 @Composable
 fun InvestmentCard(inv: Investment, onEdit: () -> Unit, onDelete: () -> Unit) {
     val animProg by animateFloatAsState(inv.progressToTarget.toFloat(), label = "prog")
-    val color = runCatching { Color(android.graphics.Color.parseColor(inv.color)) }.getOrElse { AccentTeal }
+    val color = runCatching { Color(inv.color.toColorInt()) }.getOrElse { AccentTeal }
     val isProfit = inv.isProfit
     val dateFmt = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
@@ -179,11 +181,11 @@ fun InvestmentCard(inv: Investment, onEdit: () -> Unit, onDelete: () -> Unit) {
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Column {
-                    Text("Current Value", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    Text(stringResource(R.string.current_value), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     Text("TZS ${fmt(inv.currentValue)}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Gain / Loss", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    Text(stringResource(R.string.gain_loss), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     Text("${if (isProfit) "+" else ""}TZS ${fmt(inv.gain)}",
                         fontWeight = FontWeight.Bold, fontSize = 15.sp,
                         color = if (isProfit) AccentTeal else ErrorRed)
@@ -193,13 +195,13 @@ fun InvestmentCard(inv: Investment, onEdit: () -> Unit, onDelete: () -> Unit) {
             inv.targetAmount?.let { target ->
                 Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                    Text("Progress to goal", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    Text(stringResource(R.string.progress_to_goal), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     Text("${"%.0f".format(inv.progressToTarget * 100)}%", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = color)
                 }
                 Spacer(Modifier.height(4.dp))
                 LinearProgressIndicator(progress = { animProg }, modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
                     color = color, trackColor = color.copy(alpha = 0.15f))
-                Text("Target: TZS ${fmt(target)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                Text(stringResource(R.string.target_tzs, fmt(target)), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
             }
             // Interest projection
             if (inv.interestRate > 0) {
@@ -210,14 +212,14 @@ fun InvestmentCard(inv: Investment, onEdit: () -> Unit, onDelete: () -> Unit) {
             }
             // Maturity date
             inv.maturityDate?.let {
-                Text("Matures: ${dateFmt.format(Date(it))}", fontSize = 11.sp,
+                Text(stringResource(R.string.matures, dateFmt.format(Date(it))), fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
             }
         }
     }
 }
 
-@Suppress("DEPRECATION")
+@Suppress("DEPRECATION", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
 @Composable
 fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -239,10 +241,10 @@ fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDism
             Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 520.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = name, onValueChange = { name = it },
-                    label = { Text("Name e.g. CRDB Fixed Deposit") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    label = { Text(stringResource(R.string.investment_name_hint)) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
 
                 // Type selector
-                Text("Investment Type", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.investment_type), style = MaterialTheme.typography.labelMedium)
                 InvestmentType.entries.chunked(2).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         row.forEach { t ->
@@ -253,27 +255,27 @@ fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDism
                     }
                 }
                 OutlinedTextField(value = initial, onValueChange = { initial = it },
-                    label = { Text("Initial Amount (TZS)") }, prefix = { Text("TZS ") },
+                    label = { Text(stringResource(R.string.initial_amount_tzs)) }, prefix = { Text("TZS ") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
                 OutlinedTextField(value = current, onValueChange = { current = it },
-                    label = { Text("Current Value (TZS)") }, prefix = { Text("TZS ") },
+                    label = { Text(stringResource(R.string.current_value_tzs)) }, prefix = { Text("TZS ") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
                 OutlinedTextField(value = target, onValueChange = { target = it },
-                    label = { Text("Target Amount (optional)") }, prefix = { Text("TZS ") },
+                    label = { Text(stringResource(R.string.target_amount_opt)) }, prefix = { Text("TZS ") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
                 OutlinedTextField(value = rate, onValueChange = { rate = it },
-                    label = { Text("Annual Interest Rate (%)") }, suffix = { Text("%") },
+                    label = { Text(stringResource(R.string.annual_interest)) }, suffix = { Text("%") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
                 OutlinedTextField(value = institution, onValueChange = { institution = it },
-                    label = { Text("Institution (optional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    label = { Text(stringResource(R.string.institution_opt)) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
 
                 // Start date
                 OutlinedButton(onClick = {
@@ -284,20 +286,23 @@ fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDism
                 }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.CalendarToday, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Start: ${dateFmt.format(Date(startDate))}")
+                    Text(stringResource(R.string.start_date, dateFmt.format(Date(startDate))))
                 }
 
-                // Color picker
-                Text("Color", style = MaterialTheme.typography.labelMedium)
+                // Colour picker
+                Text(stringResource(R.string.color_label), style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     PROFILE_COLORS.forEach { hex ->
-                        val c = runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrElse { AccentTeal }
-                        Box(Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)).background(c)
-                            .then(if (selectedColor == hex) Modifier else Modifier)
-                            .padding(if (selectedColor == hex) 2.dp else 0.dp)) {
-                            Box(Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp)).background(c)
-                                .let { m -> if (selectedColor == hex) m.background(Color.White.copy(0.3f)) else m }) {}
-
+                        val boxColor = runCatching { Color(hex.toColorInt()) }.getOrElse { AccentTeal }
+                        Box(
+                            Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
+                                .background(boxColor)
+                                .clickable { selectedColor = hex }
+                                .padding(if (selectedColor == hex) 3.dp else 0.dp),
+                            Alignment.Center
+                        ) {
+                            if (selectedColor == hex)
+                                Icon(Icons.Default.Check, null, Modifier.size(14.dp), Color.White)
                         }
                     }
                 }
@@ -319,9 +324,9 @@ fun InvestmentDialog(existing: Investment?, onSave: (Investment) -> Unit, onDism
                     institution = institution.trim(),
                     createdAt = existing?.createdAt ?: System.currentTimeMillis()
                 ))
-            }) { Text("Save") }
+            }) { Text(stringResource(R.string.save_label)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
 

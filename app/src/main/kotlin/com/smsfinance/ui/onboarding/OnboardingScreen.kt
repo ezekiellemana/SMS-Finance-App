@@ -1,5 +1,6 @@
-@file:Suppress("SpellCheckingInspection")
+@file:Suppress("SpellCheckingInspection", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
 package com.smsfinance.ui.onboarding
+import com.smsfinance.R
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,30 +78,33 @@ val ALL_SENDERS = listOf(
 
 // ── Info page model ───────────────────────────────────────────────────────────
 data class InfoPage(
-    val emoji: String, val title: String, val subtitle: String,
-    val description: String, val accent: Color,
-    val features: List<Pair<ImageVector, String>>
+    val emoji: String,
+    @get:androidx.annotation.StringRes val titleRes: Int,
+    @get:androidx.annotation.StringRes val subtitleRes: Int,
+    @get:androidx.annotation.StringRes val descriptionRes: Int,
+    val accent: Color,
+    val features: List<Pair<ImageVector, Int>>
 )
 
 private val INFO_PAGES = listOf(
-    InfoPage("📱", "Auto SMS\nDetection", "Zero manual entry",
-        "Reads financial messages from NMB, CRDB, M-Pesa, Airtel and 15+ providers instantly.",
+    InfoPage("📱", R.string.onb_page1_title, R.string.onb_page1_subtitle,
+        R.string.onb_page1_body,
         AccentTeal, listOf(
-            Icons.Default.AccountBalance to "NMB & CRDB Bank",
-            Icons.Default.PhoneAndroid   to "M-Pesa & Airtel",
-            Icons.Default.FlashOn        to "Instant capture")),
-    InfoPage("📊", "Smart\nDashboard", "Your finances at a glance",
-        "Live balance, income and expense charts with AI-powered spending predictions.",
+            Icons.Default.AccountBalance to R.string.onb_feat_zero_entry,
+            Icons.Default.PhoneAndroid   to R.string.onb_feat_instant,
+            Icons.Default.FlashOn        to R.string.onb_feat_instant)),
+    InfoPage("📊", R.string.onb_page2_title, R.string.onb_page2_subtitle,
+        R.string.onb_page2_body,
         AccentLight, listOf(
-            Icons.AutoMirrored.Filled.ArrowForward to "Live balance",
-            Icons.Default.PieChart   to "Spending charts",
-            Icons.Default.Psychology to "AI predictions")),
-    InfoPage("🔒", "Private\n& Secure", "Your data stays on your phone",
-        "Everything is processed locally. Your data is never sent to any server.",
+            Icons.AutoMirrored.Filled.ArrowForward to R.string.onb_feat_live,
+            Icons.Default.PieChart   to R.string.onb_feat_charts,
+            Icons.Default.Psychology to R.string.onb_feat_ai)),
+    InfoPage("🔒", R.string.onb_page3_title, R.string.onb_page3_subtitle,
+        R.string.onb_page3_body,
         AccentTeal, listOf(
-            Icons.Default.PhoneLocked to "100% local",
-            Icons.Default.Lock        to "Encrypted storage",
-            Icons.Default.Fingerprint to "Biometric lock")),
+            Icons.Default.PhoneLocked to R.string.onb_feat_ondevice,
+            Icons.Default.Lock        to R.string.onb_feat_encrypted,
+            Icons.Default.Fingerprint to R.string.onb_feat_biometric)),
 )
 
 private const val TOTAL_PAGES = 4
@@ -137,7 +142,7 @@ fun OnboardingScreen(
 
     Box(Modifier.fillMaxSize().background(BgPrimary)) {
 
-        // Soft ambient glow top-center
+        // Soft ambient glow top-centre
         Box(Modifier.fillMaxSize().drawBehind {
             drawCircle(
                 Brush.radialGradient(
@@ -222,9 +227,9 @@ fun OnboardingScreen(
                         AnimatedVisibility(!canProceed,
                             enter = fadeIn(tween(300)), exit = fadeOut(tween(200))) {
                             val hint = when {
-                                userName.isBlank()        -> "Enter your name first"
-                                selectedSenders.isEmpty() -> "Select at least one service"
-                                else                      -> "Fill in all balances"
+                                userName.isBlank()        -> stringResource(R.string.enter_name_first)
+                                selectedSenders.isEmpty() -> stringResource(R.string.select_one_service)
+                                else                      -> stringResource(R.string.fill_all_balances)
                             }
                             Text(hint, color = TextMuted, fontSize = 12.sp)
                         }
@@ -234,7 +239,7 @@ fun OnboardingScreen(
                             onClick = { settingsViewModel.setOnboardingDone(); onFinished() },
                             contentPadding = PaddingValues(0.dp)
                         ) {
-                            Text("Skip", color = TextMuted, fontSize = 14.sp)
+                            Text(stringResource(R.string.skip_label), color = TextMuted, fontSize = 14.sp)
                         }
                     }
 
@@ -261,7 +266,7 @@ fun OnboardingScreen(
                         contentPadding = PaddingValues(horizontal = 28.dp)
                     ) {
                         Text(
-                            if (isLast) "Get Started" else "Next",
+                            if (isLast) stringResource(R.string.get_started) else stringResource(R.string.next_label),
                             color = Color(0xFF0D1B2A),
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
@@ -343,7 +348,7 @@ private fun SenderSheet(
                     )
                     Text(
                         if (available.isEmpty() && selectedSenders.isNotEmpty())
-                            "All added ✓"
+                            stringResource(R.string.all_added_check)
                         else "Tap to add · ${available.size} available",
                         fontSize = 12.sp, color = if (available.isEmpty()) GreenOk else TextMuted
                     )
@@ -356,7 +361,7 @@ private fun SenderSheet(
             // Search
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
-                placeholder = { Text("Search…", color = TextMuted, fontSize = 13.sp) },
+                placeholder = { Text(stringResource(R.string.search_placeholder_ob), color = TextMuted, fontSize = 13.sp) },
                 leadingIcon  = { Icon(Icons.Default.Search, null, tint = TextMuted, modifier = Modifier.size(17.dp)) },
                 trailingIcon = {
                     AnimatedVisibility(query.isNotEmpty(), enter = fadeIn(), exit = fadeOut()) {
@@ -495,14 +500,14 @@ private fun SetupPage(
                 Text("👋", fontSize = 44.sp, modifier = Modifier.scale(waveS))
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Let's set you up",
+                    stringResource(R.string.lets_set_you_up),
                     fontSize = 26.sp, fontWeight = FontWeight.ExtraBold,
                     color = TextWhite, textAlign = TextAlign.Center,
                     letterSpacing = (-.3).sp
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Just 3 quick steps to get started",
+                    stringResource(R.string.just_3_steps),
                     fontSize = 13.sp, color = TextMuted,
                     fontStyle = FontStyle.Normal
                 )
@@ -528,8 +533,8 @@ private fun SetupPage(
             // ── Step 1 — Name ─────────────────────────────────────────────────
             StepCard(
                 number  = "01",
-                title   = "What's your name?",
-                caption = "So we can personalise your dashboard",
+                title   = stringResource(R.string.whats_your_name),
+                caption = stringResource(R.string.name_caption),
                 done    = userName.isNotBlank(),
                 active  = activeStep == 0
             ) {
@@ -569,8 +574,8 @@ private fun SetupPage(
             // ── Step 2 — Services ─────────────────────────────────────────────
             StepCard(
                 number  = "02",
-                title   = "Which services do you use?",
-                caption = "We'll only track SMS from these senders",
+                title   = stringResource(R.string.which_services),
+                caption = stringResource(R.string.services_caption),
                 done    = selectedSenders.isNotEmpty(),
                 active  = activeStep == 1
             ) {
@@ -605,8 +610,8 @@ private fun SetupPage(
             ) {
                 StepCard(
                     number  = "03",
-                    title   = "Current balance per service",
-                    caption = "Enter what you have right now — we won't touch it",
+                    title   = stringResource(R.string.balance_per_service),
+                    caption = stringResource(R.string.balance_caption),
                     done    = allDone,
                     active  = activeStep == 2
                 ) {
@@ -661,7 +666,7 @@ private fun SetupPage(
                             horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                             Icon(Icons.Default.Info, null,
                                 tint = AccentTeal.copy(.5f), modifier = Modifier.size(11.dp))
-                            Text("All balances are required to continue",
+                            Text(stringResource(R.string.all_balances_required),
                                 fontSize = 10.sp, color = TextMuted.copy(.55f))
                         }
                     }
@@ -831,7 +836,7 @@ private fun BalanceRow(
                 // Guard against absurdly large numbers
                 if (raw.length <= 15) onValueChange(raw)
             },
-            placeholder    = { Text("e.g. 100,000/=", color = TextMuted.copy(.4f), fontSize = 13.sp) },
+            placeholder    = { Text(stringResource(R.string.balance_placeholder_ob), color = TextMuted.copy(.4f), fontSize = 13.sp) },
             label          = { Text(sender.displayName, fontSize = 10.sp) },
             singleLine     = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -896,7 +901,7 @@ private fun InfoPageContent(page: InfoPage) {
 
         Spacer(Modifier.height(32.dp))
 
-        Text(page.title,
+        Text(stringResource(page.titleRes),
             fontSize = 32.sp, fontWeight = FontWeight.ExtraBold,
             color = TextWhite, textAlign = TextAlign.Center, lineHeight = 38.sp,
             modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
@@ -906,12 +911,12 @@ private fun InfoPageContent(page: InfoPage) {
         // Pill badge
         Box(Modifier.clip(CircleShape).background(page.accent.copy(.12f))
             .padding(horizontal = 14.dp, vertical = 5.dp)) {
-            Text(page.subtitle, color = page.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(page.subtitleRes), color = page.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
 
         Spacer(Modifier.height(20.dp))
 
-        Text(page.description, fontSize = 15.sp, color = TextMuted,
+        Text(stringResource(page.descriptionRes), fontSize = 15.sp, color = TextMuted,
             textAlign = TextAlign.Center, lineHeight = 23.sp,
             modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
 
@@ -921,7 +926,7 @@ private fun InfoPageContent(page: InfoPage) {
         Column(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(BgCard).padding(vertical = 4.dp)
         ) {
-            page.features.forEachIndexed { i, (icon, label) ->
+            page.features.forEachIndexed { i, (icon, labelRes) ->
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -931,7 +936,7 @@ private fun InfoPageContent(page: InfoPage) {
                         .background(page.accent.copy(.10f)), Alignment.Center) {
                         Icon(icon, null, tint = page.accent, modifier = Modifier.size(16.dp))
                     }
-                    Text(label, color = TextSoft, fontSize = 14.sp,
+                    Text(stringResource(labelRes), color = TextSoft, fontSize = 14.sp,
                         fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
                     Icon(Icons.Default.Check, null, tint = page.accent.copy(.7f), modifier = Modifier.size(14.dp))
                 }

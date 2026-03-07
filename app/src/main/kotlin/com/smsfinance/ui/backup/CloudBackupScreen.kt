@@ -1,5 +1,6 @@
 @file:Suppress("DEPRECATION")
 package com.smsfinance.ui.backup
+import com.smsfinance.R
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -73,7 +75,7 @@ fun CloudBackupScreen(
                         modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Default.Cloud, null, tint = Color.White, modifier = Modifier.size(48.dp))
                         Spacer(Modifier.height(8.dp))
-                        Text("Google Drive Backup", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(stringResource(R.string.google_drive_backup), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Text(
                             if (uiState.isSignedIn) "Signed in as ${uiState.signedInEmail}"
                             else "Opt-in backup to your personal Google Drive",
@@ -105,13 +107,13 @@ fun CloudBackupScreen(
                 ) {
                     Icon(Icons.Default.AccountCircle, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Sign in with Google", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.sign_in_google), fontWeight = FontWeight.Bold)
                 }
             } else {
                 // ── Backup status card ────────────────────────────────────────
                 Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Backup Status", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text(stringResource(R.string.backup_status), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         HorizontalDivider()
                         BackupInfoRow(Icons.Default.Storage, "Transactions",
                             "${uiState.transactionCount} ready to backup")
@@ -137,7 +139,7 @@ fun CloudBackupScreen(
                         } else {
                             Icon(Icons.Default.CloudUpload, null)
                             Spacer(Modifier.width(6.dp))
-                            Text("Backup Now", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.backup_now), fontWeight = FontWeight.Bold)
                         }
                     }
                     OutlinedButton(
@@ -151,7 +153,7 @@ fun CloudBackupScreen(
                         } else {
                             Icon(Icons.Default.CloudDownload, null)
                             Spacer(Modifier.width(6.dp))
-                            Text("Restore", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.restore_label), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -159,7 +161,7 @@ fun CloudBackupScreen(
                     Icon(Icons.AutoMirrored.Filled.Logout, null, modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.width(6.dp))
-                    Text("Sign Out from Google", color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+                    Text(stringResource(R.string.sign_out_google), color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
                 }
             }
 
@@ -188,7 +190,7 @@ fun CloudBackupScreen(
             // ── How it works ──────────────────────────────────────────────────
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("How it works", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(stringResource(R.string.how_it_works), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))
                     listOf(
                         "1️⃣  Sign in with your Google account",
@@ -210,13 +212,13 @@ fun CloudBackupScreen(
         AlertDialog(
             onDismissRequest = { showRestoreConfirm = false },
             icon = { Icon(Icons.Default.CloudDownload, null) },
-            title = { Text("Restore from Backup?") },
+            title = { Text(stringResource(R.string.restore_confirm_title)) },
             text = { Text("This will import transactions from your Google Drive backup. " +
                     "Existing transactions will not be deleted — restored transactions will be merged.") },
             confirmButton = {
-                Button(onClick = { viewModel.restore(); showRestoreConfirm = false }) { Text("Restore") }
+                Button(onClick = { viewModel.restore(); showRestoreConfirm = false }) { Text(stringResource(R.string.restore_label)) }
             },
-            dismissButton = { TextButton(onClick = { showRestoreConfirm = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showRestoreConfirm = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }

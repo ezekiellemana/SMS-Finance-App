@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Smart Money</string>
-
-    <!-- Widget labels -->
     <string name="widget_small_label">Finance (Small)</string>
     <string name="widget_medium_label">Finance (Medium)</string>
     <string name="widget_small_description">Shows your balance and monthly summary</string>
@@ -18,43 +16,26 @@
     <string name="widget_income_arrow">↑ ---</string>
     <string name="widget_expense_arrow">↓ ---</string>
     <string name="widget_tx_arrow">↑</string>
-
-    <!-- Navigation -->
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_transactions">Transactions</string>
     <string name="nav_alerts">Alerts</string>
     <string name="nav_predictions">AI Predictions</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_settings">Settings</string>
-
-    <!-- Dashboard -->
     <string name="dashboard_title">Smart Money</string>
     <string name="estimated_balance">Estimated Balance</string>
     <string name="monthly_income">Monthly Income</string>
     <string name="monthly_expenses">Monthly Expenses</string>
-    <string name="recent_transactions">Recent Activity</string>
-    <string name="view_all">See all</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="view_all">View All</string>
     <string name="this_month">This Month</string>
     <string name="no_transactions">No transactions yet</string>
     <string name="no_transactions_sub">Financial SMS will appear here automatically</string>
-    <string name="auto_tracking_active">Auto-tracking active</string>
-
-    <!-- Transaction types -->
     <string name="deposit">Deposit</string>
     <string name="withdrawal">Withdrawal</string>
     <string name="income">Income</string>
     <string name="expense">Expense</string>
     <string name="balance">Balance</string>
-
-    <!-- Transaction list -->
-    <string name="all_transactions">All Transactions</string>
-    <string name="filter_transactions">Filter Transactions</string>
-    <string name="transaction_type">Transaction Type</string>
-    <string name="apply">Apply</string>
-    <string name="clear">Clear</string>
-    <string name="no_transactions_found">No transactions found</string>
-
-    <!-- Transaction detail -->
     <string name="transaction_details">Transaction Details</string>
     <string name="source">Source</string>
     <string name="type">Type</string>
@@ -65,17 +46,19 @@
     <string name="manual_entry">Manual Entry</string>
     <string name="received">Received</string>
     <string name="sent">Sent</string>
-    <string name="raw_label">RAW</string>
-
-    <!-- Add / Edit transaction -->
     <string name="add_transaction">Add Transaction</string>
     <string name="amount_tzs">Amount (TZS)</string>
     <string name="source_hint">Source (e.g. NMB Bank)</string>
     <string name="description_optional">Description (optional)</string>
     <string name="save_transaction">Save Transaction</string>
     <string name="invalid_amount">Enter a valid amount</string>
-
-    <!-- Settings -->
+    <string name="filter_transactions">Filter Transactions</string>
+    <string name="transaction_type">Transaction Type</string>
+    <string name="deposits">Deposits</string>
+    <string name="withdrawals">Withdrawals</string>
+    <string name="apply">Apply</string>
+    <string name="clear">Clear</string>
+    <string name="no_transactions_found">No transactions found</string>
     <string name="settings_title">Settings</string>
     <string name="privacy">Privacy</string>
     <string name="privacy_mode">Privacy Mode</string>
@@ -88,34 +71,28 @@
     <string name="pin_not_set">Set a PIN to protect the app</string>
     <string name="appearance">Appearance</string>
     <string name="dark_mode">Dark Mode</string>
-    <string name="dark_mode_desc">Use dark color scheme</string>
+    <string name="dark_mode_desc" tools:ignore="Typos">Use dark color scheme</string>
     <string name="language">Language</string>
     <string name="language_desc">Choose your preferred language</string>
     <string name="app_language">App Language</string>
-    <string name="choose_language">Choose your preferred language</string>
+    <string name="choose_language">Select your preferred language for the app interface</string>
     <string name="about">About</string>
-    <string name="app_version">Version 4.0.0</string>
+    <string name="app_version">Version 1.0.0</string>
     <string name="privacy_note">All data is processed locally on your device. No SMS data is ever transmitted externally.</string>
     <string name="set_pin">Set PIN</string>
     <string name="enter_pin">Enter 4–6 digit PIN</string>
     <string name="cancel">Cancel</string>
-    <string name="save">Save</string>
-
-    <!-- PIN Screen -->
     <string name="app_name_pin">Smart Money</string>
     <string name="enter_your_pin">Enter your PIN</string>
-    <string name="enter_pin_to_continue">Enter your PIN to continue</string>
     <string name="incorrect_pin">Incorrect PIN</string>
-
-    <!-- Spending Alerts -->
     <string name="spending_alerts">Spending Alerts</string>
-    <string name="alerts_subtitle">Set limits to stay on budget</string>
+    <string name="alerts_subtitle">Set spending limits to stay aware of your budget</string>
     <string name="add_alert">Add Alert</string>
-    <string name="no_alerts">No alerts yet</string>
-    <string name="no_alerts_sub">Tap the button below to create\nyour first spending limit</string>
+    <string name="no_alerts">No alerts set</string>
+    <string name="no_alerts_sub">Tap + to add your first spending alert</string>
     <string name="alert_name">Alert Name</string>
     <string name="alert_name_hint">e.g. Monthly Food</string>
-    <string name="limit_amount">Limit Amount</string>
+    <string name="limit_amount">Limit Amount (TZS)</string>
     <string name="alert_period">Period</string>
     <string name="period_daily">Daily</string>
     <string name="period_weekly">Weekly</string>
@@ -130,8 +107,6 @@
     <string name="spent">Spent</string>
     <string name="remaining">Remaining</string>
     <string name="edit_alert">Edit Alert</string>
-
-    <!-- AI Predictions -->
     <string name="ai_predictions">AI Predictions</string>
     <string name="ai_subtitle">AI analysis of your spending habits</string>
     <string name="predicted_expenses">Predicted Expenses</string>
@@ -151,98 +126,146 @@
     <string name="analyze_spending">Analyze Spending</string>
     <string name="prediction_tip">Savings Tip</string>
     <string name="generating_analysis">Analyzing your data…</string>
-    <string name="not_enough_data_chart">Not enough data yet</string>
-    <string name="predicted_label">Predicted*</string>
-
-    <!-- Budget -->
-    <string name="budget_planning">Budget Planning</string>
-    <string name="monthly_overview">Monthly Overview</string>
-    <string name="no_budgets">No budgets yet</string>
-    <string name="no_budgets_sub">Tap the button below to create\nyour first budget category</string>
-    <string name="add_budget_category">Add Budget Category</string>
-    <string name="category_name">Category Name</string>
-    <string name="monthly_budget_tzs">Monthly Budget (TZS)</string>
-    <string name="match_keywords">Match Keywords</string>
-    <string name="quick_presets">Quick Presets</string>
-    <string name="icon_label">Icon</string>
-    <string name="color_label">Color</string>
-    <string name="save_budget">Save Budget</string>
-    <string name="surplus">Surplus</string>
-
-    <!-- Recurring -->
-    <string name="recurring_title">Recurring</string>
-    <string name="your_recurring">Your Recurring Transactions</string>
-    <string name="no_recurring">No recurring transactions</string>
-    <string name="no_recurring_sub">Tap Auto Detect to find patterns\nor use the button below to add one</string>
-    <string name="auto_detect_patterns">Auto Detect Patterns</string>
-    <string name="auto_detect_desc">Auto-detect &amp; track regular payments</string>
-    <string name="scan_transactions">Scan transactions to find regular payments</string>
-    <string name="source_label_hint">Source / Label</string>
-    <string name="frequency">Frequency</string>
-    <string name="scan">Scan</string>
-    <string name="skip">Skip</string>
-    <string name="add">Add</string>
-
-    <!-- Investments -->
-    <string name="investments_title">Investments</string>
-    <string name="track_investments">Track savings goals &amp; portfolio</string>
-    <string name="no_investments">No investments yet</string>
-    <string name="no_investments_sub">Add savings goals, fixed deposits, shares\nor any investment to track</string>
-    <string name="portfolio_overview">Portfolio Overview</string>
-    <string name="add_investment">Add Investment</string>
-    <string name="investment_type">Investment Type</string>
-    <string name="investment_name_hint">Name e.g. CRDB Fixed Deposit</string>
-    <string name="current_value">Current Value</string>
-    <string name="gain_loss">Gain / Loss</string>
-    <string name="institution_optional">Institution (optional)</string>
-    <string name="progress_to_goal">Progress to goal</string>
-
-    <!-- Multi-user / Family -->
-    <string name="family_accounts">Family Accounts</string>
-    <string name="manage_profiles">Manage profiles &amp; settings</string>
-    <string name="active_label">Active</string>
-    <string name="currently_active">Currently active profile</string>
-    <string name="add_member">Add Member</string>
-    <string name="full_name">Full Name</string>
-    <string name="avatar_emoji">Avatar Emoji</string>
-    <string name="profile_color">Profile Color</string>
-    <string name="gallery">Gallery</string>
-    <string name="remove">Remove</string>
-
-    <!-- Cloud Backup -->
-    <string name="google_drive_backup">Google Drive Backup</string>
-    <string name="backup_status">Backup Status</string>
-    <string name="backup_now">Backup Now</string>
-    <string name="restore">Restore</string>
-    <string name="restore_title">Restore from Backup?</string>
-    <string name="restore_desc">This will import transactions from your Google Drive backup. Existing transactions will not be deleted — restored transactions will be merged.</string>
-    <string name="sign_in_google">Sign in with Google</string>
-    <string name="sign_out_google">Sign Out from Google</string>
-    <string name="how_it_works">How it works</string>
-    <string name="backup_failed">Backup failed: %1$s</string>
-
-    <!-- Export -->
-    <string name="export_title">Export</string>
-    <string name="choose_format">Choose Format</string>
-    <string name="date_range">Date Range</string>
-
-    <!-- Search -->
-    <string name="search_hint">Search transactions, sources…</string>
-
-    <!-- Onboarding -->
-    <string name="search_label">Search…</string>
-    <string name="all_balances_required">All balances are required to continue</string>
-
-    <!-- Widget theme preview -->
-    <string name="widget_preview_balance">TZS 1,250,000</string>
-    <string name="widget_themes">Widget Themes</string>
-
-    <!-- Notifications -->
     <string name="notification_channel_alerts">Spending Alerts</string>
     <string name="notification_channel_transactions">New Transactions</string>
     <string name="new_transaction_detected">New Transaction Detected</string>
-
-    <!-- Language selection -->
     <string name="language_english">English</string>
     <string name="language_swahili">Kiswahili</string>
+
+    <!-- Additional UI strings -->
+    <string name="auto_tracking_active">Auto-tracking active</string>
+    <string name="recent_activity">Recent Activity</string>
+    <string name="see_all">See all</string>
+    <string name="all_transactions">All Transactions</string>
+    <string name="records">%1$d records</string>
+    <string name="raw_label">RAW</string>
+    <string name="amount_tzs_label">Amount (TZS)</string>
+    <string name="source_hint_full">Source (e.g. NMB Bank)</string>
+    <string name="description_opt">Description (optional)</string>
+    <string name="budget_planning">Budget Planning</string>
+    <string name="no_budgets_yet">No budgets yet</string>
+    <string name="no_budgets_sub">Tap the button below to create\nyour first budget category</string>
+    <string name="monthly_overview">Monthly Overview</string>
+    <string name="tzs_remaining">TZS %1$s remaining</string>
+    <string name="budget_amount">TZS %1$s budget</string>
+    <string name="quick_presets">Quick Presets</string>
+    <string name="category_name">Category Name</string>
+    <string name="monthly_budget_tzs">Monthly Budget (TZS)</string>
+    <string name="match_keywords">Match Keywords</string>
+    <string name="icon_label">Icon</string>
+    <string name="color_label" tools:ignore="Typos">Color</string>
+    <string name="save_budget">Save Budget</string>
+    <string name="investments">Investments</string>
+    <string name="investments_sub">Track savings goals &amp; portfolio</string>
+    <string name="no_investments_yet">No investments yet</string>
+    <string name="no_investments_sub">Add savings goals, fixed deposits, shares\nor any investment to track</string>
+    <string name="portfolio_overview">Portfolio Overview</string>
+    <string name="invested_label">Invested: TZS %1$s</string>
+    <string name="current_value">Current Value</string>
+    <string name="gain_loss">Gain / Loss</string>
+    <string name="progress_to_goal">Progress to goal</string>
+    <string name="target_tzs">Target: TZS %1$s</string>
+    <string name="matures">Matures: %1$s</string>
+    <string name="investment_name_hint" tools:ignore="Typos">Name e.g. CRDB Fixed Deposit</string>
+    <string name="investment_type">Investment Type</string>
+    <string name="initial_amount_tzs">Initial Amount (TZS)</string>
+    <string name="current_value_tzs">Current Value (TZS)</string>
+    <string name="target_amount_opt">Target Amount (optional)</string>
+    <string name="annual_interest">Annual Interest Rate (%)</string>
+    <string name="institution_opt">Institution (optional)</string>
+    <string name="start_date">Start: %1$s</string>
+    <string name="save_label">Save</string>
+    <string name="family_accounts">Family Accounts</string>
+    <string name="family_accounts_sub">Manage profiles &amp; settings</string>
+    <string name="active_label">Active</string>
+    <string name="currently_active">Currently active profile</string>
+    <string name="gallery_label">Gallery</string>
+    <string name="remove_label">Remove</string>
+    <string name="full_name_label">Full Name</string>
+    <string name="avatar_emoji">Avatar Emoji</string>
+    <string name="profile_color" tools:ignore="Typos">Profile Color</string>
+    <string name="date_range">Date Range</string>
+    <string name="choose_format">Choose Format</string>
+    <string name="transactions_available">%1$d transactions</string>
+    <string name="available_for_export">available for export</string>
+    <string name="google_drive_backup">Google Drive Backup</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="backup_status">Backup Status</string>
+    <string name="backup_now">Backup Now</string>
+    <string name="restore_label">Restore</string>
+    <string name="sign_out_google">Sign Out from Google</string>
+    <string name="how_it_works">How it works</string>
+    <string name="restore_confirm_title">Restore from Backup?</string>
+    <string name="restore_confirm_body">This will import transactions from your Google Drive backup. Existing data will not be overwritten.</string>
+    <string name="search_placeholder">Search transactions, sources…</string>
+    <string name="recurring_title">Recurring</string>
+    <string name="recurring_sub">Auto-detect &amp; track regular payments</string>
+    <string name="your_recurring">Your Recurring Transactions</string>
+    <string name="no_recurring">No recurring transactions</string>
+    <string name="no_recurring_sub">Tap Auto Detect to find patterns\nor use the button below to add one</string>
+    <string name="auto_detect_title">Auto Detect Patterns</string>
+    <string name="auto_detect_sub">Scan transactions to find regular payments</string>
+    <string name="scan_label">Scan</string>
+    <string name="skip_label">Skip</string>
+    <string name="add_label">Add</string>
+    <string name="next_date">Next: %1$s</string>
+    <string name="source_label_hint">Source / Label</string>
+    <string name="amount_label">Amount</string>
+    <string name="type_label">Type</string>
+    <string name="frequency_label">Frequency</string>
+    <string name="skip_label_ob">Skip</string>
+    <string name="search_placeholder_ob">Search…</string>
+    <string name="all_balances_required">All balances are required to continue</string>
+    <string name="balance_placeholder_ob">e.g. 100,000/=</string>
+    <string name="get_started">Get Started</string>
+    <string name="next_label">Next</string>
+    <string name="all_added_check">All added ✓</string>
+    <string name="tap_to_add">Tap to add · %1$d available</string>
+    <string name="lets_set_you_up">Let’s set you up</string>
+    <string name="just_3_steps">Just 3 quick steps to get started</string>
+    <string name="whats_your_name">What’s your name?</string>
+    <string name="name_caption">So we can personalise your dashboard</string>
+    <string name="which_services">Which services do you use?</string>
+    <string name="services_caption">We’ll only track SMS from these senders</string>
+    <string name="balance_per_service">Current balance per service</string>
+    <string name="balance_caption">Enter what you have right now — we won’t touch it</string>
+    <string name="enter_name_first">Enter your name first</string>
+    <string name="select_one_service">Select at least one service</string>
+    <string name="fill_all_balances">Fill in all balances</string>
+    <string name="no_match_query">No match for “%1$s”</string>
+    <string name="all_category_added">All %1$ss added!</string>
+    <string name="not_enough_data_chart">Not enough data yet</string>
+    <string name="legend_income">Income</string>
+    <string name="legend_expense">Expense</string>
+    <string name="legend_predicted">Predicted*</string>
+    <string name="spending_alerts_title">Spending Alerts</string>
+    <string name="set_limits_budget">Set limits to stay on budget</string>
+    <string name="no_alerts_yet">No alerts yet</string>
+    <string name="no_alerts_yet_sub">Tap the button below to create\nyour first spending limit</string>
+    <string name="alert_name_label">Alert Name</string>
+    <string name="limit_amount_label">Limit Amount</string>
+    <string name="notify_at_pct">Notify at (%)</string>
+    <string name="period_label">Period</string>
+    <string name="widget_preview_balance">TZS 1,250,000</string>
+    <string name="widget_recent_activity_preview">RECENT ACTIVITY</string>
+
+    <!-- Onboarding pages -->
+    <string name="onb_page1_title">Auto SMS\nDetection</string>
+    <string name="onb_page1_subtitle">Zero manual entry</string>
+    <string name="onb_page1_body">Automatically reads your financial SMS messages and extracts deposit and withdrawal details instantly.</string>
+    <string name="onb_page2_title">Smart\nDashboard</string>
+    <string name="onb_page2_subtitle">Your finances at a glance</string>
+    <string name="onb_page2_body">Live balance, income and expense charts with AI-powered spending predictions.</string>
+    <string name="onb_page3_title">Private &amp; Secure</string>
+    <string name="onb_page3_subtitle">Your data stays on your phone</string>
+    <string name="onb_page3_body">Everything is processed locally. Your data is never sent to any server.</string>
+    <string name="onb_feat_zero_entry">Zero manual entry</string>
+    <string name="onb_feat_instant">Instant capture</string>
+    <string name="onb_feat_live">Live balance</string>
+    <string name="onb_feat_charts">Spending charts</string>
+    <string name="onb_feat_ai">AI predictions</string>
+    <string name="onb_feat_ondevice" tools:ignore="Typos">On device only</string>
+    <string name="onb_feat_nointernet" tools:ignore="Typos">No internet needed</string>
+    <string name="onb_feat_encrypted">Encrypted storage</string>
+    <string name="onb_feat_biometric">Biometric lock</string>
 </resources>

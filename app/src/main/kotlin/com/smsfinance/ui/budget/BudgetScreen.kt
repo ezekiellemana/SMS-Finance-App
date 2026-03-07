@@ -1,4 +1,5 @@
 package com.smsfinance.ui.budget
+import com.smsfinance.R
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +23,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,7 +73,7 @@ fun BudgetScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Budget Planning", fontWeight = FontWeight.Bold,
+                    Text(stringResource(R.string.budget_planning), fontWeight = FontWeight.Bold,
                         fontSize = 18.sp, color = TextWhite)
                     Text(monthName, fontSize = 11.sp, color = TextSecondary)
                 }
@@ -105,9 +108,9 @@ fun BudgetScreen(
                                     verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     Text("💰", fontSize = 52.sp)
-                                    Text("No budgets yet",
+                                    Text(stringResource(R.string.no_budgets_yet),
                                         fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextWhite)
-                                    Text("Tap the button below to create\nyour first budget category",
+                                    Text(stringResource(R.string.no_budgets_sub),
                                         fontSize = 13.sp, color = TextSecondary,
                                         textAlign = TextAlign.Center)
                                 }
@@ -210,7 +213,7 @@ fun BudgetOverviewCard(totalBudgeted: Double, totalSpent: Double) {
             )
         ))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Monthly Overview", fontSize = 11.sp, color = TextSecondary,
+            Text(stringResource(R.string.monthly_overview), fontSize = 11.sp, color = TextSecondary,
                 fontWeight = FontWeight.Medium, letterSpacing = .6.sp)
             Text("TZS ${fmtAmt(totalSpent)}", fontSize = 28.sp,
                 fontWeight = FontWeight.ExtraBold, color = TextWhite)
@@ -231,7 +234,7 @@ fun BudgetOverviewCard(totalBudgeted: Double, totalSpent: Double) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Text("${"%.0f".format(overallPct * 100)}% used",
                     fontSize = 11.sp, color = barColor, fontWeight = FontWeight.SemiBold)
-                Text("TZS ${fmtAmt(remaining)} remaining",
+                Text(stringResource(R.string.tzs_remaining, fmtAmt(remaining)),
                     fontSize = 11.sp, color = TextSecondary)
             }
         }
@@ -251,7 +254,7 @@ fun BudgetProgressCard(
         else                  -> AccentTeal
     }
     val bgColor = runCatching {
-        Color(android.graphics.Color.parseColor(progress.budget.color))
+        Color(progress.budget.color.toColorInt())
     }.getOrDefault(AccentTeal)
 
     Column(
@@ -271,7 +274,7 @@ fun BudgetProgressCard(
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(progress.budget.category, fontWeight = FontWeight.Bold,
                         fontSize = 15.sp, color = TextWhite)
-                    Text("TZS ${fmtAmt(progress.budget.amount)} budget",
+                    Text(stringResource(R.string.budget_amount, fmtAmt(progress.budget.amount)),
                         fontSize = 11.sp, color = TextSecondary)
                 }
             }
@@ -325,6 +328,7 @@ fun BudgetProgressCard(
 }
 
 // ── Budget dialog ─────────────────────────────────────────────────────────────
+@Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
 @Composable
 fun BudgetDialog(existing: Budget?, onSave: (Budget) -> Unit, onDismiss: () -> Unit) {
     val cal = Calendar.getInstance()
@@ -350,7 +354,7 @@ fun BudgetDialog(existing: Budget?, onSave: (Budget) -> Unit, onDismiss: () -> U
                 modifier = Modifier.heightIn(max = 500.dp)
             ) {
                 if (usePreset) {
-                    Text("Quick Presets", fontSize = 12.sp, color = TextSecondary)
+                    Text(stringResource(R.string.quick_presets), fontSize = 12.sp, color = TextSecondary)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(BUDGET_PRESETS) { (cat, ic, kw) ->
                             FilterChip(
@@ -369,13 +373,13 @@ fun BudgetDialog(existing: Budget?, onSave: (Budget) -> Unit, onDismiss: () -> U
 
                 OutlinedTextField(
                     value = category, onValueChange = { category = it; categoryError = false },
-                    label = { Text("Category Name") }, isError = categoryError,
+                    label = { Text(stringResource(R.string.category_name)) }, isError = categoryError,
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     leadingIcon = { Text(icon, fontSize = 18.sp, modifier = Modifier.padding(start = 8.dp)) }
                 )
                 OutlinedTextField(
                     value = amount, onValueChange = { amount = it; amountError = false },
-                    label = { Text("Monthly Budget (TZS)") },
+                    label = { Text(stringResource(R.string.monthly_budget_tzs)) },
                     isError = amountError, prefix = { Text("TZS ") },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -383,11 +387,11 @@ fun BudgetDialog(existing: Budget?, onSave: (Budget) -> Unit, onDismiss: () -> U
                 )
                 OutlinedTextField(
                     value = keywords, onValueChange = { keywords = it },
-                    label = { Text("Match Keywords") },
+                    label = { Text(stringResource(R.string.match_keywords)) },
                     placeholder = { Text("e.g. food,hotel,fuel") },
                     modifier = Modifier.fillMaxWidth(), maxLines = 2
                 )
-                Text("Icon", fontSize = 11.sp, color = TextSecondary)
+                Text(stringResource(R.string.icon_label), fontSize = 11.sp, color = TextSecondary)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(BUDGET_PRESETS.map { it.second }) { ic ->
                         Text(ic, fontSize = 22.sp,
@@ -398,10 +402,10 @@ fun BudgetDialog(existing: Budget?, onSave: (Budget) -> Unit, onDismiss: () -> U
                                 .padding(6.dp))
                     }
                 }
-                Text("Color", fontSize = 11.sp, color = TextSecondary)
+                Text(stringResource(R.string.color_label), fontSize = 11.sp, color = TextSecondary)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(PROFILE_COLORS) { hex ->
-                        val c = runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(AccentTeal)
+                        val c = runCatching { Color(hex.toColorInt()) }.getOrDefault(AccentTeal)
                         Box(
                             Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
                                 .background(c).clickable { color = hex },
@@ -436,10 +440,10 @@ fun BudgetDialog(existing: Budget?, onSave: (Budget) -> Unit, onDismiss: () -> U
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AccentTeal, contentColor = Color(0xFF0A1628))
-            ) { Text("Save Budget", fontWeight = FontWeight.Bold) }
+            ) { Text(stringResource(R.string.save_budget), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = TextSecondary) }
         }
     )
 }

@@ -1,4 +1,5 @@
 package com.smsfinance.ui.alerts
+import com.smsfinance.R
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,9 +63,9 @@ fun SpendingAlertsScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Spending Alerts", fontWeight = FontWeight.Bold,
+                    Text(stringResource(R.string.spending_alerts_title), fontWeight = FontWeight.Bold,
                         fontSize = 18.sp, color = TextWhite)
-                    Text("Set limits to stay on budget",
+                    Text(stringResource(R.string.set_limits_budget),
                         fontSize = 11.sp, color = TextSecondary)
                 }
                 Spacer(Modifier.width(48.dp))
@@ -80,9 +82,9 @@ fun SpendingAlertsScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("🔔", fontSize = 52.sp)
-                        Text("No alerts yet", fontSize = 18.sp,
+                        Text(stringResource(R.string.no_alerts_yet), fontSize = 18.sp,
                             fontWeight = FontWeight.Bold, color = TextWhite)
-                        Text("Tap the button below to create\nyour first spending limit",
+                        Text(stringResource(R.string.no_alerts_yet_sub),
                             fontSize = 13.sp, color = TextSecondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                     }
@@ -224,12 +226,12 @@ fun AlertCard(
         // Amount row
         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Bottom) {
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Text("Spent", fontSize = 10.sp, color = TextSecondary, letterSpacing = .4.sp)
+                Text(stringResource(R.string.spent), fontSize = 10.sp, color = TextSecondary, letterSpacing = .4.sp)
                 Text("TZS ${fmtAmt(progress?.currentSpending ?: 0.0)}",
                     fontSize = 16.sp, fontWeight = FontWeight.Bold, color = barColor)
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Text("Limit", fontSize = 10.sp, color = TextSecondary, letterSpacing = .4.sp)
+                Text(stringResource(R.string.limit), fontSize = 10.sp, color = TextSecondary, letterSpacing = .4.sp)
                 Text("TZS ${fmtAmt(alert.limitAmount)}",
                     fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextWhite.copy(.7f))
             }
@@ -296,7 +298,7 @@ fun AlertDialog_AddEdit(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name, onValueChange = { name = it; nameError = false },
-                    label = { Text("Alert Name") },
+                    label = { Text(stringResource(R.string.alert_name_label)) },
                     placeholder = { Text("e.g. Monthly Food") },
                     isError = nameError, singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -304,14 +306,14 @@ fun AlertDialog_AddEdit(
                 )
                 OutlinedTextField(
                     value = limitAmount, onValueChange = { limitAmount = it; amountError = false },
-                    label = { Text("Limit Amount") },
+                    label = { Text(stringResource(R.string.limit_amount_label)) },
                     isError = amountError, prefix = { Text("TZS ") },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
                     shape = RoundedCornerShape(12.dp)
                 )
-                Text("Period", fontSize = 12.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.period_label), fontSize = 12.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AlertPeriod.entries.forEach { period ->
                         FilterChip(
@@ -327,7 +329,7 @@ fun AlertDialog_AddEdit(
                 }
                 OutlinedTextField(
                     value = notifyAt, onValueChange = { notifyAt = it },
-                    label = { Text("Notify at (%)") }, suffix = { Text("%") },
+                    label = { Text(stringResource(R.string.notify_at_pct)) }, suffix = { Text("%") },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
@@ -352,10 +354,10 @@ fun AlertDialog_AddEdit(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AccentTeal, contentColor = Color(0xFF0A1628))
-            ) { Text("Save Alert", fontWeight = FontWeight.Bold) }
+            ) { Text(stringResource(R.string.save_alert), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = TextSecondary) }
         }
     )
 }

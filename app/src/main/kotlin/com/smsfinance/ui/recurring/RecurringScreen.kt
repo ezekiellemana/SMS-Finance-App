@@ -1,4 +1,5 @@
 package com.smsfinance.ui.recurring
+import com.smsfinance.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,8 +56,8 @@ fun RecurringScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Recurring", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
-                    Text("Auto-detect & track regular payments", fontSize = 11.sp, color = TextSecondary)
+                    Text(stringResource(R.string.recurring_title), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
+                    Text(stringResource(R.string.recurring_sub), fontSize = 11.sp, color = TextSecondary)
                 }
                 Spacer(Modifier.width(48.dp))
             }
@@ -88,7 +90,7 @@ fun RecurringScreen(
                 // Recurring list
                 if (uiState.recurring.isNotEmpty()) {
                     item {
-                        Text("Your Recurring Transactions", fontWeight = FontWeight.Bold,
+                        Text(stringResource(R.string.your_recurring), fontWeight = FontWeight.Bold,
                             fontSize = 15.sp, color = TextWhite, modifier = Modifier.padding(top = 4.dp))
                     }
                     items(uiState.recurring, key = { it.id }) { item ->
@@ -107,9 +109,9 @@ fun RecurringScreen(
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 Text("🔄", fontSize = 52.sp)
-                                Text("No recurring transactions", fontSize = 18.sp,
+                                Text(stringResource(R.string.no_recurring), fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold, color = TextWhite)
-                                Text("Tap Auto Detect to find patterns\nor use the button below to add one",
+                                Text(stringResource(R.string.no_recurring_sub),
                                     fontSize = 13.sp, color = TextSecondary, textAlign = TextAlign.Center)
                             }
                         }
@@ -151,9 +153,9 @@ private fun AutoDetectCard(isDetecting: Boolean, onDetect: () -> Unit) {
         Arrangement.SpaceBetween, Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text("Auto Detect Patterns", fontWeight = FontWeight.Bold,
+            Text(stringResource(R.string.auto_detect_title), fontWeight = FontWeight.Bold,
                 fontSize = 15.sp, color = TextWhite)
-            Text("Scan transactions to find regular payments",
+            Text(stringResource(R.string.auto_detect_sub),
                 fontSize = 12.sp, color = TextSecondary)
         }
         Spacer(Modifier.width(12.dp))
@@ -170,7 +172,7 @@ private fun AutoDetectCard(isDetecting: Boolean, onDetect: () -> Unit) {
             ) {
                 Icon(Icons.Default.Search, null, Modifier.size(15.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Scan", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(stringResource(R.string.scan_label), fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
         }
     }
@@ -203,7 +205,7 @@ private fun SuggestionCard(
             TextButton(
                 onClick = onDismiss,
                 colors  = ButtonDefaults.textButtonColors(contentColor = TextSecondary)
-            ) { Text("Skip", fontSize = 12.sp) }
+            ) { Text(stringResource(R.string.skip_label), fontSize = 12.sp) }
             Button(
                 onClick = onAccept,
                 shape  = RoundedCornerShape(10.dp),
@@ -211,7 +213,7 @@ private fun SuggestionCard(
                     containerColor = AccentTeal, contentColor = Color(0xFF0A1628)
                 ),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-            ) { Text("Add", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+            ) { Text(stringResource(R.string.add_label), fontWeight = FontWeight.Bold, fontSize = 12.sp) }
         }
     }
 }
@@ -251,7 +253,7 @@ private fun RecurringCard(
                 Text("${item.frequency.label} · TZS ${fmt(item.expectedAmount)}",
                     fontSize = 12.sp, color = accent)
                 item.nextExpected?.let {
-                    Text("Next: ${SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(it))}",
+                    Text(stringResource(R.string.next_date, SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(it))),
                         fontSize = 11.sp, color = TextSecondary)
                 }
             }
@@ -292,7 +294,7 @@ fun RecurringDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (usePreset) {
-                    Text("Quick Presets", fontSize = 12.sp, color = TextSecondary)
+                    Text(stringResource(R.string.quick_presets), fontSize = 12.sp, color = TextSecondary)
                     androidx.compose.foundation.lazy.LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -312,20 +314,20 @@ fun RecurringDialog(
                 }
                 OutlinedTextField(
                     value = source, onValueChange = { source = it; sourceError = false },
-                    label = { Text("Source / Label") }, isError = sourceError,
+                    label = { Text(stringResource(R.string.source_label_hint)) }, isError = sourceError,
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
                 OutlinedTextField(
                     value = amountStr, onValueChange = { amountStr = it; amountError = false },
-                    label = { Text("Amount") }, prefix = { Text("TZS ") },
+                    label = { Text(stringResource(R.string.amount_label)) }, prefix = { Text("TZS ") },
                     isError = amountError, singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
                     shape = RoundedCornerShape(12.dp)
                 )
-                Text("Type", fontSize = 12.sp, color = TextSecondary)
+                Text(stringResource(R.string.type_label), fontSize = 12.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TransactionType.entries.forEach { t ->
                         FilterChip(
@@ -339,7 +341,7 @@ fun RecurringDialog(
                         )
                     }
                 }
-                Text("Frequency", fontSize = 12.sp, color = TextSecondary)
+                Text(stringResource(R.string.frequency_label), fontSize = 12.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RecurringFrequency.entries.forEach { f ->
                         FilterChip(
@@ -375,10 +377,10 @@ fun RecurringDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AccentTeal, contentColor = Color(0xFF0A1628))
-            ) { Text("Save", fontWeight = FontWeight.Bold) }
+            ) { Text(stringResource(R.string.save_label), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel", color = TextSecondary) }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = TextSecondary) }
         }
     )
 }

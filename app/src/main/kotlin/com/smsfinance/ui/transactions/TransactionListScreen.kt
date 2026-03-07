@@ -1,4 +1,5 @@
 package com.smsfinance.ui.transactions
+import com.smsfinance.R
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,7 +80,7 @@ fun TransactionListScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("All Transactions", fontWeight = FontWeight.Bold,
+                    Text(stringResource(R.string.all_transactions), fontWeight = FontWeight.Bold,
                         fontSize = 18.sp, color = TextWhite)
                     if (!uiState.isLoading) {
                         Text("${uiState.transactions.size} records",
@@ -187,10 +189,10 @@ fun TransactionListScreen(
     if (showFilterDialog) {
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
-            title = { Text("Filter Transactions", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.filter_transactions), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Transaction Type", style = MaterialTheme.typography.labelMedium,
+                    Text(stringResource(R.string.transaction_type), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(
@@ -200,7 +202,7 @@ fun TransactionListScreen(
                                 selectedType = if (current == TransactionType.DEPOSIT)
                                     null else TransactionType.DEPOSIT
                             },
-                            label = { Text("💚  Deposits") }
+                            label = { Text("💚  ${stringResource(R.string.deposits)}") }
                         )
                         FilterChip(
                             selected = selectedType == TransactionType.WITHDRAWAL,
@@ -209,7 +211,7 @@ fun TransactionListScreen(
                                 selectedType = if (current == TransactionType.WITHDRAWAL)
                                     null else TransactionType.WITHDRAWAL
                             },
-                            label = { Text("🔴  Withdrawals") }
+                            label = { Text("🔴  ${stringResource(R.string.withdrawals)}") }
                         )
                     }
                 }
@@ -218,12 +220,12 @@ fun TransactionListScreen(
                 Button(onClick = {
                     viewModel.applyFilter(TransactionFilter(type = selectedType))
                     showFilterDialog = false
-                }) { Text("Apply") }
+                }) { Text(stringResource(R.string.apply)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     selectedType = null; viewModel.clearFilter(); showFilterDialog = false
-                }) { Text("Clear") }
+                }) { Text(stringResource(R.string.clear)) }
             }
         )
     }

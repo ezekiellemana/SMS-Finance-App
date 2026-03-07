@@ -1,4 +1,6 @@
+// noinspection SpellCheckingInspection
 package com.smsfinance.ui.charts
+import com.smsfinance.R
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -7,25 +9,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.smsfinance.domain.model.TransactionType
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.ChartsViewModel
 import java.text.NumberFormat
@@ -39,7 +39,7 @@ fun ChartsScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedPeriod by remember { mutableStateOf(0) } // 0=Month, 1=Quarter, 2=Year
+    var selectedPeriod by remember { mutableIntStateOf(0) } // 0=Month, 1=Quarter, 2=Year
 
     LaunchedEffect(selectedPeriod) { viewModel.loadData(selectedPeriod) }
 
@@ -56,11 +56,11 @@ fun ChartsScreen(
             // Period selector
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("This Month", "3 Months", "This Year").forEachIndexed { i, label ->
+                    listOf("This Month", "3 Months", "This Year").forEachIndexed { i, chipLabel ->
                         FilterChip(
                             selected = selectedPeriod == i,
                             onClick = { selectedPeriod = i },
-                            label = { Text(label, fontSize = 12.sp) }
+                            label = { Text(chipLabel, fontSize = 12.sp) }
                         )
                     }
                 }
@@ -353,13 +353,7 @@ fun TrendLineChart(incomeData: List<Double>, expenseData: List<Double>, labels: 
             drawLine(expenseData, ErrorRed)
             drawLine(incomeData, AccentTeal)
 
-            // X labels
-            labels.forEachIndexed { i, label ->
-                if (labels.size <= 7 || i % (labels.size / 6).coerceAtLeast(1) == 0) {
-                    val x = padL + (i.toFloat() / (n - 1)) * chartW
-                    // Can't use drawContext.canvas.nativeCanvas easily — skip text for simplicity
-                }
-            }
+            // X labels (rendered below the canvas via Row)
         }
 
         // Legend
@@ -430,7 +424,6 @@ fun NetSavingsBarChart(data: List<MonthData>) {
             val pw = size.width; val ph = size.height
             val barCount = data.size
             val barW = (pw / barCount) * 0.55f
-            val gap = (pw / barCount) * 0.45f
             val midY = ph / 2f
 
             // Center zero line
@@ -446,7 +439,7 @@ fun NetSavingsBarChart(data: List<MonthData>) {
                     color = color,
                     topLeft = Offset(cx - barW / 2, top),
                     size = Size(barW, barH),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f)
+                    cornerRadius = CornerRadius(6f)
                 )
             }
         }
@@ -484,7 +477,7 @@ fun LegendItem(color: Color, label: String, value: Double?) {
 @Composable
 fun EmptyChartState() {
     Box(Modifier.fillMaxWidth().height(120.dp), Alignment.Center) {
-        Text("Not enough data yet", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+        Text(stringResource(R.string.not_enough_data_chart), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
     }
 }
 

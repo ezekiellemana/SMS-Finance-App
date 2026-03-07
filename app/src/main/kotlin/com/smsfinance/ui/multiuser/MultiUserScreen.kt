@@ -1,4 +1,5 @@
 package com.smsfinance.ui.multiuser
+import com.smsfinance.R
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,8 +31,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +58,7 @@ fun MultiUserScreen(
 ) {
     val uiState      by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog  by remember { mutableStateOf(false) }
-    var editingProfile by remember { mutableStateOf(null as UserProfile?) }
+    var editingProfile by remember { mutableStateOf<UserProfile?>(null) }
 
     Scaffold(
         containerColor = BgPrimary,
@@ -72,8 +72,8 @@ fun MultiUserScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Family Accounts", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
-                    Text("Manage profiles & settings", fontSize = 11.sp, color = TextSecondary)
+                    Text(stringResource(R.string.family_accounts), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
+                    Text(stringResource(R.string.family_accounts_sub), fontSize = 11.sp, color = TextSecondary)
                 }
                 Spacer(Modifier.width(48.dp))
             }
@@ -185,11 +185,11 @@ fun ActiveProfileHeroCard(profile: UserProfile) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(profile.name, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextWhite)
                     Surface(color = accentColor, shape = RoundedCornerShape(8.dp)) {
-                        Text("Active", color = Color.White, fontSize = 10.sp,
+                        Text(stringResource(R.string.active_label), color = Color.White, fontSize = 10.sp,
                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp))
                     }
                 }
-                Text("Currently active profile",
+                Text(stringResource(R.string.currently_active),
                     fontSize = 12.sp, color = TextSecondary)
             }
         }
@@ -292,7 +292,7 @@ fun ProfileDialog(
     var name          by remember { mutableStateOf(existing?.name ?: "") }
     var selectedEmoji by remember { mutableStateOf(existing?.avatarEmoji ?: "👤") }
     var selectedColor by remember { mutableStateOf(existing?.color ?: "#00C853") }
-    var photoUri      by remember { mutableStateOf(existing?.photoUri as String?) }
+    var photoUri      by remember { mutableStateOf(existing?.photoUri) }
     var nameError     by remember { mutableStateOf(false) }
 
     // Photo picker launcher — copies the chosen image into app-private files
@@ -380,7 +380,7 @@ fun ProfileDialog(
                         ) {
                             Icon(Icons.Default.Photo, null, Modifier.size(15.dp))
                             Spacer(Modifier.width(5.dp))
-                            Text("Gallery", fontSize = 12.sp)
+                            Text(stringResource(R.string.gallery_label), fontSize = 12.sp)
                         }
                         // Remove photo
                         if (!photoUri.isNullOrBlank()) {
@@ -392,7 +392,7 @@ fun ProfileDialog(
                             ) {
                                 Icon(Icons.Default.Delete, null, Modifier.size(15.dp))
                                 Spacer(Modifier.width(5.dp))
-                                Text("Remove", fontSize = 12.sp)
+                                Text(stringResource(R.string.remove_label), fontSize = 12.sp)
                             }
                         }
                     }
@@ -404,7 +404,7 @@ fun ProfileDialog(
                 OutlinedTextField(
                     value         = name,
                     onValueChange = { name = it; nameError = false },
-                    label         = { Text("Full Name") },
+                    label         = { Text(stringResource(R.string.full_name_label)) },
                     placeholder   = { Text("e.g. Mama, Baba, John") },
                     isError       = nameError,
                     modifier      = Modifier.fillMaxWidth(),
@@ -422,7 +422,7 @@ fun ProfileDialog(
                 // ── Emoji avatar picker ───────────────────────────────────────
                 if (photoUri.isNullOrBlank()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Avatar Emoji", style = MaterialTheme.typography.labelMedium,
+                        Text(stringResource(R.string.avatar_emoji), style = MaterialTheme.typography.labelMedium,
                             color = TextSecondary)
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(DEFAULT_AVATARS) { emoji ->
@@ -449,7 +449,7 @@ fun ProfileDialog(
 
                 // ── Color picker ──────────────────────────────────────────────
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Profile Color", style = MaterialTheme.typography.labelMedium,
+                    Text(stringResource(R.string.profile_color), style = MaterialTheme.typography.labelMedium,
                         color = TextSecondary)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(PROFILE_COLORS) { hex ->
@@ -497,11 +497,11 @@ fun ProfileDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AccentTeal)
-            ) { Text("Save", color = Color(0xFF0A1628), fontWeight = FontWeight.Bold) }
+            ) { Text(stringResource(R.string.save_label), color = Color(0xFF0A1628), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondary)
+                Text(stringResource(R.string.cancel), color = TextSecondary)
             }
         }
     )

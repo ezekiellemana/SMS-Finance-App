@@ -389,17 +389,17 @@ fun ForecastChart(forecast: List<AiPredictionEngine.MonthForecast>) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(10.dp).background(AccentTeal, CircleShape))
                     Spacer(Modifier.width(4.dp))
-                    Text("Income", fontSize = 11.sp)
+                    Text(stringResource(R.string.legend_income), fontSize = 11.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(10.dp).background(ErrorRed, CircleShape))
                     Spacer(Modifier.width(4.dp))
-                    Text("Expense", fontSize = 11.sp)
+                    Text(stringResource(R.string.legend_expense), fontSize = 11.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(10.dp).background(AccentTeal.copy(alpha = 0.4f), CircleShape))
                     Spacer(Modifier.width(4.dp))
-                    Text("Predicted*", fontSize = 11.sp)
+                    Text(stringResource(R.string.legend_predicted), fontSize = 11.sp)
                 }
             }
         }

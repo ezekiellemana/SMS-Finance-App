@@ -1,4 +1,5 @@
 package com.smsfinance.ui.dashboard
+import com.smsfinance.R
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.*
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -150,7 +152,7 @@ fun DashboardScreen(
                             Text("Smart Money",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold, color = TextWhite)
-                            Text("Auto-tracking active", fontSize = 11.sp, color = AccentTeal)
+                            Text(stringResource(R.string.auto_tracking_active), fontSize = 11.sp, color = AccentTeal)
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
@@ -212,7 +214,7 @@ fun DashboardScreen(
                         Arrangement.SpaceBetween, Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Recent Activity",
+                            Text(stringResource(R.string.recent_activity),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold, color = TextWhite)
                             if (uiState.recentTransactions.isNotEmpty()) {
@@ -227,7 +229,7 @@ fun DashboardScreen(
                         if (uiState.recentTransactions.size > maxCards) {
                             TextButton(onClick = onNavigateToTransactions,
                                 contentPadding = PaddingValues(0.dp)) {
-                                Text("See all", color = AccentTeal, fontSize = 13.sp)
+                                Text(stringResource(R.string.see_all), color = AccentTeal, fontSize = 13.sp)
                                 Spacer(Modifier.width(3.dp))
                                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
                                     Modifier.size(13.dp), AccentTeal)

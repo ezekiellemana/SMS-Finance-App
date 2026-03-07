@@ -1,4 +1,5 @@
 package com.smsfinance.ui.transactions
+import com.smsfinance.R
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -250,12 +252,12 @@ private fun TransactionDetailContent(
                         Icon(Icons.Default.Sms, null,
                             tint = accentColor, modifier = Modifier.size(15.dp))
                     }
-                    Text("Original SMS", fontSize = 13.sp,
+                    Text(stringResource(R.string.original_sms), fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold, color = TextWhite)
                     Spacer(Modifier.weight(1f))
                     // Small pill showing SMS label
                     Surface(color = accentColor.copy(.10f), shape = RoundedCornerShape(50.dp)) {
-                        Text("RAW", fontSize = 8.sp, fontWeight = FontWeight.ExtraBold,
+                        Text(stringResource(R.string.raw_label), fontSize = 8.sp, fontWeight = FontWeight.ExtraBold,
                             color = accentColor.copy(.7f),
                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
                             letterSpacing = 1.sp)
@@ -300,7 +302,7 @@ private fun TransactionDetailContent(
             Icon(Icons.Default.Delete, null,
                 tint = ErrorRed, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Delete Transaction", color = ErrorRed,
+            Text(stringResource(R.string.delete_transaction), color = ErrorRed,
                 fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
         }
     }
@@ -372,7 +374,7 @@ fun AddTransactionScreen(
             ) {
                 GlassCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Transaction Type", style = MaterialTheme.typography.labelMedium,
+                        Text(stringResource(R.string.transaction_type), style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             TransactionType.entries.forEach { type ->
@@ -398,19 +400,19 @@ fun AddTransactionScreen(
 
                 OutlinedTextField(
                     value = amount, onValueChange = { amount = it; amountError = false },
-                    label = { Text("Amount (TZS)") }, isError = amountError,
-                    supportingText = if (amountError) {{ Text("Enter a valid amount") }} else null,
+                    label = { Text(stringResource(R.string.amount_tzs_label)) }, isError = amountError,
+                    supportingText = if (amountError) {{ Text(stringResource(R.string.invalid_amount)) }} else null,
                     modifier = Modifier.fillMaxWidth(), prefix = { Text("TZS ") },
                     shape = RoundedCornerShape(14.dp)
                 )
                 OutlinedTextField(
                     value = source, onValueChange = { source = it },
-                    label = { Text("Source (e.g. NMB Bank)") },
+                    label = { Text(stringResource(R.string.source_hint_full)) },
                     modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
                 )
                 OutlinedTextField(
                     value = description, onValueChange = { description = it },
-                    label = { Text("Description (optional)") },
+                    label = { Text(stringResource(R.string.description_opt)) },
                     modifier = Modifier.fillMaxWidth(), minLines = 3,
                     shape = RoundedCornerShape(14.dp)
                 )
@@ -432,7 +434,7 @@ fun AddTransactionScreen(
                 ) {
                     Icon(Icons.Default.Check, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Save Transaction", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(stringResource(R.string.save_transaction), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }
