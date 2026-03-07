@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.border
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smsfinance.domain.model.Transaction
@@ -43,6 +43,7 @@ import com.smsfinance.domain.model.TransactionType
 import com.smsfinance.ui.components.*
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.DashboardViewModel
+import com.smsfinance.viewmodel.MultiUserViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -101,13 +102,23 @@ private fun TypewriterText(
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
+    multiUserVm: MultiUserViewModel = hiltViewModel(),
     onNavigateToTransactions: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit = {},
     onNavigateToCharts: () -> Unit = {}
 ) {
-    val uiState     by viewModel.uiState.collectAsStateWithLifecycle()
-    var privacyMode by remember { mutableStateOf(false) }
+    val uiState       by viewModel.uiState.collectAsStateWithLifecycle()
+    val multiState    by multiUserVm.uiState.collectAsStateWithLifecycle()
+    var privacyMode   by remember { mutableStateOf(false) }
+
+    // Derive the profile accent colour — falls back to AccentTeal if none set
+    val profileAccent: Color = remember(multiState.activeProfile?.color) {
+        runCatching {
+            val hex = multiState.activeProfile?.color ?: return@runCatching AccentTeal
+            Color(android.graphics.Color.parseColor(hex))
+        }.getOrElse { AccentTeal }
+    }
 
     Scaffold(containerColor = BgPrimary) { padding ->
 
@@ -164,11 +175,12 @@ fun DashboardScreen(
 
                 // Hero balance
                 HeroBalanceCard(
-                    balance     = uiState.summary.estimatedBalance,
-                    income      = uiState.allTimeIncome,
-                    expenses    = uiState.allTimeExpenses,
-                    isLoading   = uiState.isLoading,
-                    privacyMode = privacyMode
+                    balance       = uiState.summary.estimatedBalance,
+                    income        = uiState.allTimeIncome,
+                    expenses      = uiState.allTimeExpenses,
+                    isLoading     = uiState.isLoading,
+                    privacyMode   = privacyMode,
+                    profileAccent = profileAccent
                 )
 
                 // Quick actions
@@ -226,7 +238,7 @@ fun DashboardScreen(
                             uiState.recentTransactions,
                             key = { _, tx -> tx.id }
                         ) { _, tx ->
-                            TransactionRow(tx, privacyMode, onClick = onNavigateToTransactions)
+                            TransactionRow(tx, privacyMode, profileAccent, onClick = onNavigateToTransactions)
                         }
                     }
                 }
@@ -294,7 +306,8 @@ fun HeroBalanceCard(
     income: Double,
     expenses: Double,
     isLoading: Boolean,
-    privacyMode: Boolean
+    privacyMode: Boolean,
+    profileAccent: Color = AccentTeal
 ) {
     val animBal   by animateFloatAsState(balance.toFloat(), tween(1200, easing = EaseOutCubic), label = "bal")
     val animInc   by animateFloatAsState(income.toFloat(),  tween(900,  easing = EaseOutCubic), label = "inc")
@@ -318,14 +331,26 @@ fun HeroBalanceCard(
         Modifier.fillMaxWidth()
             .graphicsLayer { scaleX = cardScale; scaleY = cardScale }
             .clip(RoundedCornerShape(22.dp))
+            // Profile-colour glowing border
+            .border(
+                width = 1.5.dp,
+                brush = Brush.linearGradient(
+                    listOf(
+                        profileAccent.copy(alpha = 0.7f),
+                        profileAccent.copy(alpha = 0.3f),
+                        profileAccent.copy(alpha = 0.7f)
+                    )
+                ),
+                shape = RoundedCornerShape(22.dp)
+            )
             .background(Brush.linearGradient(
                 listOf(Color(0xFF1A3040), Color(0xFF1E3A3A), Color(0xFF1F2E3A))
             ))
             .drawBehind {
-                // Ambient glow orb — top-right corner
+                // Ambient glow orb — uses profile accent colour
                 drawCircle(
                     Brush.radialGradient(
-                        listOf(AccentTeal.copy(glowAlpha), Color.Transparent),
+                        listOf(profileAccent.copy(glowAlpha), Color.Transparent),
                         Offset(size.width * .82f, size.height * .18f), size.width * .55f
                     )
                 )
@@ -466,21 +491,37 @@ private fun QuickAction(
 
 // ── Transaction row ───────────────────────────────────────────────────────────
 @Composable
-fun TransactionRow(transaction: Transaction, privacyMode: Boolean, onClick: () -> Unit) {
+fun TransactionRow(
+    transaction: Transaction,
+    privacyMode: Boolean,
+    profileAccent: Color = AccentTeal,
+    onClick: () -> Unit
+) {
     val isDeposit   = transaction.type == TransactionType.DEPOSIT
     val haptic      = LocalHapticFeedback.current
-    val accentColor = if (isDeposit) AccentTeal else ErrorRed
+    val txColor     = if (isDeposit) AccentTeal else ErrorRed
 
-    // Colored card background — subtle tint of the accent
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
+            // Profile-colour border wraps the whole card
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    listOf(
+                        profileAccent.copy(alpha = 0.55f),
+                        profileAccent.copy(alpha = 0.20f),
+                        profileAccent.copy(alpha = 0.55f)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
             .background(
                 Brush.horizontalGradient(
                     listOf(
-                        accentColor.copy(.10f),
-                        accentColor.copy(.05f),
+                        txColor.copy(.08f),
+                        txColor.copy(.04f),
                         Color(0xFF1E2840)
                     )
                 )
@@ -492,13 +533,13 @@ fun TransactionRow(transaction: Transaction, privacyMode: Boolean, onClick: () -
     ) {
         // Round colored icon circle
         Box(
-            Modifier.size(42.dp).clip(CircleShape).background(accentColor.copy(.18f)),
+            Modifier.size(42.dp).clip(CircleShape).background(txColor.copy(.18f)),
             Alignment.Center
         ) {
             Icon(
                 if (isDeposit) Icons.AutoMirrored.Filled.CallReceived
                 else Icons.AutoMirrored.Filled.CallMade,
-                null, tint = accentColor, modifier = Modifier.size(18.dp)
+                null, tint = txColor, modifier = Modifier.size(18.dp)
             )
         }
 
@@ -516,16 +557,15 @@ fun TransactionRow(transaction: Transaction, privacyMode: Boolean, onClick: () -
             Text(
                 if (privacyMode) "••••"
                 else "${if (isDeposit) "+" else "-"} TZS ${fmtAmt(transaction.amount)}",
-                fontWeight = FontWeight.Bold, color = accentColor, fontSize = 13.sp
+                fontWeight = FontWeight.Bold, color = txColor, fontSize = 13.sp
             )
-            // Small circle badge (not square)
             Box(
-                Modifier.size(22.dp).clip(CircleShape).background(accentColor.copy(.18f)),
+                Modifier.size(22.dp).clip(CircleShape).background(txColor.copy(.18f)),
                 Alignment.Center
             ) {
                 Text(
                     if (isDeposit) "IN" else "OUT",
-                    fontSize = 6.sp, fontWeight = FontWeight.ExtraBold, color = accentColor
+                    fontSize = 6.sp, fontWeight = FontWeight.ExtraBold, color = txColor
                 )
             }
         }

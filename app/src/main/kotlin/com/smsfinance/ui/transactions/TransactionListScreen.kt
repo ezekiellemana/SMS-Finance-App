@@ -31,20 +31,30 @@ import com.smsfinance.domain.model.TransactionType
 import com.smsfinance.ui.components.*
 import com.smsfinance.ui.dashboard.TransactionRow
 import com.smsfinance.ui.theme.*
+import com.smsfinance.viewmodel.MultiUserViewModel
 import com.smsfinance.viewmodel.TransactionViewModel
 
 @Suppress("DEPRECATION")
 @Composable
 fun TransactionListScreen(
     viewModel: TransactionViewModel = hiltViewModel(),
+    multiUserVm: MultiUserViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (Long) -> Unit,
     onNavigateToAdd: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState       by viewModel.uiState.collectAsStateWithLifecycle()
+    val multiState    by multiUserVm.uiState.collectAsStateWithLifecycle()
     var showFilterDialog by remember { mutableStateOf(false) }
     var selectedType by remember { mutableStateOf<TransactionType?>(null) }
     val hasFilter = selectedType != null
+
+    val profileAccent: Color = remember(multiState.activeProfile?.color) {
+        runCatching {
+            val hex = multiState.activeProfile?.color ?: return@runCatching AccentTeal
+            Color(android.graphics.Color.parseColor(hex))
+        }.getOrElse { AccentTeal }
+    }
 
     Scaffold(
         containerColor = BgPrimary,
@@ -116,6 +126,7 @@ fun TransactionListScreen(
                             items(uiState.transactions, key = { it.id }) { tx ->
                                 SwipeToDismissTransaction(tx, onDismiss = { viewModel.deleteTransaction(tx) }) {
                                     TransactionRow(tx, privacyMode = false,
+                                        profileAccent = profileAccent,
                                         onClick = { onNavigateToDetail(tx.id) })
                                 }
                             }

@@ -351,7 +351,7 @@ fun SmartMoneyBottomBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(88.dp)
+                .height(89.dp)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(Color(0xFF0F1825))
                 .drawBehind {
@@ -383,7 +383,7 @@ fun SmartMoneyBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(88.dp),
+                .height(89.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -485,11 +485,11 @@ private fun BottomBarItem(
                                 modifier           = Modifier.fillMaxSize().clip(CircleShape)
                             )
                         } else {
-                            Text(text = profileEmoji ?: "👤", fontSize = 26.sp)
+                            Text(text = profileEmoji ?: "👤", fontSize = 25.sp)
                         }
                     }
                 }
-                Spacer(Modifier.height(3.dp))
+                Spacer(Modifier.height(1.dp))
                 Text(
                     text       = stringResource(item.labelRes),
                     color      = if (selected) BrandTeal else Color(0xFF3A4556),
