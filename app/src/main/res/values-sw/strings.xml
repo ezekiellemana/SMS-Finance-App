@@ -1,30 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Swahili translations for SMS Finance Widget -->
+<!-- Swahili translations for Smart Money -->
 <resources>
-    <string name="app_name">Kidijitali cha Fedha</string>
+    <string name="app_name">Smart Money</string>
 
     <!-- Widget labels -->
     <string name="widget_small_label">Fedha (Ndogo)</string>
     <string name="widget_medium_label">Fedha (Kati)</string>
     <string name="widget_small_description">Inaonyesha salio na muhtasari wa mwezi</string>
     <string name="widget_medium_description">Inaonyesha muhtasari na miamala 3 ya hivi karibuni</string>
+    <string name="widget_app_name">SMART MONEY</string>
+    <string name="widget_est_balance">Salio Inayokadiriwa</string>
+    <string name="widget_balance_placeholder">TZS ---</string>
+    <string name="widget_income_label">NDANI</string>
+    <string name="widget_expense_label">NJE</string>
+    <string name="widget_value_placeholder">---</string>
+    <string name="widget_tap_to_open">Gusa kufungua</string>
+    <string name="widget_recent_activity">SHUGHULI ZA HIVI KARIBUNI</string>
+    <string name="widget_income_arrow">↑ ---</string>
+    <string name="widget_expense_arrow">↓ ---</string>
+    <string name="widget_tx_arrow">↑</string>
 
-    <!-- Dashboard -->
+    <!-- Navigation -->
     <string name="nav_dashboard">Dashibodi</string>
     <string name="nav_transactions">Miamala</string>
     <string name="nav_alerts">Tahadhari</string>
     <string name="nav_predictions">Utabiri wa AI</string>
+    <string name="nav_profile">Wasifu</string>
     <string name="nav_settings">Mipangilio</string>
 
-    <string name="dashboard_title">Fedha za SMS</string>
+    <!-- Dashboard -->
+    <string name="dashboard_title">Smart Money</string>
     <string name="estimated_balance">Salio Lililokadiriwa</string>
     <string name="monthly_income">Mapato ya Mwezi</string>
     <string name="monthly_expenses">Matumizi ya Mwezi</string>
-    <string name="recent_transactions">Miamala ya Hivi Karibuni</string>
+    <string name="recent_transactions">Shughuli za Hivi Karibuni</string>
     <string name="view_all">Ona Yote</string>
     <string name="this_month">Mwezi Huu</string>
     <string name="no_transactions">Hakuna miamala bado</string>
     <string name="no_transactions_sub">Ujumbe wa fedha wa SMS utaonekana hapa kiotomatiki</string>
+    <string name="auto_tracking_active">Ufuatiliaji wa kiotomatiki umewashwa</string>
 
     <!-- Transaction types -->
     <string name="deposit">Amana</string>
@@ -32,6 +46,14 @@
     <string name="income">Mapato</string>
     <string name="expense">Matumizi</string>
     <string name="balance">Salio</string>
+
+    <!-- Transaction list -->
+    <string name="all_transactions">Miamala Yote</string>
+    <string name="filter_transactions">Chuja Miamala</string>
+    <string name="transaction_type">Aina ya Muamala</string>
+    <string name="apply">Tumia</string>
+    <string name="clear">Futa</string>
+    <string name="no_transactions_found">Hakuna miamala iliyopatikana</string>
 
     <!-- Transaction detail -->
     <string name="transaction_details">Maelezo ya Muamala</string>
@@ -44,23 +66,15 @@
     <string name="manual_entry">Kuingizwa kwa Mkono</string>
     <string name="received">Imepokewa</string>
     <string name="sent">Imetumwa</string>
+    <string name="raw_label">ASILI</string>
 
-    <!-- Add transaction -->
+    <!-- Add / Edit transaction -->
     <string name="add_transaction">Ongeza Muamala</string>
     <string name="amount_tzs">Kiasi (TZS)</string>
     <string name="source_hint">Chanzo (mf. Benki ya NMB)</string>
     <string name="description_optional">Maelezo (hiari)</string>
     <string name="save_transaction">Hifadhi Muamala</string>
     <string name="invalid_amount">Ingiza kiasi halali</string>
-
-    <!-- Filters -->
-    <string name="filter_transactions">Chuja Miamala</string>
-    <string name="transaction_type">Aina ya Muamala</string>
-    <string name="deposits">Amana</string>
-    <string name="withdrawals">Kutoa</string>
-    <string name="apply">Tumia</string>
-    <string name="clear">Futa</string>
-    <string name="no_transactions_found">Hakuna miamala iliyopatikana</string>
 
     <!-- Settings -->
     <string name="settings_title">Mipangilio</string>
@@ -78,27 +92,31 @@
     <string name="dark_mode_desc">Tumia mpango wa rangi za giza</string>
     <string name="language">Lugha</string>
     <string name="language_desc">Chagua lugha unayopendelea</string>
+    <string name="app_language">Lugha ya Programu</string>
+    <string name="choose_language">Chagua lugha unayopendelea</string>
     <string name="about">Kuhusu</string>
-    <string name="app_version">Toleo 1.0.0</string>
+    <string name="app_version">Toleo 4.0.0</string>
     <string name="privacy_note">Data yote inashughulikiwa ndani ya simu yako. Hakuna data ya SMS inayotumwa nje.</string>
     <string name="set_pin">Weka PIN</string>
     <string name="enter_pin">Ingiza PIN ya tarakimu 4–6</string>
     <string name="cancel">Ghairi</string>
+    <string name="save">Hifadhi</string>
 
     <!-- PIN Screen -->
-    <string name="app_name_pin">Kidijitali cha Fedha</string>
+    <string name="app_name_pin">Smart Money</string>
     <string name="enter_your_pin">Ingiza PIN yako</string>
+    <string name="enter_pin_to_continue">Ingiza PIN yako kuendelea</string>
     <string name="incorrect_pin">PIN si sahihi</string>
 
-    <!-- Alerts -->
+    <!-- Spending Alerts -->
     <string name="spending_alerts">Tahadhari za Matumizi</string>
-    <string name="alerts_subtitle">Weka mipaka ya matumizi ili uwe na ufahamu</string>
+    <string name="alerts_subtitle">Weka mipaka kudhibiti bajeti yako</string>
     <string name="add_alert">Ongeza Tahadhari</string>
-    <string name="no_alerts">Hakuna tahadhari zilizowekwa</string>
-    <string name="no_alerts_sub">Gusa + kuongeza tahadhari yako ya kwanza</string>
+    <string name="no_alerts">Hakuna tahadhari bado</string>
+    <string name="no_alerts_sub">Gusa kitufe hapa chini kuunda\nkikomo chako cha kwanza</string>
     <string name="alert_name">Jina la Tahadhari</string>
     <string name="alert_name_hint">mf. Chakula cha Mwezi</string>
-    <string name="limit_amount">Kiasi cha Kikomo (TZS)</string>
+    <string name="limit_amount">Kiasi cha Kikomo</string>
     <string name="alert_period">Kipindi</string>
     <string name="period_daily">Kila Siku</string>
     <string name="period_weekly">Kila Wiki</string>
@@ -134,6 +152,91 @@
     <string name="analyze_spending">Changanua Matumizi</string>
     <string name="prediction_tip">Kidokezo cha Akiba</string>
     <string name="generating_analysis">Inachambua data yako…</string>
+    <string name="not_enough_data_chart">Data haitoshi bado</string>
+    <string name="predicted_label">Inayotabiriwa*</string>
+
+    <!-- Budget -->
+    <string name="budget_planning">Mipango ya Bajeti</string>
+    <string name="monthly_overview">Muhtasari wa Mwezi</string>
+    <string name="no_budgets">Hakuna bajeti bado</string>
+    <string name="no_budgets_sub">Gusa kitufe hapa chini kuunda\nkategoria yako ya kwanza ya bajeti</string>
+    <string name="add_budget_category">Ongeza Kategoria ya Bajeti</string>
+    <string name="category_name">Jina la Kategoria</string>
+    <string name="monthly_budget_tzs">Bajeti ya Mwezi (TZS)</string>
+    <string name="match_keywords">Maneno ya Kutafuta</string>
+    <string name="quick_presets">Chaguo za Haraka</string>
+    <string name="icon_label">Ikoni</string>
+    <string name="color_label">Rangi</string>
+    <string name="save_budget">Hifadhi Bajeti</string>
+    <string name="surplus">Ziada</string>
+
+    <!-- Recurring -->
+    <string name="recurring_title">Za Kawaida</string>
+    <string name="your_recurring">Miamala Yako ya Kawaida</string>
+    <string name="no_recurring">Hakuna miamala ya kawaida</string>
+    <string name="no_recurring_sub">Gusa Gundua Kiotomatiki kupata mifumo\nau tumia kitufe hapa chini kuongeza</string>
+    <string name="auto_detect_patterns">Gundua Mifumo</string>
+    <string name="auto_detect_desc">Gundua na ufuatilie malipo ya kawaida</string>
+    <string name="scan_transactions">Changanua miamala kupata malipo ya kawaida</string>
+    <string name="source_label_hint">Chanzo / Lebo</string>
+    <string name="frequency">Mzunguko</string>
+    <string name="scan">Changanua</string>
+    <string name="skip">Ruka</string>
+    <string name="add">Ongeza</string>
+
+    <!-- Investments -->
+    <string name="investments_title">Uwekezaji</string>
+    <string name="track_investments">Fuatilia malengo ya akiba na kwingineko</string>
+    <string name="no_investments">Hakuna uwekezaji bado</string>
+    <string name="no_investments_sub">Ongeza malengo ya akiba, amana za muda, hisa\nau uwekezaji wowote kufuatilia</string>
+    <string name="portfolio_overview">Muhtasari wa Kwingineko</string>
+    <string name="add_investment">Ongeza Uwekezaji</string>
+    <string name="investment_type">Aina ya Uwekezaji</string>
+    <string name="investment_name_hint">Jina mf. Amana ya CRDB</string>
+    <string name="current_value">Thamani ya Sasa</string>
+    <string name="gain_loss">Faida / Hasara</string>
+    <string name="institution_optional">Taasisi (hiari)</string>
+    <string name="progress_to_goal">Maendeleo ya lengo</string>
+
+    <!-- Multi-user / Family -->
+    <string name="family_accounts">Akaunti za Familia</string>
+    <string name="manage_profiles">Simamia wasifu na mipangilio</string>
+    <string name="active_label">Amilifu</string>
+    <string name="currently_active">Wasifu unaotumika sasa</string>
+    <string name="add_member">Ongeza Mwanachama</string>
+    <string name="full_name">Jina Kamili</string>
+    <string name="avatar_emoji">Emoji ya Picha</string>
+    <string name="profile_color">Rangi ya Wasifu</string>
+    <string name="gallery">Picha</string>
+    <string name="remove">Ondoa</string>
+
+    <!-- Cloud Backup -->
+    <string name="google_drive_backup">Hifadhi kwenye Google Drive</string>
+    <string name="backup_status">Hali ya Hifadhi</string>
+    <string name="backup_now">Hifadhi Sasa</string>
+    <string name="restore">Rejesha</string>
+    <string name="restore_title">Rejesha kutoka kwa Hifadhi?</string>
+    <string name="restore_desc">Hii itaingiza miamala kutoka kwa hifadhi yako ya Google Drive. Miamala iliyopo haitafutwa — itaunganishwa.</string>
+    <string name="sign_in_google">Ingia na Google</string>
+    <string name="sign_out_google">Toka kwenye Google</string>
+    <string name="how_it_works">Inavyofanya kazi</string>
+    <string name="backup_failed">Hifadhi imeshindwa: %1$s</string>
+
+    <!-- Export -->
+    <string name="export_title">Hamisha</string>
+    <string name="choose_format">Chagua Muundo</string>
+    <string name="date_range">Kipindi cha Tarehe</string>
+
+    <!-- Search -->
+    <string name="search_hint">Tafuta miamala, vyanzo…</string>
+
+    <!-- Onboarding -->
+    <string name="search_label">Tafuta…</string>
+    <string name="all_balances_required">Salio zote zinahitajika kuendelea</string>
+
+    <!-- Widget theme preview -->
+    <string name="widget_preview_balance">TZS 1,250,000</string>
+    <string name="widget_themes">Mandhari ya Kidijitali</string>
 
     <!-- Notifications -->
     <string name="notification_channel_alerts">Tahadhari za Matumizi</string>

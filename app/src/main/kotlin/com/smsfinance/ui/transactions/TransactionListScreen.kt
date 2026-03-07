@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smsfinance.domain.model.Transaction
 import com.smsfinance.domain.model.TransactionFilter
 import com.smsfinance.domain.model.TransactionType
 import com.smsfinance.ui.components.*

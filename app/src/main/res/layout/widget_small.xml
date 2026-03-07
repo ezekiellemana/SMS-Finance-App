@@ -5,23 +5,24 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#E61F2633"
+    android:baselineAligned="false"
     android:padding="12dp">
 
-    <!-- Header -->
+    <!-- Header: fixed height eliminates nested-weight warning -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="18dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:baselineAligned="false">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="SMART MONEY"
+            android:text="@string/widget_app_name"
             android:textColor="#99FFFFFF"
-            android:textSize="9sp"
+            android:textSize="11sp"
             android:textAllCaps="true" />
 
         <TextView
@@ -30,14 +31,14 @@
             android:layout_height="7dp"
             android:background="#FF3DDAD7"
             android:text=""
-            android:textSize="1sp" />
+            android:textSize="11sp" />
     </LinearLayout>
 
-    <!-- Balance -->
+    <!-- Balance: takes all remaining height -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center_vertical">
 
@@ -45,15 +46,15 @@
             android:id="@+id/tv_balance_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Est. Balance"
+            android:text="@string/widget_est_balance"
             android:textColor="#AAFFFFFF"
-            android:textSize="10sp" />
+            android:textSize="11sp" />
 
         <TextView
             android:id="@+id/tv_balance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="TZS ---"
+            android:text="@string/widget_balance_placeholder"
             android:textColor="#FFFFFFFF"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -62,19 +63,20 @@
     </LinearLayout>
 
     <!-- Divider -->
-    <View
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#33FFFFFF"
-        android:layout_marginBottom="4dp" />
+        android:layout_marginBottom="4dp"
+        android:text="" />
 
-    <!-- Income / Expenses -->
+    <!-- Income / Expenses: fixed height eliminates nested-weight warning -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_height="40dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:baselineAligned="false">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -89,15 +91,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="IN"
+                android:text="@string/widget_income_label"
                 android:textColor="#77FFFFFF"
-                android:textSize="8sp" />
+                android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/tv_income"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="---"
+                android:text="@string/widget_value_placeholder"
                 android:textColor="#FF3DDAD7"
                 android:textSize="11sp"
                 android:textStyle="bold"
@@ -118,15 +120,15 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="OUT"
+                android:text="@string/widget_expense_label"
                 android:textColor="#77FFFFFF"
-                android:textSize="8sp" />
+                android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/tv_expenses"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="---"
+                android:text="@string/widget_value_placeholder"
                 android:textColor="#FFFF5C5C"
                 android:textSize="11sp"
                 android:textStyle="bold"
@@ -135,15 +137,14 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Last updated -->
+    <!-- Last updated: fixed height -->
     <TextView
         android:id="@+id/tv_last_updated"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="Tap to open"
+        android:layout_height="16dp"
+        android:text="@string/widget_tap_to_open"
         android:textColor="#44FFFFFF"
-        android:textSize="8sp"
+        android:textSize="11sp"
         android:gravity="bottom" />
 
 </LinearLayout>

@@ -8,7 +8,6 @@
         <!-- Edge-to-edge: transparent bars so Compose controls the drawing -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
     <!-- Static system splash suppressed — video splash handles everything -->

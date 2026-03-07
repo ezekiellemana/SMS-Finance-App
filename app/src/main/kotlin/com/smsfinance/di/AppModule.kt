@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.smsfinance.di
 
 import android.content.Context
@@ -18,6 +19,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    @Suppress("DEPRECATION")
     @Provides @Singleton
     fun provideEncryptedSharedPreferences(@ApplicationContext context: Context): android.content.SharedPreferences {
         val masterKey = MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()

@@ -108,6 +108,12 @@ class MainActivity : FragmentActivity() {
 
     @Inject lateinit var smsHistoryImporter: SmsHistoryImporter
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        val prefs = newBase.getSharedPreferences("app_language", android.content.Context.MODE_PRIVATE)
+        val lang = prefs.getString("language", "en") ?: "en"
+        super.attachBaseContext(com.smsfinance.util.LocaleHelper.wrap(newBase, lang))
+    }
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()) { grants ->
         // If READ_SMS was just granted, import existing inbox in background

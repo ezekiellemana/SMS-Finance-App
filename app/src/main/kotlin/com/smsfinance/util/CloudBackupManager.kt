@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.smsfinance.util
 
 import android.content.Context
@@ -35,10 +36,10 @@ import javax.inject.Singleton
 @Suppress("DEPRECATION")
 @Singleton
 class CloudBackupManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context  // explicit use-site target
 ) {
     companion object {
-        private const val BACKUP_FILE_NAME = "smsfinance_backup.json"
+        private const val BACKUP_FILE_NAME = "smart_money_backup.json"  // fixed typo: was 'smsfinance'
         private const val APP_NAME = "Smart Money"
         private const val DRIVE_FOLDER = "appDataFolder"
     }
@@ -137,9 +138,9 @@ class CloudBackupManager @Inject constructor(
             BackupInfo(
                 fileId = file.id,
                 lastModified = file.modifiedTime?.value ?: 0L,
-                sizeBytes = file.getSize() ?: 0L
+                sizeBytes = file.size.toLong()
             )
-        } catch (e: Exception) { null }
+        } catch (_: Exception) { null }  // "e" was never used — replaced with _
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

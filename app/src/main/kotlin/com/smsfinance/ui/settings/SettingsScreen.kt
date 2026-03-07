@@ -12,11 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smsfinance.R
 import com.smsfinance.ui.components.*
 import com.smsfinance.ui.theme.*
 import com.smsfinance.util.LocaleHelper
@@ -99,51 +101,51 @@ fun SettingsScreen(
                     pinEnabled) { if (it) showPinSetup = true else viewModel.disablePin() }
 
                 Spacer(Modifier.height(4.dp))
-                SectionHeader("Appearance")
-                AppSwitchRow("Dark Mode", "Switch to dark colour scheme",
+                SectionHeader(stringResource(R.string.appearance))
+                AppSwitchRow(stringResource(R.string.dark_mode), stringResource(R.string.dark_mode_desc),
                     Icons.Default.DarkMode,
                     AccentLight, AccentLight.copy(alpha = 0.12f),
                     darkMode) { viewModel.setDarkMode(it) }
 
                 Spacer(Modifier.height(4.dp))
-                SectionHeader("Language")
+                SectionHeader(stringResource(R.string.language))
                 GlassCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
-                        Text("App Language", style = MaterialTheme.typography.bodyMedium,
+                        Text(stringResource(R.string.app_language), style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold)
-                        Text("Choose your preferred language",
+                        Text(stringResource(R.string.choose_language),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(selected = language == LocaleHelper.LANG_ENGLISH,
                                 onClick = { viewModel.setLanguage(LocaleHelper.LANG_ENGLISH, context) },
-                                label = { Text("🇬🇧  English") })
+                                label = { Text("🇬🇧  ${stringResource(R.string.language_english)}") })
                             FilterChip(selected = language == LocaleHelper.LANG_SWAHILI,
                                 onClick = { viewModel.setLanguage(LocaleHelper.LANG_SWAHILI, context) },
-                                label = { Text("🇹🇿  Kiswahili") })
+                                label = { Text("🇹🇿  ${stringResource(R.string.language_swahili)}") })
                         }
                     }
                 }
 
                 Spacer(Modifier.height(4.dp))
-                SectionHeader("About")
+                SectionHeader(stringResource(R.string.about))
                 GlassCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("💚", fontSize = 32.sp)
                             Column {
-                                Text("Smart Money",
+                                Text(stringResource(R.string.app_name),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold)
-                                Text("Version 4.0.0", fontSize = 12.sp,
+                                Text(stringResource(R.string.app_version), fontSize = 12.sp,
                                     color = AccentTeal, fontWeight = FontWeight.Medium)
                             }
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Text(
-                            "🔒  All data is processed locally on your device. Your SMS data is never transmitted externally.",
+                            "🔒  ${stringResource(R.string.privacy_note)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -157,12 +159,12 @@ fun SettingsScreen(
     if (showPinSetup) {
         AlertDialog(
             onDismissRequest = { showPinSetup = false },
-            title = { Text("Set PIN", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.set_pin), fontWeight = FontWeight.Bold) },
             text = {
                 OutlinedTextField(
                     value = pinInput,
                     onValueChange = { if (it.length <= 6) pinInput = it },
-                    label = { Text("Enter 4–6 digit PIN") },
+                    label = { Text(stringResource(R.string.enter_pin)) },
                     visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword),
@@ -174,10 +176,10 @@ fun SettingsScreen(
                     if (pinInput.length in 4..6) {
                         viewModel.setPin(pinInput); pinInput = ""; showPinSetup = false
                     }
-                }) { Text("Set PIN") }
+                }) { Text(stringResource(R.string.set_pin)) }
             },
             dismissButton = {
-                TextButton(onClick = { showPinSetup = false; pinInput = "" }) { Text("Cancel") }
+                TextButton(onClick = { showPinSetup = false; pinInput = "" }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

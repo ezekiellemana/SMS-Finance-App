@@ -81,10 +81,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setLanguage(lang: String, context: Context) = viewModelScope.launch {
         prefs.setLanguage(lang)
-        context.applicationContext
-            .getSharedPreferences("app_language", Context.MODE_PRIVATE)
-            .edit().apply { putString("language", lang); apply() }
-        LocaleHelper.applyLocale(context, lang)
+        context.getSharedPreferences("app_language", Context.MODE_PRIVATE)
+            .edit().putString("language", lang).apply()
+        // Recreate the Activity so the new locale takes effect immediately
+        (context as? android.app.Activity)?.recreate()
     }
 
     fun setPin(pin: String) = viewModelScope.launch {

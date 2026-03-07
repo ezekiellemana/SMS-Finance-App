@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.smsfinance.ui.backup
 
 import android.content.Intent
@@ -26,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.CloudBackupViewModel
 import com.smsfinance.ui.components.AppScreenScaffold
@@ -39,22 +39,15 @@ fun CloudBackupScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showRestoreConfirm by remember { mutableStateOf(false) }
-    var signInIntent by remember { mutableStateOf<Intent?>(null) }
-
-    // Build sign-in intent when needed
-    LaunchedEffect(Unit) {
-        signInIntent = viewModel.buildSignInIntent()
-    }
 
     // Google Sign-In launcher
     val signInLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        try {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            task.getResult(ApiException::class.java)
-            viewModel.refreshSignInState()
-        } catch (e: ApiException) { /* cancelled or failed */ }
+        val signedIn = runCatching {
+            GoogleSignIn.getSignedInAccountFromIntent(result.data).result
+        }.isSuccess
+        if (signedIn) viewModel.refreshSignInState()
     }
 
     AppScreenScaffold(
@@ -105,7 +98,7 @@ fun CloudBackupScreen(
             if (!uiState.isSignedIn) {
                 // ── Sign in button ────────────────────────────────────────────
                 Button(
-                    onClick = { signInIntent?.let { signInLauncher.launch(it) } },
+                    onClick = { signInLauncher.launch(viewModel.buildSignInIntent()) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
