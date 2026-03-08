@@ -75,7 +75,7 @@
     <string name="language">Language</string>
     <string name="language_desc">Choose your preferred language</string>
     <string name="app_language">App Language</string>
-    <string name="choose_language">Select your preferred language for the app interface</string>
+    <string name="choose_language">Choose your preferred language</string>
     <string name="about">About</string>
     <string name="app_version">Version 1.0.0</string>
     <string name="privacy_note">All data is processed locally on your device. No SMS data is ever transmitted externally.</string>
@@ -135,6 +135,8 @@
     <!-- Additional UI strings -->
     <string name="auto_tracking_active">Auto-tracking active</string>
     <string name="recent_activity">Recent Activity</string>
+    <string name="refresh_sms">Refresh SMS</string>
+    <string name="refresh_up_to_date">Up to date</string>
     <string name="see_all">See all</string>
     <string name="all_transactions">All Transactions</string>
     <string name="records">%1$d records</string>

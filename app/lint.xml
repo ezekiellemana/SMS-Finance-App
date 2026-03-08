@@ -1,14 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
-    <!-- Suppress spell-checker false positives in Swahili translation file.
-         Android Studio's spell checker has no Swahili dictionary. -->
+
+    <!--
+        Typos — two separate paths suppressed:
+        1. values-sw/strings.xml: Android Studio has no Swahili dictionary.
+        2. AndroidManifest.xml: 'fileprovider' is a URI authority token, not prose.
+    -->
     <issue id="Typos">
         <ignore path="src/main/res/values-sw/strings.xml" />
+        <ignore path="src/main/AndroidManifest.xml" />
     </issue>
 
-    <!-- nav_profile is defined in values-sw/strings.xml — suppress stale
-         "not translated" warnings that appear before a clean Gradle sync. -->
+    <!--
+        MissingTranslation — suppress stale warnings before a clean Gradle sync.
+    -->
     <issue id="MissingTranslation">
         <ignore path="src/main/res/values-sw/strings.xml" />
     </issue>
+
+    <!--
+        ProtectedPermissions — RECEIVE_SMS / READ_SMS.
+        Smart Money's sole purpose is automatic financial-transaction detection
+        from bank and mobile-money SMS. These permissions ARE the core product
+        feature; they are never used for ads or secondary functionality.
+        tools:ignore on <uses-permission> is not reliably respected by all
+        lint versions, so the suppression is declared here instead.
+    -->
+    <issue id="ProtectedPermissions">
+        <ignore path="src/main/AndroidManifest.xml" />
+    </issue>
+
+    <!--
+        ForegroundServicePermission — Android 14 foreground-service type.
+        The app uses WorkManager for background widget refresh; WorkManager's
+        merged manifest supplies foregroundServiceType on its internal Worker
+        service. No raw <service> element is declared in this manifest.
+    -->
+    <issue id="ForegroundServicePermission">
+        <ignore path="src/main/AndroidManifest.xml" />
+    </issue>
+
 </lint>

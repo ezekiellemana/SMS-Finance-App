@@ -91,7 +91,7 @@
     <string name="language">Lugha</string>
     <string name="language_desc">Chagua lugha unayopendelea</string>
     <string name="app_language">Lugha ya Programu</string>
-    <string name="choose_language">Chagua lugha unayopendelea kwa mwonekano wa programu</string>
+    <string name="choose_language">Chagua lugha unayopendelea</string>
     <string name="about">Kuhusu</string>
     <string name="app_version">Toleo 1.0.0</string>
     <string name="privacy_note">Data yote inashughulikiwa ndani ya simu yako. Hakuna data ya SMS inayotumwa nje.</string>
@@ -161,6 +161,8 @@
     <!-- Nyongeza za UI -->
     <string name="auto_tracking_active">Ufuatiliaji wa otomatiki umewashwa</string>
     <string name="recent_activity">Shughuli za Hivi Karibuni</string>
+    <string name="refresh_sms">Sasisha SMS</string>
+    <string name="refresh_up_to_date">Imesasishwa</string>
     <string name="see_all">Ona yote</string>
     <string name="all_transactions">Miamala Yote</string>
     <string name="records">rekodi %1$d</string>

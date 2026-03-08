@@ -63,6 +63,12 @@ class TransactionRepository @Inject constructor(
     suspend fun deleteById(id: Long) =
         dao.deleteById(id)
 
+    suspend fun existsByAmountTypeDate(amount: Double, type: String, date: Long): Boolean =
+        dao.existsByAmountTypeDate(amount, type, date) > 0
+
+    suspend fun getLatestTransactionDate(): Long =
+        dao.getLatestTransactionDate()
+
     // ─── MAPPERS ──────────────────────────────────────────────────────────────
 
     private fun TransactionEntity.toDomain() = Transaction(

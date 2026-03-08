@@ -130,6 +130,27 @@ interface TransactionDao {
     """)
     fun searchByAmountRange(minAmt: Double, maxAmt: Double, startDate: Long, endDate: Long): Flow<List<TransactionEntity>>
 
+    // ─── DEDUPLICATION ───────────────────────────────────────────────────────
+
+    /**
+     * Returns 1 if a transaction with the same amount, type, and timestamp already
+     * exists — used by the inbox refresh scanner to avoid double-inserting the same
+     * SMS that was already captured by the live BroadcastReceiver.
+     */
+    @Query("""
+        SELECT COUNT(*) FROM transactions
+        WHERE amount = :amount AND type = :type AND date = :date
+        LIMIT 1
+    """)
+    suspend fun existsByAmountTypeDate(amount: Double, type: String, date: Long): Int
+
+    /**
+     * Returns the highest (most-recent) date stored — lets the refresh scanner
+     * know it only needs to look at SMS newer than this timestamp.
+     */
+    @Query("SELECT COALESCE(MAX(date), 0) FROM transactions")
+    suspend fun getLatestTransactionDate(): Long
+
 }
 
 /** Helper data class for aggregated source totals */

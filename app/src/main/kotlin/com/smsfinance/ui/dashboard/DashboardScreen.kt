@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.core.graphics.toColorInt
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -113,6 +114,7 @@ fun DashboardScreen(
     val uiState       by viewModel.uiState.collectAsStateWithLifecycle()
     val multiState    by multiUserVm.uiState.collectAsStateWithLifecycle()
     var privacyMode   by remember { mutableStateOf(false) }
+    val haptic        = LocalHapticFeedback.current
 
     // Derive the profile accent colour — falls back to AccentTeal if none set
     val profileAccent: Color = remember(multiState.activeProfile?.color) {
@@ -208,11 +210,12 @@ fun DashboardScreen(
                 val visibleTx = uiState.recentTransactions.take(maxCards)
 
                 Column(Modifier.fillMaxWidth()) {
-                    // Header row
+                    // ── Recent Activity header row ─────────────────────────
                     Row(
                         Modifier.fillMaxWidth().padding(bottom = 10.dp),
                         Arrangement.SpaceBetween, Alignment.CenterVertically
                     ) {
+                        // Left: title + subtitle
                         Column {
                             Text(stringResource(R.string.recent_activity),
                                 style = MaterialTheme.typography.titleMedium,
@@ -225,14 +228,76 @@ fun DashboardScreen(
                                 )
                             }
                         }
-                        // "See all" link whenever there are more transactions than visible
-                        if (uiState.recentTransactions.size > maxCards) {
-                            TextButton(onClick = onNavigateToTransactions,
-                                contentPadding = PaddingValues(0.dp)) {
-                                Text(stringResource(R.string.see_all), color = AccentTeal, fontSize = 13.sp)
-                                Spacer(Modifier.width(3.dp))
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
-                                    Modifier.size(13.dp), AccentTeal)
+
+                        // Right: refresh button + optional "See all"
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // ── Refresh badge (shows count of newly found tx) ──
+                            val result = uiState.refreshResult
+                            if (result != null) {
+                                LaunchedEffect(result) {
+                                    delay(3_000)
+                                    viewModel.clearRefreshResult()
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (result > 0) AccentTeal.copy(.18f)
+                                    else TextSecondary.copy(.12f),
+                                    modifier = Modifier.clickable { viewModel.clearRefreshResult() }
+                                ) {
+                                    Text(
+                                        if (result > 0) "+$result new" else "Up to date",
+                                        fontSize = 10.sp,
+                                        color = if (result > 0) AccentTeal else TextSecondary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+
+                            // ── Spinning refresh icon button ──────────────────
+                            val spinAngle by rememberInfiniteTransition(label = "spin")
+                                .animateFloat(
+                                    0f, 360f,
+                                    infiniteRepeatable(tween(700, easing = LinearEasing)),
+                                    label = "sa"
+                                )
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (uiState.isRefreshing) AccentTeal.copy(.18f)
+                                        else TextSecondary.copy(.08f)
+                                    )
+                                    .clickable(enabled = !uiState.isRefreshing) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        viewModel.refreshFromInbox()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh SMS",
+                                    tint = if (uiState.isRefreshing) AccentTeal
+                                    else TextSecondary,
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .rotate(if (uiState.isRefreshing) spinAngle else 0f)
+                                )
+                            }
+
+                            // ── "See all" link ────────────────────────────────
+                            if (uiState.recentTransactions.size > maxCards) {
+                                TextButton(onClick = onNavigateToTransactions,
+                                    contentPadding = PaddingValues(0.dp)) {
+                                    Text(stringResource(R.string.see_all), color = AccentTeal, fontSize = 13.sp)
+                                    Spacer(Modifier.width(3.dp))
+                                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
+                                        Modifier.size(13.dp), AccentTeal)
+                                }
                             }
                         }
                     }
