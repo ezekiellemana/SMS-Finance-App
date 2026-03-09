@@ -2,9 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- SMS Permissions — core function: auto-detect financial transactions from SMS -->
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.READ_SMS" />
+    <!--
+        SMS Permissions — core function only: automatically detect financial
+        transactions from bank and mobile-money SMS alerts so the user does
+        not have to enter transactions manually. No SMS data is transmitted
+        externally (tools:ignore suppresses the Play-policy lint reminder).
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_SMS"
+        tools:ignore="ProtectedPermissions" />
 
     <!-- Telephony declared optional so the app installs on Chrome OS tablets -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -22,8 +29,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Foreground service — widget data-sync background work -->
+    <!-- Foreground service — required by WorkManager on Android 14+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- Internet — Google Drive backup (opt-in only, no data sent by default) -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -51,7 +58,7 @@
             android:name=".ui.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.SMSFinanceWidget.VideoSplash"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"
+            android:configChanges="locale|layoutDirection|orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"
             android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -65,7 +72,7 @@
             android:exported="true"
             android:theme="@style/Theme.SMSFinanceWidget"
             android:launchMode="singleTop"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize" />
+            android:configChanges="locale|layoutDirection|orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize" />
 
         <!-- SMS Receiver — highest possible priority for instant transaction detection -->
         <receiver
@@ -114,7 +121,8 @@
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true"
+            tools:ignore="Typo">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />

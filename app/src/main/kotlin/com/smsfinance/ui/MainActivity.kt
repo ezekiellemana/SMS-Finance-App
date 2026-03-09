@@ -1,8 +1,10 @@
 package com.smsfinance.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +47,7 @@ import androidx.navigation.compose.*
 import com.smsfinance.R
 import com.smsfinance.ui.ai.AiPredictionsScreen
 import com.smsfinance.ui.charts.ChartsScreen
+import com.smsfinance.ui.components.LocalProfileColor
 import com.smsfinance.ui.onboarding.OnboardingScreen
 import com.smsfinance.ui.alerts.SpendingAlertsScreen
 import com.smsfinance.ui.auth.PinScreen
@@ -62,6 +65,7 @@ import com.smsfinance.ui.theme.SMSFinanceTheme
 import com.smsfinance.ui.transactions.AddTransactionScreen
 import com.smsfinance.ui.transactions.TransactionDetailScreen
 import com.smsfinance.ui.transactions.TransactionListScreen
+import com.smsfinance.util.LocaleHelper
 import com.smsfinance.util.SmsHistoryImporter
 import com.smsfinance.viewmodel.SettingsViewModel
 import com.smsfinance.viewmodel.MultiUserViewModel
@@ -113,10 +117,19 @@ class MainActivity : FragmentActivity() {
 
     @Inject lateinit var smsHistoryImporter: SmsHistoryImporter
 
-    override fun attachBaseContext(newBase: android.content.Context) {
-        val prefs = newBase.getSharedPreferences("app_language", android.content.Context.MODE_PRIVATE)
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("app_language", MODE_PRIVATE)
         val lang = prefs.getString("language", "en") ?: "en"
-        super.attachBaseContext(com.smsfinance.util.LocaleHelper.wrap(newBase, lang))
+        super.attachBaseContext(LocaleHelper.wrap(newBase, lang))
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        // Re-apply our saved locale after any system config change so that
+        // the Compose UI always renders strings in the user's chosen language.
+        val prefs = getSharedPreferences("app_language", MODE_PRIVATE)
+        val lang = prefs.getString("language", "en") ?: "en"
+        LocaleHelper.wrap(baseContext, lang)
+        super.onConfigurationChanged(newConfig)
     }
 
     private val permissionLauncher = registerForActivityResult(
@@ -145,21 +158,31 @@ class MainActivity : FragmentActivity() {
             val bioEnabled by vm.biometricEnabled.collectAsStateWithLifecycle()
             val onboardingDone by vm.onboardingDone.collectAsStateWithLifecycle()
             val windowSizeClass = calculateWindowSizeClass(this)
+            // Resolve active profile colour — used for card borders throughout the app
+            val multiUserVmRoot: MultiUserViewModel = hiltViewModel()
+            val multiUserStateRoot by multiUserVmRoot.uiState.collectAsStateWithLifecycle()
+            val activeProfileColor = runCatching {
+                Color(
+                    (multiUserStateRoot.activeProfile?.color ?: "#00C853").toColorInt()
+                )
+            }.getOrElse { Color(0xFF3DDAD7) }  // fallback = BrandTeal
             SMSFinanceTheme(darkTheme = darkMode) {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    // Don't render navigation until DataStore has emitted the real
-                    // onboardingDone value. Without this guard the app briefly shows
-                    // onboarding on every launch because StateFlow starts at false.
-                    val prefsReady by vm.prefsReady.collectAsStateWithLifecycle()
-                    if (!prefsReady) return@Surface
+                CompositionLocalProvider(LocalProfileColor provides activeProfileColor) {
+                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                        // Don't render navigation until DataStore has emitted the real
+                        // onboardingDone value. Without this guard the app briefly shows
+                        // onboarding on every launch because StateFlow starts at false.
+                        val prefsReady by vm.prefsReady.collectAsStateWithLifecycle()
+                        if (!prefsReady) return@Surface
 
-                    AdaptiveAppNavigation(
-                        windowSizeClass = windowSizeClass,
-                        requireAuth = pinEnabled || bioEnabled,
-                        onBiometricAuth = { cb -> triggerBiometricAuth(cb) },
-                        onboardingDone = onboardingDone
-                    )
-                }
+                        AdaptiveAppNavigation(
+                            windowSizeClass = windowSizeClass,
+                            requireAuth = pinEnabled || bioEnabled,
+                            onBiometricAuth = { cb -> triggerBiometricAuth(cb) },
+                            onboardingDone = onboardingDone
+                        )
+                    }
+                } // CompositionLocalProvider
             }
         }
     }
@@ -190,6 +213,9 @@ class MainActivity : FragmentActivity() {
             .build())
     }
 }
+
+// ── Shared navigation transition spec ────────────────────────────────────────
+// Transitions are defined in AdaptiveLayout.kt and shared across all NavHosts.
 
 @Composable
 fun AppNavigation(
@@ -231,7 +257,12 @@ fun AppNavigation(
         }
     ) { innerPadding ->
         NavHost(navController = navController, startDestination = startRoute,
-            modifier = Modifier.padding(innerPadding).padding(bottom = 0.dp)) {
+            modifier = Modifier.padding(innerPadding).padding(bottom = 0.dp),
+            enterTransition    = { enterTransition },
+            exitTransition     = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition  = { popExitTransition }
+        ) {
             composable(Routes.ONBOARDING) {
                 OnboardingScreen(onFinished = {
                     navController.navigate(Routes.DASHBOARD) {
@@ -351,7 +382,7 @@ fun SmartMoneyBottomBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(89.dp)
+                .height(96.dp)
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(Color(0xFF0F1825))
                 .drawBehind {
@@ -383,7 +414,7 @@ fun SmartMoneyBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(89.dp),
+                .height(96.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -414,8 +445,13 @@ private fun BottomBarItem(
 ) {
     val isProfileTab = profileEmoji != null
 
+    // Resolve profile colour for both the profile tab ring and regular tab rings/icons
+    val accentColorResolved = runCatching {
+        Color(profileColor!!.toColorInt())
+    }.getOrElse { LocalProfileColor.current }
+
     val iconColor by animateColorAsState(
-        targetValue = if (selected) BrandTeal else Color(0xFF3A4556),
+        targetValue = if (selected) accentColorResolved else Color(0xFF3A4556),
         animationSpec = tween(250), label = "iconColor"
     )
     val scale by animateFloatAsState(
@@ -426,12 +462,10 @@ private fun BottomBarItem(
 
     if (isProfileTab) {
         // ── Profile tab — noticeably larger, floating above the bar ──────────
-        val accentColor = runCatching {
-            Color(profileColor!!.toColorInt())
-        }.getOrElse { BrandTeal }
+        val accentColor = accentColorResolved
 
         val ringColor by animateColorAsState(
-            targetValue = if (selected) BrandTeal else Color(0xFF3A4556),
+            targetValue = if (selected) accentColor else Color(0xFF3A4556),
             animationSpec = tween(250), label = "ring"
         )
 
@@ -485,11 +519,11 @@ private fun BottomBarItem(
                                 modifier           = Modifier.fillMaxSize().clip(CircleShape)
                             )
                         } else {
-                            Text(text = profileEmoji ?: "👤", fontSize = 25.sp)
+                            Text(text = profileEmoji, fontSize = 26.sp)
                         }
                     }
                 }
-                Spacer(Modifier.height(1.dp))
+                Spacer(Modifier.height(3.dp))
                 Text(
                     text       = stringResource(item.labelRes),
                     color      = if (selected) BrandTeal else Color(0xFF3A4556),
@@ -514,6 +548,10 @@ private fun BottomBarItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            val ringColor by animateColorAsState(
+                targetValue = if (selected) accentColorResolved else Color.Transparent,
+                animationSpec = tween(250), label = "tabRing"
+            )
             Box(
                 modifier = Modifier
                     .size(50.dp)
@@ -521,7 +559,7 @@ private fun BottomBarItem(
                         if (selected) {
                             drawCircle(
                                 brush = Brush.radialGradient(
-                                    listOf(BrandTeal.copy(alpha = 0.14f), Color.Transparent),
+                                    listOf(accentColorResolved.copy(alpha = 0.14f), Color.Transparent),
                                     radius = size.minDimension * 0.85f
                                 )
                             )
@@ -529,26 +567,35 @@ private fun BottomBarItem(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (selected) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .background(BrandTeal.copy(alpha = 0.12f), CircleShape)
-                    )
-                }
+                // Ring border + tinted background when selected
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .border(
+                            width = if (selected) 1.8.dp else 0.dp,
+                            color = ringColor,
+                            shape = CircleShape
+                        )
+                        .background(
+                            if (selected) accentColorResolved.copy(alpha = 0.10f)
+                            else Color.Transparent,
+                            CircleShape
+                        )
+                )
                 Icon(
                     imageVector        = item.icon,
                     contentDescription = null,
                     tint               = iconColor,
                     modifier           = Modifier
-                        .size(32.dp)
+                        .size(28.dp)
                         .graphicsLayer { scaleX = scale; scaleY = scale }
                 )
             }
             Spacer(Modifier.height(3.dp))
             Text(
                 text       = stringResource(item.labelRes),
-                color      = if (selected) BrandTeal else Color(0xFF3A4556),
+                color      = if (selected) accentColorResolved else Color(0xFF3A4556),
                 fontSize   = 11.5.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                 maxLines   = 1,

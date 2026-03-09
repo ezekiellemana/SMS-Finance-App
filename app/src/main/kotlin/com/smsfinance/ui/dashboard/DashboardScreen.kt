@@ -6,6 +6,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -47,6 +48,8 @@ import com.smsfinance.ui.components.*
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.DashboardViewModel
 import com.smsfinance.viewmodel.MultiUserViewModel
+import com.smsfinance.viewmodel.ServiceBalance
+import com.smsfinance.viewmodel.SettingsViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -106,15 +109,17 @@ private fun TypewriterText(
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     multiUserVm: MultiUserViewModel = hiltViewModel(),
+    settingsVm: SettingsViewModel = hiltViewModel(),
     onNavigateToTransactions: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit = {},
     onNavigateToCharts: () -> Unit = {}
 ) {
-    val uiState       by viewModel.uiState.collectAsStateWithLifecycle()
-    val multiState    by multiUserVm.uiState.collectAsStateWithLifecycle()
-    var privacyMode   by remember { mutableStateOf(false) }
-    val haptic        = LocalHapticFeedback.current
+    val uiState     by viewModel.uiState.collectAsStateWithLifecycle()
+    val multiState  by multiUserVm.uiState.collectAsStateWithLifecycle()
+    // Persisted in DataStore — survives app restarts and process death
+    val privacyMode by settingsVm.privacyMode.collectAsStateWithLifecycle()
+    val haptic      = LocalHapticFeedback.current
 
     // Derive the profile accent colour — falls back to AccentTeal if none set
     val profileAccent: Color = remember(multiState.activeProfile?.color) {
@@ -158,7 +163,7 @@ fun DashboardScreen(
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-                        IconButton(onClick = { privacyMode = !privacyMode }) {
+                        IconButton(onClick = { settingsVm.setPrivacyMode(!privacyMode) }) {
                             Icon(if (privacyMode) Icons.Default.VisibilityOff
                             else Icons.Default.Visibility, null, tint = TextSecondary)
                         }
@@ -179,12 +184,13 @@ fun DashboardScreen(
 
                 // Hero balance
                 HeroBalanceCard(
-                    balance       = uiState.summary.estimatedBalance,
-                    income        = uiState.allTimeIncome,
-                    expenses      = uiState.allTimeExpenses,
-                    isLoading     = uiState.isLoading,
-                    privacyMode   = privacyMode,
-                    profileAccent = profileAccent
+                    balance         = uiState.summary.estimatedBalance,
+                    income          = uiState.allTimeIncome,
+                    expenses        = uiState.allTimeExpenses,
+                    isLoading       = uiState.isLoading,
+                    privacyMode     = privacyMode,
+                    profileAccent   = profileAccent,
+                    serviceBalances = uiState.serviceBalances
                 )
 
                 // Quick actions
@@ -382,7 +388,8 @@ fun HeroBalanceCard(
     expenses: Double,
     isLoading: Boolean,
     privacyMode: Boolean,
-    profileAccent: Color = AccentTeal
+    profileAccent: Color = AccentTeal,
+    serviceBalances: List<ServiceBalance> = emptyList()
 ) {
     val animBal   by animateFloatAsState(balance.toFloat(), tween(1200, easing = EaseOutCubic), label = "bal")
     val animInc   by animateFloatAsState(income.toFloat(),  tween(900,  easing = EaseOutCubic), label = "inc")
@@ -485,33 +492,93 @@ fun HeroBalanceCard(
             // Thin divider
             Box(Modifier.fillMaxWidth().height(.5.dp).background(TextSecondary.copy(.12f)))
 
-            // ── Income / Expenses — all-time SMS totals ────────────────────────
-            Row(Modifier.fillMaxWidth()) {
-                StatItem(
-                    icon     = Icons.AutoMirrored.Filled.TrendingUp,
-                    label    = "Total Income",
-                    value    = if (privacyMode) "••••"
-                    else if (isLoading) "—"
-                    else "TZS ${fmtAmt(animInc.toDouble())}",
-                    color    = AccentTeal,
-                    modifier = Modifier.weight(1f)
-                )
-                Box(
-                    Modifier.width(.5.dp).height(38.dp)
-                        .background(TextSecondary.copy(.15f))
-                        .align(Alignment.CenterVertically)
-                )
-                StatItem(
-                    icon     = Icons.AutoMirrored.Filled.TrendingDown,
-                    label    = "Total Expenses",
-                    value    = if (privacyMode) "••••"
-                    else if (isLoading) "—"
-                    else "TZS ${fmtAmt(animExp.toDouble())}",
-                    color    = ErrorRed,
-                    modifier = Modifier.weight(1f).padding(start = 14.dp)
-                )
+            // ── Bottom row: income/expenses LEFT | services RIGHT ──────────────
+            // height(IntrinsicSize.Min) makes the Row wrap its tallest child
+            // instead of expanding to fill remaining screen height.
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.Top) {
+
+                // Left — income & expenses totals
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    StatItem(
+                        icon     = Icons.AutoMirrored.Filled.TrendingUp,
+                        label    = "Total Income",
+                        value    = if (privacyMode) "••••"
+                        else if (isLoading) "—"
+                        else "TZS ${fmtAmt(animInc.toDouble())}",
+                        color    = AccentTeal,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    StatItem(
+                        icon     = Icons.AutoMirrored.Filled.TrendingDown,
+                        label    = "Total Expenses",
+                        value    = if (privacyMode) "••••"
+                        else if (isLoading) "—"
+                        else "TZS ${fmtAmt(animExp.toDouble())}",
+                        color    = ErrorRed,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Vertical divider
+                if (serviceBalances.isNotEmpty()) {
+                    Box(
+                        Modifier.width(.5.dp).fillMaxHeight().padding(vertical = 2.dp)
+                            .background(TextSecondary.copy(.15f))
+                    )
+
+                    Spacer(Modifier.width(12.dp))
+
+                    // Right — per-service opening balances (scrollable if many)
+                    Column(
+                        Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            "My Services",
+                            fontSize = 9.sp,
+                            color    = TextSecondary,
+                            letterSpacing = .5.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        serviceBalances.forEach { svc ->
+                            ServiceBalanceRow(svc, privacyMode)
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun ServiceBalanceRow(svc: ServiceBalance, privacyMode: Boolean) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(svc.emoji, fontSize = 10.sp)
+            Text(
+                svc.displayName,
+                fontSize    = 9.sp,
+                color       = TextSecondary,
+                maxLines    = 1,
+                modifier    = Modifier.widthIn(max = 64.dp),
+                overflow    = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+        }
+        Text(
+            if (privacyMode) "••••"
+            else if (svc.openingBalance == 0.0) "—"
+            else "TZS ${fmtAmt(svc.openingBalance)}",
+            fontSize   = 9.sp,
+            fontWeight = FontWeight.SemiBold,
+            color      = if (svc.openingBalance > 0.0 && !privacyMode) AccentTeal else TextSecondary
+        )
     }
 }
 

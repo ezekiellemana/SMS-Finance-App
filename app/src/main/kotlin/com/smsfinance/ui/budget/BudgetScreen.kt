@@ -36,6 +36,7 @@ import com.smsfinance.domain.model.Budget
 import com.smsfinance.domain.model.BudgetProgress
 import com.smsfinance.domain.model.PROFILE_COLORS
 import com.smsfinance.ui.components.fmtAmt
+import com.smsfinance.ui.components.GlassCard
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.BudgetViewModel
 import java.util.Calendar
@@ -197,45 +198,40 @@ fun BudgetOverviewCard(totalBudgeted: Double, totalSpent: Double) {
     val animProg     by animateFloatAsState(overallPct.toFloat(), tween(900), label = "ov")
     val remaining    = maxOf(0.0, totalBudgeted - totalSpent)
 
-    Box(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .background(
-                Brush.linearGradient(listOf(Color(0xFF163040), Color(0xFF1A3A2A), Color(0xFF1C2A3A)))
-            )
-            .padding(20.dp)
-    ) {
-        // Background glow
-        Box(Modifier.matchParentSize().background(
-            Brush.radialGradient(
-                listOf(AccentTeal.copy(.10f), Color.Transparent),
-                Offset.Zero, 600f
-            )
-        ))
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(stringResource(R.string.monthly_overview), fontSize = 11.sp, color = TextSecondary,
-                fontWeight = FontWeight.Medium, letterSpacing = .6.sp)
-            Text("TZS ${fmtAmt(totalSpent)}", fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold, color = TextWhite)
-            Text("of TZS ${fmtAmt(totalBudgeted)} budgeted",
-                fontSize = 12.sp, color = TextSecondary)
-
-            // Progress bar
-            Box(Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(4.dp))
-                .background(barColor.copy(.15f))) {
-                Box(
-                    Modifier.fillMaxWidth(animProg).fillMaxHeight()
-                        .background(
-                            Brush.horizontalGradient(listOf(barColor.copy(.7f), barColor)),
-                            RoundedCornerShape(4.dp)
-                        )
+    GlassCard(Modifier.fillMaxWidth()) {
+        Box(Modifier.padding(20.dp)) {
+            // Background glow
+            Box(Modifier.matchParentSize().background(
+                Brush.radialGradient(
+                    listOf(AccentTeal.copy(.08f), Color.Transparent),
+                    Offset.Zero, 600f
                 )
-            }
-            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                Text("${"%.0f".format(overallPct * 100)}% used",
-                    fontSize = 11.sp, color = barColor, fontWeight = FontWeight.SemiBold)
-                Text(stringResource(R.string.tzs_remaining, fmtAmt(remaining)),
-                    fontSize = 11.sp, color = TextSecondary)
+            ))
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.monthly_overview), fontSize = 11.sp, color = TextSecondary,
+                    fontWeight = FontWeight.Medium, letterSpacing = .6.sp)
+                Text("TZS ${fmtAmt(totalSpent)}", fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold, color = TextWhite)
+                Text("of TZS ${fmtAmt(totalBudgeted)} budgeted",
+                    fontSize = 12.sp, color = TextSecondary)
+
+                // Progress bar
+                Box(Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(4.dp))
+                    .background(barColor.copy(.15f))) {
+                    Box(
+                        Modifier.fillMaxWidth(animProg).fillMaxHeight()
+                            .background(
+                                Brush.horizontalGradient(listOf(barColor.copy(.7f), barColor)),
+                                RoundedCornerShape(4.dp)
+                            )
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+                    Text("${"%.0f".format(overallPct * 100)}% used",
+                        fontSize = 11.sp, color = barColor, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.tzs_remaining, fmtAmt(remaining)),
+                        fontSize = 11.sp, color = TextSecondary)
+                }
             }
         }
     }
@@ -257,74 +253,73 @@ fun BudgetProgressCard(
         Color(progress.budget.color.toColorInt())
     }.getOrDefault(AccentTeal)
 
-    Column(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFF1C2740))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-            Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    GlassCard(Modifier.fillMaxWidth()) {
+        Column(
+            Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(
+                        Modifier.size(42.dp).clip(RoundedCornerShape(12.dp))
+                            .background(bgColor.copy(.15f)), Alignment.Center
+                    ) { Text(progress.budget.icon, fontSize = 20.sp) }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(progress.budget.category, fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp, color = TextWhite)
+                        Text(stringResource(R.string.budget_amount, fmtAmt(progress.budget.amount)),
+                            fontSize = 11.sp, color = TextSecondary)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                    IconButton(onClick = onEdit, modifier = Modifier.size(30.dp)) {
+                        Icon(Icons.Default.Edit, null, Modifier.size(15.dp), tint = TextSecondary)
+                    }
+                    IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
+                        Icon(Icons.Default.Delete, null, Modifier.size(15.dp), tint = ErrorRed.copy(.7f))
+                    }
+                }
+            }
+
+            // Spent vs remaining
+            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Bottom) {
+                Column {
+                    Text("Spent", fontSize = 10.sp, color = TextSecondary)
+                    Text("TZS ${fmtAmt(progress.spent)}", fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold, color = color)
+                }
+                Text("${"%.0f".format(pct)}%", fontSize = 18.sp,
+                    fontWeight = FontWeight.ExtraBold, color = color)
+            }
+
+            // Progress bar
+            Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp))
+                .background(color.copy(.12f))) {
                 Box(
-                    Modifier.size(42.dp).clip(RoundedCornerShape(12.dp))
-                        .background(bgColor.copy(.15f)), Alignment.Center
-                ) { Text(progress.budget.icon, fontSize = 20.sp) }
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(progress.budget.category, fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp, color = TextWhite)
-                    Text(stringResource(R.string.budget_amount, fmtAmt(progress.budget.amount)),
-                        fontSize = 11.sp, color = TextSecondary)
-                }
+                    Modifier.fillMaxWidth(animProg).fillMaxHeight()
+                        .background(
+                            Brush.horizontalGradient(listOf(color.copy(.7f), color)),
+                            RoundedCornerShape(3.dp)
+                        )
+                )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
-                IconButton(onClick = onEdit, modifier = Modifier.size(30.dp)) {
-                    Icon(Icons.Default.Edit, null, Modifier.size(15.dp), tint = TextSecondary)
-                }
-                IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
-                    Icon(Icons.Default.Delete, null, Modifier.size(15.dp), tint = ErrorRed.copy(.7f))
-                }
-            }
-        }
 
-        // Spent vs remaining
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Bottom) {
-            Column {
-                Text("Spent", fontSize = 10.sp, color = TextSecondary)
-                Text("TZS ${fmtAmt(progress.spent)}", fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold, color = color)
+            if (progress.isOverBudget) {
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                        .background(ErrorRed.copy(.10f))
+                        .padding(horizontal = 10.dp, vertical = 7.dp)
+                ) {
+                    Text("⚠️ Over by TZS ${fmtAmt(progress.spent - progress.budget.amount)}",
+                        fontSize = 11.sp, color = ErrorRed, fontWeight = FontWeight.SemiBold)
+                }
+            } else {
+                Text("TZS ${fmtAmt(progress.remaining)} remaining",
+                    fontSize = 11.sp, color = TextSecondary)
             }
-            Text("${"%.0f".format(pct)}%", fontSize = 18.sp,
-                fontWeight = FontWeight.ExtraBold, color = color)
-        }
-
-        // Progress bar
-        Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp))
-            .background(color.copy(.12f))) {
-            Box(
-                Modifier.fillMaxWidth(animProg).fillMaxHeight()
-                    .background(
-                        Brush.horizontalGradient(listOf(color.copy(.7f), color)),
-                        RoundedCornerShape(3.dp)
-                    )
-            )
-        }
-
-        if (progress.isOverBudget) {
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                    .background(ErrorRed.copy(.10f))
-                    .padding(horizontal = 10.dp, vertical = 7.dp)
-            ) {
-                Text("⚠️ Over by TZS ${fmtAmt(progress.spent - progress.budget.amount)}",
-                    fontSize = 11.sp, color = ErrorRed, fontWeight = FontWeight.SemiBold)
-            }
-        } else {
-            Text("TZS ${fmtAmt(progress.remaining)} remaining",
-                fontSize = 11.sp, color = TextSecondary)
-        }
-    }
+        } // Column
+    } // GlassCard
 }
 
 // ── Budget dialog ─────────────────────────────────────────────────────────────

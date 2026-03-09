@@ -70,8 +70,6 @@
     <string name="pin_set">PIN is set</string>
     <string name="pin_not_set">Set a PIN to protect the app</string>
     <string name="appearance">Appearance</string>
-    <string name="dark_mode">Dark Mode</string>
-    <string name="dark_mode_desc" tools:ignore="Typos">Use dark color scheme</string>
     <string name="language">Language</string>
     <string name="language_desc">Choose your preferred language</string>
     <string name="app_language">App Language</string>
@@ -270,4 +268,46 @@
     <string name="onb_feat_nointernet" tools:ignore="Typos">No internet needed</string>
     <string name="onb_feat_encrypted">Encrypted storage</string>
     <string name="onb_feat_biometric">Biometric lock</string>
+
+    <!-- Settings screen — section headers & grouped labels -->
+    <string name="settings">Settings</string>
+    <string name="settings_subtitle">Customise your experience</string>
+    <string name="section_money_services">Money Services</string>
+    <string name="section_analytics">Analytics &amp; Insights</string>
+    <string name="section_data_backup">Data &amp; Backup</string>
+    <string name="section_account">Account</string>
+    <string name="section_personalisation">Personalisation</string>
+    <string name="privacy_security">Privacy &amp; Security</string>
+
+    <!-- Settings — money services -->
+    <string name="no_opening_balance">No opening balance set</string>
+    <string name="edit_opening_balance">Edit opening balance</string>
+    <string name="opening_balance_tzs">Opening balance (TZS)</string>
+    <string name="add_money_service">Add a Money Service</string>
+    <string name="all_services_added">All available services are already added.</string>
+    <string name="choose_service">Choose a service:</string>
+
+    <!-- Settings — security -->
+    <string name="pin_lock_desc">Protect app with a PIN</string>
+    <string name="pin_set_tap">PIN is set — tap to change</string>
+
+    <!-- Settings — features -->
+    <string name="advanced_charts">Advanced Charts</string>
+    <string name="advanced_charts_desc">Pie, donut, trend &amp; category analytics</string>
+    <string name="investments_desc">Track savings goals &amp; portfolio</string>
+    <string name="budget_planning_desc">Set monthly category budgets</string>
+    <string name="recurring_transactions">Recurring Transactions</string>
+    <string name="recurring_transactions_desc">Auto-detect &amp; manage regular payments</string>
+    <string name="export_data">Export Data</string>
+    <string name="export_data_desc">Save as Excel or PDF</string>
+    <string name="cloud_backup">Cloud Backup</string>
+    <string name="cloud_backup_desc">Back up to Google Drive</string>
+    <string name="family_accounts_desc">Switch between family member profiles</string>
+    <string name="widget_themes">Widget Themes</string>
+    <string name="widget_themes_desc">Customise home screen widget colours</string>
+
+    <!-- Common actions -->
+    <string name="save">Save</string>
+    <string name="add">Add</string>
+    <string name="edit">Edit</string>
 </resources>

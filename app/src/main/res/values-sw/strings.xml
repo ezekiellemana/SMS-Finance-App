@@ -86,8 +86,6 @@
     <string name="pin_set">PIN imewekwa</string>
     <string name="pin_not_set">Weka PIN kulinda programu</string>
     <string name="appearance">Mwonekano</string>
-    <string name="dark_mode">Hali ya Giza</string>
-    <string name="dark_mode_desc">Tumia mpango wa rangi za giza</string>
     <string name="language">Lugha</string>
     <string name="language_desc">Chagua lugha unayopendelea</string>
     <string name="app_language">Lugha ya Programu</string>
@@ -296,4 +294,38 @@
     <string name="onb_feat_nointernet">Hakuna intaneti inayohitajika</string>
     <string name="onb_feat_encrypted">Hifadhi iliyosimbwa</string>
     <string name="onb_feat_biometric">Kufuli cha biometriki</string>
+
+    <!-- Settings screen -->
+    <string name="settings">Mipangilio</string>
+    <string name="settings_subtitle">Binafsisha uzoefu wako</string>
+    <string name="section_money_services">Huduma za Pesa</string>
+    <string name="section_analytics">Uchambuzi na Maarifa</string>
+    <string name="section_data_backup">Data na Hifadhi Nakala</string>
+    <string name="section_account">Akaunti</string>
+    <string name="section_personalisation">Ubinafsi</string>
+    <string name="privacy_security">Faragha na Usalama</string>
+    <string name="no_opening_balance">Hakuna salio la awali</string>
+    <string name="edit_opening_balance">Hariri salio la awali</string>
+    <string name="opening_balance_tzs">Salio la awali (TZS)</string>
+    <string name="add_money_service">Ongeza Huduma ya Pesa</string>
+    <string name="all_services_added">Huduma zote zinapatikana zimeshongezwa.</string>
+    <string name="choose_service">Chagua huduma:</string>
+    <string name="pin_lock_desc">Linda programu kwa PIN</string>
+    <string name="pin_set_tap">PIN imewekwa — gusa kubadilisha</string>
+    <string name="advanced_charts">Chati za Kina</string>
+    <string name="advanced_charts_desc">Uchambuzi wa pai, donut, mwenendo na kategoria</string>
+    <string name="investments_desc">Fuatilia malengo ya akiba na kwingineko</string>
+    <string name="budget_planning_desc">Weka bajeti ya kila mwezi kwa kategoria</string>
+    <string name="recurring_transactions">Miamala ya Mara kwa Mara</string>
+    <string name="recurring_transactions_desc">Gundua na simamia malipo ya kawaida</string>
+    <string name="export_data">Hamisha Data</string>
+    <string name="export_data_desc">Hifadhi kama Excel au PDF</string>
+    <string name="cloud_backup">Hifadhi Nakala Mtandaoni</string>
+    <string name="cloud_backup_desc">Hifadhi nakala kwenye Google Drive</string>
+    <string name="family_accounts_desc">Badilisha kati ya wasifu wa washiriki wa familia</string>
+    <string name="widget_themes">Mandhari ya Wijeti</string>
+    <string name="widget_themes_desc">Binafsisha rangi za wijeti ya skrini ya nyumbani</string>
+    <string name="save">Hifadhi</string>
+    <string name="add">Ongeza</string>
+    <string name="edit">Hariri</string>
 </resources>

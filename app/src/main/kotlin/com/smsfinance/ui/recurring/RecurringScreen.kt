@@ -28,6 +28,7 @@ import com.smsfinance.domain.model.RecurringTransaction
 import com.smsfinance.domain.model.RECURRING_PRESETS
 import com.smsfinance.domain.model.TransactionType
 import com.smsfinance.ui.components.BigFab
+import com.smsfinance.ui.components.GlassCard
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.RecurringViewModel
 import java.text.NumberFormat
@@ -143,39 +144,36 @@ fun RecurringScreen(
 // ── Auto-detect card ──────────────────────────────────────────────────────────
 @Composable
 private fun AutoDetectCard(isDetecting: Boolean, onDetect: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(
-                Brush.linearGradient(listOf(Color(0xFF163040), Color(0xFF1A2E40)))
-            )
-            .padding(16.dp),
-        Arrangement.SpaceBetween, Alignment.CenterVertically
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(stringResource(R.string.auto_detect_title), fontWeight = FontWeight.Bold,
-                fontSize = 15.sp, color = TextWhite)
-            Text(stringResource(R.string.auto_detect_sub),
-                fontSize = 12.sp, color = TextSecondary)
-        }
-        Spacer(Modifier.width(12.dp))
-        if (isDetecting) {
-            CircularProgressIndicator(Modifier.size(28.dp), color = AccentTeal, strokeWidth = 2.5.dp)
-        } else {
-            Button(
-                onClick = onDetect,
-                shape  = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AccentTeal, contentColor = Color(0xFF0A1628)
-                ),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Icon(Icons.Default.Search, null, Modifier.size(15.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.scan_label), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    GlassCard(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(16.dp),
+            Arrangement.SpaceBetween, Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(stringResource(R.string.auto_detect_title), fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp, color = TextWhite)
+                Text(stringResource(R.string.auto_detect_sub),
+                    fontSize = 12.sp, color = TextSecondary)
             }
-        }
-    }
+            Spacer(Modifier.width(12.dp))
+            if (isDetecting) {
+                CircularProgressIndicator(Modifier.size(28.dp), color = AccentTeal, strokeWidth = 2.5.dp)
+            } else {
+                Button(
+                    onClick = onDetect,
+                    shape  = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AccentTeal, contentColor = Color(0xFF0A1628)
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.Search, null, Modifier.size(15.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.scan_label), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+            }
+        } // Row
+    } // GlassCard
 }
 
 // Keep remaining composables unchanged from before —
@@ -187,35 +185,34 @@ private fun SuggestionCard(
     onAccept: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Row(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(AccentTeal.copy(.07f))
-            .padding(14.dp),
-        Arrangement.SpaceBetween, Alignment.CenterVertically
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(suggestion.source, fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp, color = TextWhite)
-            Text("${suggestion.type.label} · ${suggestion.frequency.label}",
-                fontSize = 12.sp, color = AccentTeal)
-            Text("TZS ${fmt(suggestion.expectedAmount)}", fontSize = 11.sp, color = TextSecondary)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(
-                onClick = onDismiss,
-                colors  = ButtonDefaults.textButtonColors(contentColor = TextSecondary)
-            ) { Text(stringResource(R.string.skip_label), fontSize = 12.sp) }
-            Button(
-                onClick = onAccept,
-                shape  = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AccentTeal, contentColor = Color(0xFF0A1628)
-                ),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-            ) { Text(stringResource(R.string.add_label), fontWeight = FontWeight.Bold, fontSize = 12.sp) }
-        }
-    }
+    GlassCard(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(14.dp),
+            Arrangement.SpaceBetween, Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(suggestion.source, fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp, color = TextWhite)
+                Text("${suggestion.type.label} · ${suggestion.frequency.label}",
+                    fontSize = 12.sp, color = AccentTeal)
+                Text("TZS ${fmt(suggestion.expectedAmount)}", fontSize = 11.sp, color = TextSecondary)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = onDismiss,
+                    colors  = ButtonDefaults.textButtonColors(contentColor = TextSecondary)
+                ) { Text(stringResource(R.string.skip_label), fontSize = 12.sp) }
+                Button(
+                    onClick = onAccept,
+                    shape  = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AccentTeal, contentColor = Color(0xFF0A1628)
+                    ),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                ) { Text(stringResource(R.string.add_label), fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+            }
+        } // Row
+    } // GlassCard
 }
 
 @Composable
@@ -227,46 +224,45 @@ private fun RecurringCard(
     val isDeposit = item.type == TransactionType.DEPOSIT
     val accent    = if (isDeposit) AccentTeal else ErrorRed
 
-    Row(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1C2740))
-            .padding(14.dp),
-        Arrangement.SpaceBetween, Alignment.CenterVertically
-    ) {
+    GlassCard(Modifier.fillMaxWidth()) {
         Row(
-            Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            Modifier.padding(14.dp),
+            Arrangement.SpaceBetween, Alignment.CenterVertically
         ) {
-            Box(
-                Modifier.size(42.dp).clip(RoundedCornerShape(12.dp))
-                    .background(accent.copy(.12f)), Alignment.Center
+            Row(
+                Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    if (isDeposit) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
-                    null, tint = accent, modifier = Modifier.size(20.dp)
-                )
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(item.source, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextWhite)
-                Text("${item.frequency.label} · TZS ${fmt(item.expectedAmount)}",
-                    fontSize = 12.sp, color = accent)
-                item.nextExpected?.let {
-                    Text(stringResource(R.string.next_date, SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(it))),
-                        fontSize = 11.sp, color = TextSecondary)
+                Box(
+                    Modifier.size(42.dp).clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(.12f)), Alignment.Center
+                ) {
+                    Icon(
+                        if (isDeposit) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                        null, tint = accent, modifier = Modifier.size(20.dp)
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(item.source, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextWhite)
+                    Text("${item.frequency.label} · TZS ${fmt(item.expectedAmount)}",
+                        fontSize = 12.sp, color = accent)
+                    item.nextExpected?.let {
+                        Text(stringResource(R.string.next_date, SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(it))),
+                            fontSize = 11.sp, color = TextSecondary)
+                    }
                 }
             }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
-            IconButton(onClick = onEdit, modifier = Modifier.size(30.dp)) {
-                Icon(Icons.Default.Edit, null, Modifier.size(15.dp), tint = TextSecondary)
+            Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                IconButton(onClick = onEdit, modifier = Modifier.size(30.dp)) {
+                    Icon(Icons.Default.Edit, null, Modifier.size(15.dp), tint = TextSecondary)
+                }
+                IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
+                    Icon(Icons.Default.Delete, null, Modifier.size(15.dp), tint = ErrorRed.copy(.7f))
+                }
             }
-            IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
-                Icon(Icons.Default.Delete, null, Modifier.size(15.dp), tint = ErrorRed.copy(.7f))
-            }
-        }
-    }
+        } // Row
+    } // GlassCard
 }
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE", "UNUSED_VALUE")

@@ -1,5 +1,6 @@
 package com.smsfinance.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -20,7 +21,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
@@ -33,7 +37,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.smsfinance.ui.theme.AccentTeal
-import com.smsfinance.ui.theme.BgSecondary
 import com.smsfinance.ui.theme.TextSecondary
 
 @Composable
@@ -48,10 +51,11 @@ fun ScreenEnterAnimation(content: @Composable () -> Unit) {
 
 @Composable
 fun SectionHeader(title: String, modifier: Modifier = Modifier) {
+    val profileColor = LocalProfileColor.current
     Text(
         text = title.uppercase(),
         style = MaterialTheme.typography.labelMedium,
-        color = AccentTeal,
+        color = profileColor,
         letterSpacing = 1.2.sp,
         modifier = modifier.padding(horizontal = 4.dp, vertical = 8.dp)
     )
@@ -63,12 +67,17 @@ fun GlassCard(
     cornerRadius: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val profileColor = LocalProfileColor.current
+    // Blend profile colour (15%) into the outline for a subtle tinted border.
+    val borderColor = profileColor.copy(alpha = 0.35f)
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(cornerRadius),
-        colors = CardDefaults.cardColors(containerColor = BgSecondary),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3A4558))
+        border = BorderStroke(1.dp, borderColor)
     ) { Column(content = content) }
 }
 
@@ -132,11 +141,11 @@ fun AppNavRow(
                     Text(title, style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Text(subtitle, style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, null,
-                modifier = Modifier.size(14.dp), tint = TextSecondary)
+                modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -166,7 +175,8 @@ fun AppSwitchRow(
                 Column {
                     Text(title, style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Switch(
@@ -174,8 +184,8 @@ fun AppSwitchRow(
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                     checkedTrackColor = AccentTeal,
-                    uncheckedThumbColor = TextSecondary,
-                    uncheckedTrackColor = Color(0xFF3A4558)
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             )
         }
@@ -241,8 +251,9 @@ fun AppScreenScaffold(
     actions: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
+    val profileColor = LocalProfileColor.current
     Scaffold(
-        containerColor = com.smsfinance.ui.theme.BgPrimary,
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Column(
@@ -251,45 +262,73 @@ fun AppScreenScaffold(
                 .padding(innerPadding)
                 .statusBarsPadding()
         ) {
-            // ── Header — matches dashboard top spacing ──
-            Row(
+            // ── Header — profile-color accent line at the bottom ──
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .drawBehind {
+                        // Thin glowing line at the bottom of the header row
+                        val lineY = size.height - 1.dp.toPx()
+                        drawRect(
+                            brush = Brush.horizontalGradient(
+                                listOf(
+                                    Color.Transparent,
+                                    profileColor.copy(0.55f),
+                                    profileColor.copy(0.75f),
+                                    profileColor.copy(0.55f),
+                                    Color.Transparent
+                                )
+                            ),
+                            topLeft = Offset(0f, lineY),
+                            size    = Size(size.width, 1.5f)
+                        )
+                        // Subtle glow below the line
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                listOf(profileColor.copy(0.07f), Color.Transparent),
+                                startY = lineY, endY = size.height
+                            ),
+                            topLeft = Offset(0f, lineY)
+                        )
+                    }
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = com.smsfinance.ui.theme.TextWhite
-                        )
-                    }
-                    Column {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = com.smsfinance.ui.theme.TextWhite
-                        )
-                        if (subtitle.isNotEmpty()) {
-                            Text(
-                                text = subtitle,
-                                fontSize = 11.sp,
-                                color = AccentTeal
-                            )
-                        }
-                    }
-                }
-                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    actions()
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            if (subtitle.isNotEmpty()) {
+                                Text(
+                                    text = subtitle,
+                                    fontSize = 11.sp,
+                                    color = profileColor
+                                )
+                            }
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        actions()
+                    }
                 }
             }
 

@@ -46,6 +46,7 @@ class PreferencesManager @Inject constructor(
     val userNameFlow:         Flow<String>  = context.dataStore.data.map { it[USER_NAME]         ?: "" }
     val openingBalancesFlow:  Flow<String>  = context.dataStore.data.map { it[OPENING_BALANCES]  ?: "{}" }
     val setupCompletedAtFlow: Flow<Long>    = context.dataStore.data.map { it[SETUP_COMPLETED_AT] ?: 0L }
+    val selectedSendersFlow:  Flow<String>  = context.dataStore.data.map { it[SELECTED_SENDERS]  ?: "[]" }
 
     // ── One-shot reads (suspend) ──────────────────────────────────────────────
     suspend fun getPinHash(): String?       = context.dataStore.data.first()[PIN_HASH]

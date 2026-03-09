@@ -41,6 +41,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import com.smsfinance.ui.components.BigFab
+import com.smsfinance.ui.components.GlassCard
 
 @Suppress("DEPRECATION")
 @Composable
@@ -125,13 +126,8 @@ fun InvestmentScreen(
 @Composable
 fun PortfolioSummaryCard(totalValue: Double, totalInvested: Double, gain: Double, gainPct: Double) {
     val isProfit = gain >= 0
-    Card(Modifier.fillMaxWidth(), RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
-        Box(Modifier.fillMaxWidth()
-            .background(Brush.linearGradient(
-                if (isProfit) listOf(Color(0xFF1A3040), Color(0xFF1E3A3A))
-                else listOf(Color(0xFFB71C1C), Color(0xFFC62828))
-            )).padding(20.dp)) {
+    GlassCard(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().padding(20.dp)) {
             Column {
                 Text(stringResource(R.string.portfolio_overview), color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
@@ -159,7 +155,7 @@ fun InvestmentCard(inv: Investment, onEdit: () -> Unit, onDelete: () -> Unit) {
     val isProfit = inv.isProfit
     val dateFmt = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
-    Card(Modifier.fillMaxWidth(), RoundedCornerShape(16.dp), elevation = CardDefaults.cardElevation(3.dp)) {
+    GlassCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

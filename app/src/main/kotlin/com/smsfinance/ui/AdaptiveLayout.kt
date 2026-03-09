@@ -14,6 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.*
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import com.smsfinance.ui.ai.AiPredictionsScreen
 import com.smsfinance.ui.alerts.SpendingAlertsScreen
 import com.smsfinance.ui.auth.PinScreen
@@ -34,6 +39,13 @@ import com.smsfinance.ui.transactions.TransactionDetailScreen
 import com.smsfinance.ui.transactions.TransactionListScreen
 
 data class NavRailItem(val route: String, val label: String, val icon: ImageVector)
+
+// ── Shared transition spec (mirrors MainActivity) ─────────────────────────────
+private const val ANIM_DURATION = 300
+internal val enterTransition     = slideInHorizontally(tween(ANIM_DURATION))  { it / 3 } + fadeIn(tween(ANIM_DURATION))
+internal val exitTransition      = fadeOut(tween(ANIM_DURATION / 2))
+internal val popEnterTransition  = fadeIn(tween(ANIM_DURATION))
+internal val popExitTransition   = slideOutHorizontally(tween(ANIM_DURATION)) { it / 3 } + fadeOut(tween(ANIM_DURATION))
 
 val navRailItems = listOf(
     NavRailItem(Routes.DASHBOARD,      "Dashboard",    Icons.Default.Home),
@@ -105,13 +117,23 @@ fun TabletLayout(
         if (isTwoPane) {
             Row(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(0.4f).fillMaxHeight()) {
-                    NavHost(navController = primaryNav, startDestination = startDest) {
+                    NavHost(navController = primaryNav, startDestination = startDest,
+                        enterTransition    = { enterTransition },
+                        exitTransition     = { exitTransition },
+                        popEnterTransition = { popEnterTransition },
+                        popExitTransition  = { popExitTransition }
+                    ) {
                         buildSharedGraph(primaryNav, detailNav, requireAuth, onBiometricAuth)
                     }
                 }
                 VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Box(Modifier.weight(0.6f).fillMaxHeight()) {
-                    NavHost(navController = detailNav, startDestination = "detail_empty") {
+                    NavHost(navController = detailNav, startDestination = "detail_empty",
+                        enterTransition    = { enterTransition },
+                        exitTransition     = { exitTransition },
+                        popEnterTransition = { popEnterTransition },
+                        popExitTransition  = { popExitTransition }
+                    ) {
                         composable("detail_empty") { DetailEmptyState() }
                         buildDetailGraph(detailNav)
                     }
@@ -121,7 +143,11 @@ fun TabletLayout(
             NavHost(
                 navController = primaryNav,
                 startDestination = startDest,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                enterTransition    = { enterTransition },
+                exitTransition     = { exitTransition },
+                popEnterTransition = { popEnterTransition },
+                popExitTransition  = { popExitTransition }
             ) {
                 buildSharedGraph(primaryNav, primaryNav, requireAuth, onBiometricAuth)
             }

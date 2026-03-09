@@ -45,6 +45,7 @@ import com.smsfinance.domain.model.DEFAULT_AVATARS
 import com.smsfinance.domain.model.PROFILE_COLORS
 import com.smsfinance.domain.model.UserProfile
 import com.smsfinance.ui.components.BigFab
+import com.smsfinance.ui.components.GlassCard
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.MultiUserViewModel
 import java.io.File
@@ -160,37 +161,37 @@ fun ActiveProfileHeroCard(profile: UserProfile) {
     val glow  by pulse.animateFloat(.12f, .28f,
         infiniteRepeatable(tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "hg")
 
-    Box(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF1A2D40), Color(0xFF1C3035))))
-            .drawBehind {
-                drawCircle(
-                    Brush.radialGradient(
-                        listOf(accentColor.copy(glow), Color.Transparent),
-                        Offset(size.width * .85f, size.height * .2f), size.width * .55f
+    GlassCard(Modifier.fillMaxWidth()) {
+        Box(
+            Modifier
+                .drawBehind {
+                    drawCircle(
+                        Brush.radialGradient(
+                            listOf(accentColor.copy(glow), Color.Transparent),
+                            Offset(size.width * .85f, size.height * .2f), size.width * .55f
+                        )
                     )
-                )
-            }
-            .padding(20.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-
-            // Avatar
-            ProfileAvatar(profile = profile, size = 70.dp, accentColor = accentColor, borderWidth = 3.dp)
-
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(profile.name, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextWhite)
-                    Surface(color = accentColor, shape = RoundedCornerShape(8.dp)) {
-                        Text(stringResource(R.string.active_label), color = Color.White, fontSize = 10.sp,
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp))
-                    }
                 }
-                Text(stringResource(R.string.currently_active),
-                    fontSize = 12.sp, color = TextSecondary)
+                .padding(20.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+
+                // Avatar
+                ProfileAvatar(profile = profile, size = 70.dp, accentColor = accentColor, borderWidth = 3.dp)
+
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(profile.name, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextWhite)
+                        Surface(color = accentColor, shape = RoundedCornerShape(8.dp)) {
+                            Text(stringResource(R.string.active_label), color = Color.White, fontSize = 10.sp,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp))
+                        }
+                    }
+                    Text(stringResource(R.string.currently_active),
+                        fontSize = 12.sp, color = TextSecondary)
+                }
             }
         }
     }

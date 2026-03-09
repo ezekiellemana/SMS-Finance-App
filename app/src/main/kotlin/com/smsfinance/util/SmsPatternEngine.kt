@@ -5,7 +5,7 @@ import com.smsfinance.domain.model.Transaction
 import com.smsfinance.domain.model.TransactionType
 
 /**
- * SMS Pattern Recognition Engine — v3.1
+ * SMS Pattern Recognition Engine — v3.2
  *
  * Key rule: ONLY SMS where money has actually moved are stored as transactions.
  * Reminder / alert messages (loan due, low balance, OTP, promo) are detected
@@ -13,10 +13,16 @@ import com.smsfinance.domain.model.TransactionType
  *
  * Tested against real SMS samples from:
  * ── Tanzania ──────────────────────────────────────────────────────
- *  HaloPesa         — Deposit, Withdraw (bank/wallet), SONGESHA loan deduction
- *  Vodacom M-Pesa   — Deposit, Withdraw, SONGESHA loan deduction
+ *  HaloPesa         — Deposit (kutoka NAME(phone)), Withdraw (kwa NAME(phone,Network),
+ *                     kwa PHONE_ONLY, kwenye akaunti bank, kwenda wallet),
+ *                     SONGESHA loan deduction, English bill payment
+ *  Vodacom M-Pesa   — Deposit (kutoka NUMBER-NAME mnamo, M-PESA FAIDA tarehe),
+ *                     Withdraw (AMT imetumwa kwa ... kwenye akaunti,
+ *                     NAME has received Tsh [English], Umenunua airtime,
+ *                     AMT imetolewa [agent])
  *  CRDB Bank        — Deposit, Withdraw (agent), SimBanking transfers
- *  NMB Bank         — Deposit (kimewekwa), Withdrawal (kimetolewa/kimetumwa/kikamilifu), Mshiko Fasta reminders filtered
+ *  NMB Bank         — Deposit (kimewekwa), Withdrawal (kimetolewa/kimetumwa/kikamilifu),
+ *                     Mshiko Fasta reminders filtered
  *  Mixx by Yas      — Deposit, Withdraw (kupokea/kutuma + umefanikiwa)
  *  Airtel Money     — Deposit, Withdraw (Swahili + English confirmed)
  *  Tigo Pesa        — Deposit, Withdraw (Swahili + Kiasi format, now Mixx by Yas)
@@ -86,29 +92,81 @@ object SmsPatternEngine {
         // ══════════════════════════════════════════════════════════════════════
         // HALOPESA
         // ══════════════════════════════════════════════════════════════════════
+        //
+        // Confirmed real formats (sender ID: HaloPesa):
+        //
+        // DEPOSIT:
+        //   (a) "Umepokea 20,000 TZS kutoka STEWART ERNEST MASIMA (0626233330)"
+        //
+        // WITHDRAWAL (send money to wallet / person):
+        //   (a) "Tnx 6061531825522767. Umetuma 22,000 TZS kwa ABEL AUGUSTINO
+        //        LAIZA (0745870024, M-Pesa) tarehe 03/03/2026 14:46:26.
+        //        Maudhui: ... Ada: 520 TZS. Salio jipya: 2,691.87 TZS."
+        //       → Amount BEFORE TZS, recipient has phone+network in parens
+        //   (b) "IMEFANIKIWA! Tnx 6065369528091332. Umetuma 2,100 TZS kwa
+        //        ABEL AUGUSTINO LAIZA (0745870024, M-Pesa) tarehe ..."
+        //       → Same format, prefixed with "IMEFANIKIWA!"
+        //
+        // WITHDRAWAL (bill payment / airtime — phone number only, no name):
+        //   (a) "IMEFANIKIWA! Tnx 6065627700451729. Umelipa 500 TZS kwa
+        //        692524898 tarehe 07/03/2026 17:26:25.
+        //        Ada: O TZS. Salio jipya: 51.87 TZS."
+        //       → Phone number only after "kwa"
+        //
+        // WITHDRAWAL (bank transfer):
+        //   (a) "Umetuma TSH 540,000.00 kwenye akaunti namba ... ya NMB"
+        //
+        // WITHDRAWAL (wallet-to-wallet, named destination):
+        //   (a) "Umetuma TSH 9,000.00 kwenda Mixx by Yas, jina ROBERT TAIRO"
+        //
+        // WITHDRAWAL (SONGESHA loan deduction):
+        //   (a) "Umelipa Tsh 100 kama makato ya deni la  SONGESHA."
+        //
+        // WITHDRAWAL (English bill payment):
+        //   (a) "Transaction ID: 6060... You have paid 1,000 TZS for phone..."
 
-        // "Umepokea 20,000 TZS kutoka STEWART ERNEST MASIMA (0626233330)"
+        // ── DEPOSIT: Umepokea AMT TZS kutoka NAME (phone) ────────────────────
         SmsPattern(
             senderMatch = "halo",
             bodyPattern = Regex("""[Uu]mepokea\s+$AMT\s*(?:TZS|TSH|Tsh)\s+kutoka\s+.+?\([+\d]+\)""", RegexOption.IGNORE_CASE),
             type = TransactionType.DEPOSIT, amountGroup = 1,
             sourceLabel = "HaloPesa", category = "Mobile Money"
         ),
-        // "Umetuma TSH 540,000.00 kwenye akaunti namba ... ya NMB"
+        // ── WITHDRAWAL: Umetuma AMT TZS kwa NAME (phone, Network) ───────────
+        // "Umetuma 22,000 TZS kwa ABEL AUGUSTINO LAIZA (0745870024, M-Pesa)"
+        // "IMEFANIKIWA! Tnx ... Umetuma 2,100 TZS kwa NAME (phone, Network)"
+        // Amount is plain digits before TZS (no Tsh/TSH prefix here)
+        SmsPattern(
+            senderMatch = "halo",
+            bodyPattern = Regex("""[Uu]metuma\s+$AMT\s*(?:TZS|TSH|Tsh)\s+kwa\s+.+?\(\d+.*?\)""", RegexOption.IGNORE_CASE),
+            type = TransactionType.WITHDRAWAL, amountGroup = 1,
+            sourceLabel = "HaloPesa", category = "Mobile Money"
+        ),
+        // ── WITHDRAWAL: Umelipa AMT TZS kwa PHONE_NUMBER (bill/airtime) ──────
+        // "Umelipa 500 TZS kwa 692524898 tarehe ..."
+        // Phone-number-only after "kwa" (no name, no parens)
+        SmsPattern(
+            senderMatch = "halo",
+            bodyPattern = Regex("""[Uu]melipa\s+$AMT\s*(?:TZS|TSH|Tsh)\s+kwa\s+\d{9,13}(?:\s|$)""", RegexOption.IGNORE_CASE),
+            type = TransactionType.WITHDRAWAL, amountGroup = 1,
+            sourceLabel = "HaloPesa Payment", category = "Bill Payment"
+        ),
+        // ── WITHDRAWAL: Umetuma TSH AMT kwenye akaunti (bank transfer) ───────
         SmsPattern(
             senderMatch = "halo",
             bodyPattern = Regex("""[Uu]metuma\s+(?:TSH|TZS|Tsh)\s*$AMT\s+kwenye\s+akaunti""", RegexOption.IGNORE_CASE),
             type = TransactionType.WITHDRAWAL, amountGroup = 1,
             sourceLabel = "HaloPesa → Bank", category = "Transfer"
         ),
-        // "Umetuma TSH 9,000.00 kwenda Mixx by Yas, jina ROBERT TAIRO"
+        // ── WITHDRAWAL: Umetuma TSH AMT kwenda WALLET, jina NAME ─────────────
         SmsPattern(
             senderMatch = "halo",
             bodyPattern = Regex("""[Uu]metuma\s+(?:TSH|TZS|Tsh)\s*$AMT\s+kwenda\s+.+?,""", RegexOption.IGNORE_CASE),
             type = TransactionType.WITHDRAWAL, amountGroup = 1,
             sourceLabel = "HaloPesa → Wallet", category = "Transfer"
         ),
-        // Real format: "Umelipa Tsh 100 kama makato ya deni la  SONGESHA. Salio la deni lako kwa sasa ni Tsh 32,058."
+        // ── WITHDRAWAL: SONGESHA loan deduction ──────────────────────────────
+        // "Umelipa Tsh 100 kama makato ya deni la  SONGESHA."
         // \s+ handles the double-space before SONGESHA seen in real messages.
         SmsPattern(
             senderMatch = "halo",
@@ -116,10 +174,7 @@ object SmsPatternEngine {
             type = TransactionType.WITHDRAWAL, amountGroup = 1,
             sourceLabel = "SONGESHA Loan", category = "Loan Repayment"
         ),
-        // "Unakumbushwa kurejesha deni lako la Tsh 28507 la SONGESHA. Ili kulipa deni weka pesa..."
-        // → reminder only, no money moved — caught by isReminderSms() before pattern matching.
-        // "Transaction ID: 6060... You have paid 1,000 TZS for phone number ... of Buy Bundle"
-        // HaloPesa English bill payment / bundle purchase
+        // ── WITHDRAWAL: English "You have paid AMT TZS for phone" ───────────
         SmsPattern(
             senderMatch = "halo",
             bodyPattern = Regex("""[Yy]ou\s+have\s+paid\s+$AMT\s+TZS""", RegexOption.IGNORE_CASE),
@@ -130,14 +185,74 @@ object SmsPatternEngine {
         // ══════════════════════════════════════════════════════════════════════
         // VODACOM M-PESA
         // ══════════════════════════════════════════════════════════════════════
+        //
+        // Confirmed real formats (sender ID: M-PESA):
+        //
+        // DEPOSIT:
+        //   (a) "DC22N8FK524 Imethibitishwa. Umepokea Tsh100.00 kutoka
+        //        255792892289 - ESTHER BALADIGA mnamo ..."
+        //   (b) "DC9ONDODMFA Imethibitishwa.Umepokea Tsh14.00 kutoka
+        //        219777 - M-PESA FAIDA tarehe 9/3/26 saa 12:21 AM
+        //        Salio lako la M-Pesa ni Tsh1,473.60."
+        //       → M-PESA FAIDA (interest credit) — income to balance
+        //
+        // WITHDRAWAL (send money):
+        //   (a) "DC76NC9YC1A Imethibitishwa. Tsh5,000.00 imetumwa kwa
+        //        TIPS-AIRTELMONEY kwenye akaunti namba 255789452917 tarehe..."
+        //       → Amount BEFORE keyword, sent to another wallet
+        //   (b) "DC76NC9YC1A Confirmed. SAMWEL TARIMO has received Tsh..."
+        //       → English format: someone "has received" = you sent = withdrawal
+        //
+        // WITHDRAWAL (airtime / bundle purchase):
+        //   (a) "DC79NCMOEUX Imethibitishwa. Umenunua Tsh500.00 muda wa
+        //        maongezi kwa AIRTEL-255692524898, tarehe 7/3/26 5:31 PM.
+        //        Salio lako la ni Tsh1,459.60."
+        //       → Airtime purchase = outgoing money
+        //
+        // WITHDRAWAL (agent / legacy):
+        //   (a) "Tsh100.00 imetolewa kwenye akaunti yako ya M-Pesa"
 
-        // "DC22N8FK524 Imethibitishwa. Umepokea Tsh100.00 kutoka 255792892289 - ESTHER BALADIGA mnamo ..."
+        // ── DEPOSIT: Umepokea ... kutoka NUMBER - NAME mnamo ─────────────────
         SmsPattern(
             senderMatch = "mpesa",
             bodyPattern = Regex("""[Uu]mepokea\s+(?:Tsh|TZS|TSH)\s*$AMT\s+kutoka\s+[\d+]+\s*-\s*.+?\s+mnamo""", RegexOption.IGNORE_CASE),
             type = TransactionType.DEPOSIT, amountGroup = 1,
             sourceLabel = "M-Pesa", category = "Mobile Money"
         ),
+        // ── DEPOSIT: Umepokea ... kutoka NUMBER - NAME tarehe (M-PESA FAIDA) ─
+        // "DC9ONDODMFA Imethibitishwa.Umepokea Tsh14.00 kutoka 219777 - M-PESA FAIDA tarehe..."
+        SmsPattern(
+            senderMatch = "mpesa",
+            bodyPattern = Regex("""[Uu]mepokea\s+(?:Tsh|TZS|TSH)\s*$AMT\s+kutoka\s+[\d]+\s*-\s*.+?(?:tarehe|saa|\d{1,2}/\d{1,2}/\d{2,4})""", RegexOption.IGNORE_CASE),
+            type = TransactionType.DEPOSIT, amountGroup = 1,
+            sourceLabel = "M-Pesa Faida", category = "Mobile Money"
+        ),
+        // ── WITHDRAWAL: AMT imetumwa kwa NAME/NETWORK kwenye akaunti ─────────
+        // "Tsh5,000.00 imetumwa kwa TIPS-AIRTELMONEY kwenye akaunti namba..."
+        SmsPattern(
+            senderMatch = "mpesa",
+            bodyPattern = Regex("""$AMT\s+imetumwa\s+kwa\s+.+?\s+kwenye\s+akaunti""", RegexOption.IGNORE_CASE),
+            type = TransactionType.WITHDRAWAL, amountGroup = 1,
+            sourceLabel = "M-Pesa", category = "Mobile Money"
+        ),
+        // ── WITHDRAWAL: English "has received Tsh..." (you sent = withdrawal) ─
+        // "DC76NC9YC1A Confirmed. SAMWEL TARIMO has received Tsh..."
+        // Captures amount after "has received Tsh/TZS"
+        SmsPattern(
+            senderMatch = "mpesa",
+            bodyPattern = Regex(""".+?\s+has\s+received\s+(?:Tsh|TZS|TSH)\s*$AMT""", RegexOption.IGNORE_CASE),
+            type = TransactionType.WITHDRAWAL, amountGroup = 1,
+            sourceLabel = "M-Pesa", category = "Mobile Money"
+        ),
+        // ── WITHDRAWAL: Umenunua ... muda wa maongezi (airtime purchase) ─────
+        // "Imethibitishwa. Umenunua Tsh500.00 muda wa maongezi kwa AIRTEL-..."
+        SmsPattern(
+            senderMatch = "mpesa",
+            bodyPattern = Regex("""[Uu]menunua\s+(?:Tsh|TZS|TSH)\s*$AMT\s+muda\s+wa\s+maongezi""", RegexOption.IGNORE_CASE),
+            type = TransactionType.WITHDRAWAL, amountGroup = 1,
+            sourceLabel = "M-Pesa Airtime", category = "Airtime"
+        ),
+        // ── WITHDRAWAL: AMT imetolewa kwenye akaunti yako ya M-Pesa ──────────
         // "Tsh100.00 imetolewa kwenye akaunti yako ya M-Pesa"
         SmsPattern(
             senderMatch = "mpesa",

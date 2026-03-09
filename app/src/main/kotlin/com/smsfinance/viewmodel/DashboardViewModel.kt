@@ -11,9 +11,19 @@ import com.smsfinance.util.SmsHistoryImporter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
 import javax.inject.Inject
+
+/** One money service entry shown in the hero card and settings. */
+data class ServiceBalance(
+    val id: String,
+    val displayName: String,
+    val emoji: String,
+    val category: String,
+    val openingBalance: Double
+)
 
 data class DashboardUiState(
     val summary: FinancialSummary             = FinancialSummary(0.0, 0.0, 0.0, 0),
@@ -23,9 +33,10 @@ data class DashboardUiState(
     val chartData: List<ChartDataPoint>       = emptyList(),
     val userName: String                      = "",
     val openingBalance: Double                = 0.0,
+    val serviceBalances: List<ServiceBalance> = emptyList(),
     val isLoading: Boolean                    = true,
-    val isRefreshing: Boolean                 = false,   // ← true while inbox scan runs
-    val refreshResult: Int?                   = null,    // ← # new tx found (null = idle)
+    val isRefreshing: Boolean                 = false,
+    val refreshResult: Int?                   = null,
     val error: String?                        = null
 )
 
@@ -49,7 +60,7 @@ class DashboardViewModel @Inject constructor(
             _uiState.update { it.copy(isRefreshing = true, refreshResult = null) }
             val newCount = try {
                 smsHistoryImporter.refreshUnread()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 0
             }
             _uiState.update { it.copy(isRefreshing = false, refreshResult = newCount) }
@@ -66,22 +77,30 @@ class DashboardViewModel @Inject constructor(
     private fun observeData() {
         viewModelScope.launch {
             try {
-                val prefsFlow: Flow<Triple<String, String, Long>> = combine(
+                // Combine 4 prefs flows into a single array (combine() max is 5 params)
+                val prefsFlow = combine(
                     prefs.userNameFlow,
                     prefs.openingBalancesFlow,
-                    prefs.setupCompletedAtFlow
-                ) { name, balJson, setupAt -> Triple(name, balJson, setupAt) }
+                    prefs.setupCompletedAtFlow,
+                    prefs.selectedSendersFlow
+                ) { name, balJson, setupAt, sendersJson ->
+                    arrayOf(name, balJson, setupAt.toString(), sendersJson)
+                }
 
                 combine(
                     prefsFlow,
                     repository.getTotalIncome(Long.MIN_VALUE, Long.MAX_VALUE),
                     repository.getTotalExpenses(Long.MIN_VALUE, Long.MAX_VALUE),
                     repository.getAllTransactions()
-                ) { (userName, balancesJson, setupAt), allIncome, allExpenses, allTx ->
+                ) { prefs, allIncome, allExpenses, allTx ->
+                    val userName     = prefs[0]
+                    val balancesJson = prefs[1]
+                    val setupAt      = prefs[2].toLong()
+                    val sendersJson  = prefs[3]
 
                     val openingBalance = parseOpeningBalances(balancesJson)
                     val newTxStart  = if (setupAt > 0L) setupAt else Long.MIN_VALUE
-                    val newIncome   = allTx.filter { it.type.name == "DEPOSIT"    && it.date >= newTxStart }.sumOf { it.amount }
+                    val newIncome   = allTx.filter { it.type.name == "DEPOSIT" && it.date >= newTxStart }.sumOf { it.amount }
                     val newExpenses = allTx.filter { it.type.name == "WITHDRAWAL" && it.date >= newTxStart }.sumOf { it.amount }
                     val balance     = openingBalance + newIncome - newExpenses
 
@@ -96,6 +115,7 @@ class DashboardViewModel @Inject constructor(
                         allTimeExpenses    = allExpenses,
                         recentTransactions = allTx,
                         chartData          = buildChartData(allTx, getMonthRange()),
+                        serviceBalances    = parseServiceBalances(sendersJson, balancesJson),
                         userName           = userName,
                         openingBalance     = openingBalance,
                         isLoading          = false,
@@ -111,8 +131,8 @@ class DashboardViewModel @Inject constructor(
                         _uiState.value = state
                     }
 
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            } catch (ex: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = ex.message) }
             }
         }
     }
@@ -148,6 +168,54 @@ class DashboardViewModel @Inject constructor(
             obj.keys().forEach { key -> total += obj.optDouble(key, 0.0) }
             total
         } catch (_: Exception) { 0.0 }
+    }
+
+    /**
+     * Build the per-service balance list shown in the hero card.
+     * Only services that appear in [sendersJson] (user's selected services)
+     * are included; balance defaults to 0 if not yet set.
+     */
+    private fun parseServiceBalances(sendersJson: String, balancesJson: String): List<ServiceBalance> {
+        val balObj = try { JSONObject(balancesJson) } catch (_: Exception) { JSONObject() }
+        val selected = try {
+            val arr = JSONArray(sendersJson)
+            (0 until arr.length()).map { arr.getString(it) }
+        } catch (_: Exception) { emptyList() }
+
+        return selected.mapNotNull { id ->
+            val meta = KNOWN_SERVICES[id] ?: return@mapNotNull null
+            ServiceBalance(
+                id             = id,
+                displayName    = meta.first,
+                emoji          = meta.second,
+                category       = meta.third,
+                openingBalance = balObj.optDouble(id, 0.0)
+            )
+        }
+    }
+
+    @Suppress("SpellCheckingInspection")
+    companion object {
+        /** Master catalogue — matches OnboardingScreen's ALL_SENDERS list. */
+        val KNOWN_SERVICES: Map<String, Triple<String, String, String>> = mapOf(
+            "NMB"       to Triple("NMB Bank",               "🏦", "Bank"),
+            "CRDB"      to Triple("CRDB Bank",              "🏦", "Bank"),
+            "NBC"       to Triple("NBC Bank",               "🏦", "Bank"),
+            "EQUITY"    to Triple("Equity Bank",            "🏦", "Bank"),
+            "STANBIC"   to Triple("Stanbic Bank",           "🏦", "Bank"),
+            "ABSA"      to Triple("ABSA Bank",              "🏦", "Bank"),
+            "EXIM"      to Triple("EXIM Bank",              "🏦", "Bank"),
+            "DTB"       to Triple("DTB Bank",               "🏦", "Bank"),
+            "MPESA"     to Triple("M-Pesa",                 "📱", "Mobile Money"),
+            "MIXX"      to Triple("Mixx by Yas",            "📱", "Mobile Money"),
+            "AIRTEL"    to Triple("Airtel Money",           "📱", "Mobile Money"),
+            "HALOPESA"  to Triple("HaloPesa",               "📱", "Mobile Money"),
+            "TPESA"     to Triple("T-Pesa",                 "📱", "Mobile Money"),
+            "AZAMPESA"  to Triple("AzamPesa",               "📱", "Mobile Money"),
+            "SELCOMPESA" to Triple("SelcomPesa",            "📱", "Mobile Money"),
+            "EZYPESA"   to Triple("EzyPesa",                "📱", "Mobile Money"),
+            "NALA"      to Triple("NALA",                   "📱", "Mobile Money")
+        )
     }
 
     private fun getMonthRange(): Pair<Long, Long> {

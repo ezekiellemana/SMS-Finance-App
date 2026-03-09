@@ -1,6 +1,5 @@
 package com.smsfinance.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -17,7 +16,7 @@ val TextWhite       = Color(0xFFFFFFFF)   // Primary text
 val TextSecondary   = Color(0xFFAAB4C3)   // Secondary text
 val ErrorRed        = Color(0xFFFF5C5C)   // Error / expense
 
-// Legacy aliases (used by charts/existing code)
+// Legacy aliases (used by charts and existing code)
 val GreenPrimary    = AccentTeal
 val GreenDark       = Color(0xFF2AB8B5)
 val GreenLight      = AccentLight
@@ -30,25 +29,25 @@ val SurfaceDark     = BgPrimary
 val SurfaceCardDark = BgSecondary
 
 private val AppColorScheme = darkColorScheme(
-    primary             = AccentTeal,
-    onPrimary           = BgPrimary,
-    primaryContainer    = Color(0xFF1E3A3A),
-    onPrimaryContainer  = AccentLight,
-    secondary           = AccentLight,
-    onSecondary         = BgPrimary,
-    secondaryContainer  = Color(0xFF1E3540),
+    primary              = AccentTeal,
+    onPrimary            = BgPrimary,
+    primaryContainer     = Color(0xFF1E3A3A),
+    onPrimaryContainer   = AccentLight,
+    secondary            = AccentLight,
+    onSecondary          = BgPrimary,
+    secondaryContainer   = Color(0xFF1E3540),
     onSecondaryContainer = AccentLight,
-    background          = BgPrimary,
-    surface             = BgSecondary,
-    surfaceVariant      = Color(0xFF2A3347),
-    onSurface           = TextWhite,
-    onSurfaceVariant    = TextSecondary,
-    onBackground        = TextWhite,
-    outline             = Color(0xFF3A4558),
-    outlineVariant      = Color(0xFF2E3A4A),
-    error               = ErrorRed,
-    errorContainer      = Color(0xFF3A1F1F),
-    tertiary            = OrangeWarn
+    background           = BgPrimary,
+    surface              = BgSecondary,
+    surfaceVariant       = Color(0xFF2A3347),
+    onSurface            = TextWhite,
+    onSurfaceVariant     = TextSecondary,
+    onBackground         = TextWhite,
+    outline              = Color(0xFF3A4558),
+    outlineVariant       = Color(0xFF2E3A4A),
+    error                = ErrorRed,
+    errorContainer       = Color(0xFF3A1F1F),
+    tertiary             = OrangeWarn
 )
 
 val AppTypography = Typography(
@@ -69,7 +68,7 @@ val AppTypography = Typography(
 
 @Composable
 fun SMSFinanceTheme(
-    darkTheme: Boolean = true, // Always dark — Smart Money brand
+    darkTheme: Boolean = true,   // parameter kept for API compatibility; always dark
     content: @Composable () -> Unit
 ) {
     MaterialTheme(

@@ -1,6 +1,7 @@
 package com.smsfinance.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import androidx.core.net.toUri
@@ -15,6 +16,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import com.smsfinance.R
+import com.smsfinance.util.LocaleHelper
 
 /**
  * Full-screen video splash screen.
@@ -27,6 +29,12 @@ class SplashActivity : FragmentActivity(), SurfaceHolder.Callback {
     private lateinit var container: FrameLayout
     private var mediaPlayer: MediaPlayer? = null
     private var launched = false
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("app_language", MODE_PRIVATE)
+        val lang = prefs.getString("language", "en") ?: "en"
+        super.attachBaseContext(LocaleHelper.wrap(newBase, lang))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()

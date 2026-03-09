@@ -1,6 +1,8 @@
 package com.smsfinance.viewmodel
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -44,6 +47,20 @@ class SettingsViewModel @Inject constructor(
     val language: StateFlow<String> = prefs.languageFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LocaleHelper.LANG_ENGLISH)
 
+    /** Live list of the user's money services with their opening balances. */
+    val serviceBalances: StateFlow<List<ServiceBalance>> =
+        combine(prefs.selectedSendersFlow, prefs.openingBalancesFlow) { sendersJson, balJson ->
+            val balObj = try { JSONObject(balJson) } catch (_: Exception) { JSONObject() }
+            val selected = try {
+                val arr = JSONArray(sendersJson)
+                (0 until arr.length()).map { arr.getString(it) }
+            } catch (_: Exception) { emptyList() }
+            selected.mapNotNull { id ->
+                val meta = DashboardViewModel.KNOWN_SERVICES[id] ?: return@mapNotNull null
+                ServiceBalance(id, meta.first, meta.second, meta.third, balObj.optDouble(id, 0.0))
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val widgetTheme: StateFlow<String> = prefs.widgetThemeFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "GREEN_DARK")
 
@@ -73,21 +90,33 @@ class SettingsViewModel @Inject constructor(
         prefs.setBiometricEnabled(enabled)
     }
 
-    fun setDarkMode(enabled: Boolean) = viewModelScope.launch {
-        prefs.setDarkMode(enabled)
-    }
-
     fun setWidgetTheme(theme: String) = viewModelScope.launch {
         prefs.setWidgetTheme(theme)
         widgetUpdateManager.updateAllWidgets(appContext)
     }
 
     fun setLanguage(lang: String, context: Context) = viewModelScope.launch {
+        // 1. Persist to both DataStore and SharedPreferences so both
+        //    Application.attachBaseContext and Activity.attachBaseContext
+        //    read the same value on the next cold start or recreate().
         prefs.setLanguage(lang)
         context.getSharedPreferences("app_language", Context.MODE_PRIVATE)
             .edit { putString("language", lang) }
-        // Recreate the Activity so the new locale takes effect immediately
-        (context as? android.app.Activity)?.recreate()
+
+        // 2. Unwrap the ContextWrapper chain to reach the real Activity.
+        //    LocalContext.current in Compose is a ContextThemeWrapper, not
+        //    the Activity itself, so a direct cast always returns null.
+        context.findActivity()?.recreate()
+    }
+
+    /** Walk the ContextWrapper chain until we find an Activity or give up. */
+    private fun Context.findActivity(): Activity? {
+        var ctx: Context = this
+        repeat(10) {                       // guard against infinite loops
+            if (ctx is Activity) return ctx
+            ctx = (ctx as? ContextWrapper)?.baseContext ?: return null
+        }
+        return null
     }
 
     fun setPin(pin: String) = viewModelScope.launch {
@@ -103,6 +132,28 @@ class SettingsViewModel @Inject constructor(
     fun disablePin() = viewModelScope.launch { prefs.setPinEnabled(false) }
 
     // ── User setup (called from onboarding page 2) ────────────────────────────
+    /** Update the opening balance for a single service without touching others. */
+    fun updateServiceBalance(serviceId: String, newBalance: Double) = viewModelScope.launch {
+        val current = try { JSONObject(prefs.getOpeningBalances()) }
+        catch (_: Exception) { JSONObject() }
+        if (newBalance > 0.0) current.put(serviceId, newBalance)
+        else current.remove(serviceId)
+        prefs.setOpeningBalances(current.toString())
+    }
+
+    /** Add a new service to the user's selected list and set its opening balance. */
+    fun addService(serviceId: String, openingBalance: Double) = viewModelScope.launch {
+        // Read current selected senders from the StateFlow's cached value
+        val currentSenders = serviceBalances.value.map { it.id }.toMutableList()
+        if (serviceId !in currentSenders) {
+            currentSenders.add(serviceId)
+            prefs.setSelectedSenders(JSONArray(currentSenders).toString())
+        }
+        if (openingBalance > 0.0) {
+            updateServiceBalance(serviceId, openingBalance)
+        }
+    }
+
     fun saveUserSetup(
         name: String,
         selectedSenders: List<String>,
@@ -113,7 +164,7 @@ class SettingsViewModel @Inject constructor(
         prefs.setSelectedSenders(JSONArray(selectedSenders).toString())
 
         // Sync the name into the active DB profile immediately so Family
-        // Accounts shows the real name without needing a re-install.
+        // Accounts shows the real name without requiring a fresh install.
         userProfileRepository.syncActiveProfileName()
 
         // Opening balances are stored purely in DataStore — NOT as transactions.
