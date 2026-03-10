@@ -179,7 +179,7 @@ private fun TransactionDetailContent(
                     )
                 }
                 Text(
-                    if (isDeposit) "Money Received" else "Money Sent",
+                    if (isDeposit) stringResource(R.string.tx_money_received) else stringResource(R.string.tx_money_sent),
                     fontSize = 11.sp, color = accentColor.copy(.75f),
                     fontWeight = FontWeight.SemiBold, letterSpacing = .8.sp
                 )
@@ -213,20 +213,20 @@ private fun TransactionDetailContent(
                 Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                DetailItem(Icons.Default.AccountBalance, "Source",   transaction.source, accentColor)
+                DetailItem(Icons.Default.AccountBalance, stringResource(R.string.tx_detail_source), transaction.source, accentColor)
                 DetailDivider()
                 DetailItem(
                     if (isDeposit) Icons.AutoMirrored.Filled.CallReceived
                     else           Icons.AutoMirrored.Filled.CallMade,
-                    "Type", transaction.type.label, accentColor
+                    stringResource(R.string.tx_detail_type), stringResource(if (transaction.type == com.smsfinance.domain.model.TransactionType.DEPOSIT) R.string.tx_type_deposit else R.string.tx_type_withdrawal), accentColor
                 )
                 if (transaction.reference.isNotEmpty()) {
                     DetailDivider()
-                    DetailItem(Icons.Default.Tag, "Reference", transaction.reference, accentColor)
+                    DetailItem(Icons.Default.Tag, stringResource(R.string.tx_detail_reference), transaction.reference, accentColor)
                 }
                 if (transaction.isManual) {
                     DetailDivider()
-                    DetailItem(Icons.Default.Edit, "Entry", "Manual Entry", accentColor)
+                    DetailItem(Icons.Default.Edit, stringResource(R.string.tx_detail_entry), stringResource(R.string.tx_detail_manual_entry), accentColor)
                 }
             }
         }
@@ -510,7 +510,7 @@ fun AddTransactionScreen(
                             Transaction(
                                 amount      = parsed,
                                 type        = selectedType,
-                                source      = source.ifEmpty { "Manual" },
+                                source      = source.ifEmpty { "Manual" },  // kept as internal fallback
                                 date        = System.currentTimeMillis(),
                                 description = description,
                                 isManual    = true

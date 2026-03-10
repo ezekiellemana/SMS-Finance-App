@@ -268,6 +268,91 @@
     <string name="onb_feat_nointernet" tools:ignore="Typos">No internet needed</string>
     <string name="onb_feat_encrypted">Encrypted storage</string>
     <string name="onb_feat_biometric">Biometric lock</string>
+    <!-- Hero page -->
+    <string name="hero_tagline">Your finances, automated.</string>
+    <string name="hero_pill_sms">Auto SMS</string>
+    <string name="hero_pill_charts">Live charts</string>
+    <string name="hero_pill_private">Private</string>
+    <string name="hero_card_tag">Smart finance tracking, worldwide</string>
+    <string name="hero_stat1_title">Auto-reads SMS</string>
+    <string name="hero_stat1_sub">Zero typing needed</string>
+    <string name="hero_stat2_title">Real-time balance</string>
+    <string name="hero_stat2_sub">Always up to date</string>
+    <string name="hero_stat3_title">100% on-device</string>
+    <string name="hero_stat3_sub">Private &amp; encrypted</string>
+    <string name="hero_choose_lang">Choose language</string>
+    <string name="hero_swipe_hint">Swipe to change</string>
+    <!-- Feature page row sub-labels -->
+    <string name="onb_feat_instant_sub">Reads SMS in under 2 seconds</string>
+    <string name="onb_feat_smart">Smart patterns</string>
+    <string name="onb_feat_smart_sub">Learns your transaction formats</string>
+    <string name="onb_feat_widget">Home widget</string>
+    <string name="onb_feat_widget_sub">Balance visible without opening app</string>
+    <string name="onb_feat_charts_sub">Visual breakdown by category</string>
+    <string name="onb_feat_ai_sub">Forecast where your money goes</string>
+    <string name="onb_feat_ondevice_sub">No cloud, no servers, ever</string>
+    <string name="onb_feat_aes">AES encryption</string>
+    <string name="onb_feat_aes_sub">Data locked at rest</string>
+    <string name="onb_feat_biometric_sub">PIN or fingerprint protection</string>
+    <!-- Feature page full titles and bodies (long form) -->
+    <string name="onb_page1_body_long">Smart Money silently watches your incoming SMS and instantly captures every transaction — deposits, withdrawals, transfers — the moment they arrive.</string>
+    <string name="onb_page2_body_long">A live home-screen widget and full dashboard show your balance, income and expenses in real-time — beautifully charted and always up to date.</string>
+    <string name="onb_page3_body_long">Every transaction is stored locally using AES encryption. Nothing is sent to any server. Your financial data belongs only to you.</string>
+    <!-- Setup page -->
+    <string name="onb_banks_label">Banks</string>
+    <string name="onb_mobile_money_label">Mobile Money</string>
+    <string name="onb_all_set">All set ✓</string>
+    <string name="onb_filled_of">%1$d / %2$d</string>
+    <string name="onb_choose_bank">Choose your bank</string>
+    <string name="onb_choose_mobile">Choose mobile money</string>
+    <string name="onb_tap_add_count">Tap to add · %1$d available</string>
+    <string name="onb_no_match">No match for "%1$s"</string>
+    <string name="onb_all_cat_added">All %1$ss added!</string>
+    <!-- Dashboard hardcoded strings -->
+    <string name="dash_good_morning">Good morning</string>
+    <string name="dash_good_afternoon">Good afternoon</string>
+    <string name="dash_good_evening">Good evening</string>
+    <string name="dash_hey">Hey</string>
+    <string name="dash_snapshot">Here\'s your financial snapshot for today</string>
+    <string name="dash_tracked">Your money is being tracked automatically</string>
+    <string name="dash_day_looked">Here\'s how your day looked financially</string>
+    <string name="dash_late_night">Late night — your finances are safe</string>
+    <string name="dash_no_tx">No transactions yet</string>
+    <string name="dash_no_tx_sub">Financial SMS messages will appear here automatically</string>
+    <string name="dash_calculating">Calculating balance…</string>
+    <string name="dash_current_balance">Current Balance</string>
+    <string name="dash_total_income">Total Income</string>
+    <string name="dash_total_expenses">Total Expenses</string>
+    <string name="dash_my_services">My Services</string>
+    <string name="dash_btn_transactions">Transactions</string>
+    <string name="dash_btn_analytics">Analytics</string>
+    <string name="dash_up_to_date">Up to date</string>
+    <string name="dash_new_tx">+%1$d new</string>
+    <!-- Transaction type labels -->
+    <string name="tx_type_deposit">Deposit</string>
+    <string name="tx_type_withdrawal">Withdrawal</string>
+    <!-- Transaction detail screen -->
+    <string name="tx_money_received">Money Received</string>
+    <string name="tx_money_sent">Money Sent</string>
+    <string name="tx_detail_source">Source</string>
+    <string name="tx_detail_type">Type</string>
+    <string name="tx_detail_reference">Reference</string>
+    <string name="tx_detail_entry">Entry</string>
+    <string name="tx_detail_manual_entry">Manual Entry</string>
+    <!-- Transaction list screen -->
+    <string name="tx_list_empty_title">No transactions found</string>
+    <string name="tx_list_empty_sub">Tap + to add one, or wait for an SMS</string>
+    <string name="tx_list_add_btn">Add Transaction</string>
+    <string name="tx_list_show_more">Show more</string>
+    <!-- SMS detection titles (page 1 onboarding + SMS screens) -->
+    <string name="sms_auto_reads">Auto-reads SMS</string>
+    <string name="sms_instant_capture">Instant capture</string>
+    <string name="sms_17_services">17+ services</string>
+    <string name="sms_smart_patterns">Smart patterns</string>
+    <string name="sms_page_title">SMS Detection</string>
+    <string name="sms_reads_in">Reads SMS in under 2 seconds</string>
+    <string name="sms_services_list">NMB, CRDB, M-Pesa, Airtel &amp; more</string>
+    <string name="sms_learns">Learns your transaction formats</string>
 
     <!-- Settings screen — section headers & grouped labels -->
     <string name="settings">Settings</string>

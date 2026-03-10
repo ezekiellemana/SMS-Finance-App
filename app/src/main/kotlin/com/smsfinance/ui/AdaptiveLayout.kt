@@ -60,7 +60,8 @@ fun AdaptiveAppNavigation(
     windowSizeClass: WindowSizeClass,
     requireAuth: Boolean,
     onBiometricAuth: (() -> Unit) -> Unit,
-    onboardingDone: Boolean = true
+    onboardingDone: Boolean = true,
+    onLangChange: () -> Unit = {}
 ) {
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
     val isMedium   = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Medium
@@ -68,7 +69,7 @@ fun AdaptiveAppNavigation(
     if (isExpanded || isMedium) {
         TabletLayout(requireAuth, onBiometricAuth, isExpanded, onboardingDone)
     } else {
-        AppNavigation(requireAuth, onBiometricAuth, onboardingDone)
+        AppNavigation(requireAuth, onBiometricAuth, onboardingDone, onLangChange)
     }
 }
 
@@ -123,7 +124,7 @@ fun TabletLayout(
                         popEnterTransition = { popEnterTransition },
                         popExitTransition  = { popExitTransition }
                     ) {
-                        buildSharedGraph(primaryNav, detailNav, requireAuth, onBiometricAuth)
+                        buildSharedGraph(primaryNav, detailNav, onBiometricAuth)
                     }
                 }
                 VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -149,7 +150,7 @@ fun TabletLayout(
                 popEnterTransition = { popEnterTransition },
                 popExitTransition  = { popExitTransition }
             ) {
-                buildSharedGraph(primaryNav, primaryNav, requireAuth, onBiometricAuth)
+                buildSharedGraph(primaryNav, primaryNav, onBiometricAuth)
             }
         }
     }
@@ -177,7 +178,6 @@ private fun DetailEmptyState() {
 private fun NavGraphBuilder.buildSharedGraph(
     nav: NavController,
     detailNav: NavController,
-    requireAuth: Boolean,
     onBiometricAuth: (() -> Unit) -> Unit
 ) {
     composable(Routes.ONBOARDING) {
@@ -263,5 +263,5 @@ private fun NavGraphBuilder.buildDetailGraph(detailNav: NavController) {
 }
 
 private fun safeNavigate(detailNav: NavController, primaryNav: NavController, route: String) {
-    try { detailNav.navigate(route) } catch (e: Exception) { primaryNav.navigate(route) }
+    try { detailNav.navigate(route) } catch (_: Exception) { primaryNav.navigate(route) }
 }

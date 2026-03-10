@@ -8,10 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smsfinance.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -64,10 +66,9 @@ private val TextMuted   = Color(0xFF8A96A8)
 private val TextSoft    = Color(0xFFCDD5E0)
 private val GreenOk     = Color(0xFF43C59E)
 
-// 0=Hero 1=SMS 2=Dashboard 3=Security 4=Language 5=Personalize
-private const val TOTAL_PAGES = 6
-private const val PAGE_SETUP  = 5
-private const val PAGE_LANG   = 4
+// 0=Hero 1=SMS Detection 2=Dashboard 3=Security 4=Personalize
+private const val TOTAL_PAGES = 5
+private const val PAGE_SETUP  = 4
 
 // ── Sender data ───────────────────────────────────────────────────────────────
 data class SenderOption(val id: String, val displayName: String, val emoji: String, val category: String)
@@ -95,48 +96,48 @@ val ALL_SENDERS = listOf(
 // ── Feature page model ────────────────────────────────────────────────────────
 data class FeaturePage(
     val emoji: String,
-    val title: String,
-    val tagline: String,
-    val body: String,
+    @field:androidx.annotation.StringRes val titleRes: Int,
+    @field:androidx.annotation.StringRes val taglineRes: Int,
+    @field:androidx.annotation.StringRes val bodyRes: Int,
     val accent: Color,
-    val items: List<Triple<ImageVector, String, String>>
+    val items: List<Triple<ImageVector, Int, Int>>  // icon, titleRes, subtitleRes
 )
 
 private val FEATURE_PAGES = listOf(
     FeaturePage(
-        emoji   = "📲",
-        title   = "Auto SMS\nDetection",
-        tagline = "Zero manual entry",
-        body    = "Smart Money silently watches your incoming SMS and instantly captures every transaction — deposits, withdrawals, transfers — the moment they arrive.",
-        accent  = AccentTeal,
-        items   = listOf(
-            Triple(Icons.Default.FlashOn,        "Instant capture",  "Reads SMS in under 2 seconds"),
-            Triple(Icons.Default.AccountBalance, "17+ services",     "NMB, CRDB, M-Pesa, Airtel & more"),
-            Triple(Icons.Default.AutoAwesome,    "Smart patterns",   "Learns your transaction formats"),
+        emoji      = "📲",
+        titleRes   = R.string.onb_page1_title,
+        taglineRes = R.string.onb_page1_subtitle,
+        bodyRes    = R.string.onb_page1_body_long,
+        accent     = AccentTeal,
+        items      = listOf(
+            Triple(Icons.Default.FlashOn,        R.string.sms_instant_capture, R.string.sms_reads_in),
+            Triple(Icons.Default.AccountBalance, R.string.sms_17_services,     R.string.sms_services_list),
+            Triple(Icons.Default.AutoAwesome,    R.string.sms_smart_patterns,  R.string.sms_learns),
         )
     ),
     FeaturePage(
-        emoji   = "📊",
-        title   = "Smart\nDashboard",
-        tagline = "Your money at a glance",
-        body    = "A live home-screen widget and full dashboard show your balance, income and expenses in real-time — beautifully charted and always up to date.",
-        accent  = AccentBlue,
-        items   = listOf(
-            Triple(Icons.Default.Widgets,    "Home widget",    "Balance visible without opening app"),
-            Triple(Icons.Default.PieChart,   "Spending charts","Visual breakdown by category"),
-            Triple(Icons.Default.Psychology, "AI predictions", "Forecast where your money goes"),
+        emoji      = "📊",
+        titleRes   = R.string.onb_page2_title,
+        taglineRes = R.string.onb_page2_subtitle,
+        bodyRes    = R.string.onb_page2_body_long,
+        accent     = AccentBlue,
+        items      = listOf(
+            Triple(Icons.Default.Widgets,    R.string.onb_feat_widget,  R.string.onb_feat_widget_sub),
+            Triple(Icons.Default.PieChart,   R.string.onb_feat_charts,  R.string.onb_feat_charts_sub),
+            Triple(Icons.Default.Psychology, R.string.onb_feat_ai,      R.string.onb_feat_ai_sub),
         )
     ),
     FeaturePage(
-        emoji   = "🔐",
-        title   = "Private\n& Secure",
-        tagline = "Stays on your phone",
-        body    = "Every transaction is stored locally using AES encryption. Nothing is sent to any server. Your financial data belongs only to you.",
-        accent  = AccentGreen,
-        items   = listOf(
-            Triple(Icons.Default.PhoneLocked, "On-device only",   "No cloud, no servers, ever"),
-            Triple(Icons.Default.Lock,        "AES encryption",   "Data locked at rest"),
-            Triple(Icons.Default.Fingerprint, "Biometric lock",   "PIN or fingerprint protection"),
+        emoji      = "🔐",
+        titleRes   = R.string.onb_page3_title,
+        taglineRes = R.string.onb_page3_subtitle,
+        bodyRes    = R.string.onb_page3_body_long,
+        accent     = AccentGreen,
+        items      = listOf(
+            Triple(Icons.Default.PhoneLocked, R.string.onb_feat_ondevice,  R.string.onb_feat_ondevice_sub),
+            Triple(Icons.Default.Lock,        R.string.onb_feat_aes,       R.string.onb_feat_aes_sub),
+            Triple(Icons.Default.Fingerprint, R.string.onb_feat_biometric, R.string.onb_feat_biometric_sub),
         )
     ),
 )
@@ -148,13 +149,21 @@ private val FEATURE_PAGES = listOf(
 @Composable
 fun OnboardingScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
-    onFinished: () -> Unit
+    onFinished: () -> Unit,
+    onLangChange: (() -> Unit)? = null
 ) {
     val pagerState = rememberPagerState(pageCount = { TOTAL_PAGES })
     val scope      = rememberCoroutineScope()
     val context    = LocalContext.current
 
-    var selectedLang    by remember { mutableStateOf("en") }
+    val currentLang by settingsViewModel.language.collectAsStateWithLifecycle()
+    // Read initial lang from SharedPrefs synchronously so the roller always
+    // starts at the correct position — even right after a recreate() where
+    // the DataStore flow might not have emitted yet.
+    var selectedLang by remember {
+        val prefs = context.getSharedPreferences("app_language", android.content.Context.MODE_PRIVATE)
+        mutableStateOf(prefs.getString("language", "en") ?: "en")
+    }
     var userName        by remember { mutableStateOf("") }
     var selectedSenders by remember { mutableStateOf(setOf<String>()) }
     var openingBalances by remember { mutableStateOf(mapOf<String, String>()) }
@@ -167,7 +176,6 @@ fun OnboardingScreen(
         1    -> AccentTeal
         2    -> AccentBlue
         3    -> AccentGreen
-        4    -> AccentGold
         else -> AccentTeal
     }
     val isLast     = page == TOTAL_PAGES - 1
@@ -211,15 +219,16 @@ fun OnboardingScreen(
                         }
                 ) {
                     when (p) {
-                        0         -> HeroPage()
-                        1, 2, 3   -> FeaturePageContent(FEATURE_PAGES[p - 1])
-                        PAGE_LANG -> LanguagePage(
-                            selected = selectedLang,
-                            onSelect = { lang ->
+                        0         -> HeroPage(
+                            selectedLang = selectedLang,
+                            onSelectLang = { lang ->
                                 selectedLang = lang
                                 settingsViewModel.setLanguage(lang, context)
+                                // No recreate() here — resources.updateConfiguration()
+                                // in setContent handles the recompose instantly.
                             }
                         )
+                        1, 2, 3   -> FeaturePageContent(FEATURE_PAGES[p - 1])
                         PAGE_SETUP -> SetupPage(
                             userName        = userName,
                             onNameChange    = { userName = it },
@@ -255,9 +264,9 @@ fun OnboardingScreen(
                 }
 
                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                    when {
-                        page == 0 || page == PAGE_LANG -> Spacer(Modifier.width(1.dp))
-                        page == PAGE_SETUP -> {
+                    when (page) {
+                        0 -> Spacer(Modifier.width(1.dp))
+                        PAGE_SETUP -> {
                             AnimatedVisibility(!canProceed,
                                 enter = fadeIn(tween(300)), exit = fadeOut(tween(200))) {
                                 val hint = when {
@@ -269,40 +278,86 @@ fun OnboardingScreen(
                             }
                             if (canProceed) Spacer(Modifier.width(1.dp))
                         }
-                        else -> TextButton(
-                            onClick = { settingsViewModel.setOnboardingDone(); onFinished() },
-                            contentPadding = PaddingValues(0.dp)
-                        ) { Text(stringResource(R.string.skip_label), color = TextMuted, fontSize = 14.sp) }
+                        else -> Spacer(Modifier.width(1.dp))
                     }
 
+                    // Colour cross-fades smoothly across pages
+                    val btnColor  by animateColorAsState(
+                        if (canProceed) accent else accent.copy(.35f),
+                        tween(600, easing = EaseInOutSine), label = "btnc")
+                    val btnColor2 by animateColorAsState(
+                        if (canProceed) accent.copy(.55f) else accent.copy(.15f),
+                        tween(600, easing = EaseInOutSine), label = "btnc2")
+                    // Press spring — identical feel to the pager swipe
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val isPressed by interactionSource.collectIsPressedAsState()
                     val btnScale by animateFloatAsState(
-                        if (canProceed) 1f else .97f, spring(Spring.DampingRatioMediumBouncy), label = "btn")
-                    val btnColor by animateColorAsState(accent, tween(400), label = "btnc")
+                        when { isPressed -> .93f; !canProceed -> .97f; else -> 1f },
+                        spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMediumLow),
+                        label = "btnsc")
+                    val btnLabel = if (isLast) stringResource(R.string.get_started)
+                    else        stringResource(R.string.next_label)
 
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                if (isLast) {
-                                    settingsViewModel.saveUserSetup(userName, selectedSenders.toList(), openingBalances)
-                                    settingsViewModel.setOnboardingDone()
-                                    onFinished()
-                                } else pagerState.animateScrollToPage(page + 1)
+                    Box(
+                        Modifier
+                            .scale(btnScale)
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(26.dp))
+                            .background(
+                                if (canProceed)
+                                    Brush.horizontalGradient(listOf(btnColor2, btnColor))
+                                else
+                                    Brush.horizontalGradient(listOf(BgRow, BgRow))
+                            )
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication        = null,
+                                enabled           = canProceed
+                            ) {
+                                scope.launch {
+                                    if (isLast) {
+                                        settingsViewModel.saveUserSetup(
+                                            userName, selectedSenders.toList(), openingBalances)
+                                        settingsViewModel.setOnboardingDone()
+                                        onFinished()
+                                    } else {
+                                        pagerState.animateScrollToPage(
+                                            page + 1,
+                                            animationSpec = tween(520, easing = EaseInOutSine)
+                                        )
+                                    }
+                                }
                             }
-                        },
-                        enabled = canProceed,
-                        shape   = RoundedCornerShape(14.dp),
-                        colors  = ButtonDefaults.buttonColors(
-                            containerColor = btnColor, disabledContainerColor = btnColor.copy(.25f)),
-                        modifier = Modifier.scale(btnScale).height(48.dp),
-                        contentPadding = PaddingValues(horizontal = 28.dp)
+                            .padding(start = 22.dp, end = 8.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            if (isLast) stringResource(R.string.get_started) else stringResource(R.string.next_label),
-                            color = Color(0xFF0D1B2A), fontWeight = FontWeight.Bold, fontSize = 15.sp
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
-                            tint = Color(0xFF0D1B2A), modifier = Modifier.size(16.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                btnLabel,
+                                color      = Color(0xFF05111E),
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize   = 15.sp,
+                                letterSpacing = .1.sp
+                            )
+                            // Circle arrow badge
+                            Box(
+                                Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF05111E).copy(.18f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint     = Color(0xFF05111E),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -316,134 +371,303 @@ fun OnboardingScreen(
             sheetState      = sheetState,
             onSelect        = { id -> selectedSenders = selectedSenders + id },
             onDismiss       = {
-                scope.launch { sheetState.hide() }.invokeOnCompletion { showSheet = false }
+                @Suppress("UNUSED_EXPRESSION")
+                scope.launch {
+                    sheetState.hide()
+                    showSheet = false
+                }
+                Unit
             }
         )
     }
 }
 
-// ── Page 0: Hero ──────────────────────────────────────────────────────────────
+// ── Language options ─────────────────────────────────────────────────────────
+private data class LangOption(val code: String, val flag: String, val name: String, val native: String)
+private val LANGUAGES = listOf(
+    LangOption("en", "🇬🇧", "English",  "English"),
+    LangOption("sw", "🇹🇿", "Swahili",  "Kiswahili"),
+)
+
+// ── Page 0: Hero — full-screen with embedded language picker ─────────────────
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun HeroPage() {
+private fun HeroPage(selectedLang: String, onSelectLang: (String) -> Unit) {
     var triggered by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { triggered = true }
 
     val alpha  by animateFloatAsState(if (triggered) 1f else 0f, tween(700), label = "ha")
-    val slideY by animateFloatAsState(if (triggered) 0f else 60f, tween(700, easing = EaseOut), label = "hsy")
-    val logoSc by animateFloatAsState(if (triggered) 1f else .4f,
+    val slideY by animateFloatAsState(if (triggered) 0f else 50f, tween(700, easing = EaseOut), label = "hsy")
+    val logoSc by animateFloatAsState(if (triggered) 1f else .3f,
         spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow), label = "hls")
 
-    val pulse  = rememberInfiniteTransition(label = "hp")
-    val glowR  by pulse.animateFloat(100f, 145f,
-        infiniteRepeatable(tween(2400, easing = EaseInOutSine), RepeatMode.Reverse), label = "hgr")
-    val glowA  by pulse.animateFloat(.06f, .18f,
-        infiniteRepeatable(tween(2400, easing = EaseInOutSine), RepeatMode.Reverse), label = "hga")
+    val pulse = rememberInfiniteTransition(label = "hp")
+    val glowR by pulse.animateFloat(130f, 200f,
+        infiniteRepeatable(tween(2800, easing = EaseInOutSine), RepeatMode.Reverse), label = "hgr")
+    val glowA by pulse.animateFloat(.07f, .20f,
+        infiniteRepeatable(tween(2800, easing = EaseInOutSine), RepeatMode.Reverse), label = "hga")
+    val ringA by pulse.animateFloat(.35f, .75f,
+        infiniteRepeatable(tween(2000, easing = EaseInOutSine), RepeatMode.Reverse), label = "hra")
+    val ringR by pulse.animateFloat(0f, 4f,
+        infiniteRepeatable(tween(2000, easing = EaseInOutSine), RepeatMode.Reverse), label = "hrr")
+
+    // Language roller state
+    val initIdx      = LANGUAGES.indexOfFirst { it.code == selectedLang }.coerceAtLeast(0)
+    val rowState     = androidx.compose.foundation.lazy.rememberLazyListState(initialFirstVisibleItemIndex = initIdx)
+    val snapBehavior = rememberSnapFlingBehavior(rowState)
+    val langScope    = rememberCoroutineScope()
+    val centreIndex  by remember { derivedStateOf { rowState.firstVisibleItemIndex } }
+    // Fire instantly as centreIndex changes — no debounce needed because
+    // recreate() in onLangChange reloads all strings immediately.
+    LaunchedEffect(centreIndex) {
+        val lang = LANGUAGES.getOrNull(centreIndex)
+        if (lang != null && lang.code != selectedLang) onSelectLang(lang.code)
+    }
 
     Box(Modifier.fillMaxSize()) {
+        // Deep atmosphere — two layered glows
         Box(Modifier.fillMaxSize().drawBehind {
+            // Primary pulsing glow top-centre
             drawCircle(
                 Brush.radialGradient(
                     listOf(AccentTeal.copy(glowA), Color.Transparent),
-                    Offset(size.width * .5f, size.height * .28f), glowR.dp.toPx()
+                    Offset(size.width * .5f, size.height * .22f),
+                    glowR.dp.toPx()
                 )
             )
+            // Secondary static blue glow bottom-right for depth
+            drawCircle(
+                Brush.radialGradient(
+                    listOf(AccentBlue.copy(.05f), Color.Transparent),
+                    Offset(size.width * .85f, size.height * .75f),
+                    size.width * .6f
+                )
+            )
+            // Bottom-to-top fade so content doesn't float
             drawRect(Brush.verticalGradient(
-                listOf(Color.Transparent, BgPrimary.copy(.85f)),
-                startY = size.height * .55f, endY = size.height))
+                listOf(Color.Transparent, BgPrimary.copy(.7f)),
+                startY = size.height * .45f, endY = size.height))
         })
 
         Column(
-            Modifier.fillMaxSize().padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            Modifier.fillMaxSize().padding(horizontal = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.weight(.4f))
 
-            // Logo circle
+            // ── TOP SECTION: Logo + title + subtitle ─────────────────────────
+            Spacer(Modifier.weight(1.2f))
+
             Box(
-                Modifier.size(130.dp).scale(logoSc)
+                Modifier
+                    .size(118.dp)
+                    .scale(logoSc)
                     .drawBehind {
+                        // Outer radial pulse
                         drawCircle(Brush.radialGradient(
-                            listOf(AccentTeal.copy(.28f), Color.Transparent),
-                            radius = size.minDimension * .9f))
+                            listOf(AccentTeal.copy(glowA * .8f), Color.Transparent),
+                            radius = size.minDimension * 1.1f))
+                        // Animated ring
+                        drawCircle(
+                            color  = AccentTeal.copy(ringA),
+                            radius = size.minDimension / 2 + ringR.dp.toPx(),
+                            style  = Stroke(1.8.dp.toPx()))
                     }
                     .clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(Color(0xFF1E3A5A), Color(0xFF0F1E30))))
+                    .background(Brush.radialGradient(listOf(Color(0xFF1E3A5A), Color(0xFF0A1525))))
                     .drawBehind {
-                        drawCircle(color = AccentTeal.copy(.55f),
-                            radius = size.minDimension / 2,
-                            style  = Stroke(2.dp.toPx()))
+                        drawCircle(color = AccentTeal.copy(.5f),
+                            radius = size.minDimension / 2 - .5.dp.toPx(),
+                            style  = Stroke(1.5.dp.toPx()))
                     },
                 contentAlignment = Alignment.Center
-            ) { Text("💰", fontSize = 52.sp) }
+            ) { Text("💰", fontSize = 48.sp) }
 
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(22.dp))
 
             Text("Smart Money",
-                fontSize = 38.sp, fontWeight = FontWeight.ExtraBold,
-                color = TextWhite, textAlign = TextAlign.Center, letterSpacing = (-.5).sp,
-                modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
-            Spacer(Modifier.height(6.dp))
-            Text("Your finances, automated.",
-                fontSize = 16.sp, color = AccentTeal, textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium,
+                fontSize = 40.sp, fontWeight = FontWeight.ExtraBold,
+                color = TextWhite, textAlign = TextAlign.Center, letterSpacing = (-.6).sp,
                 modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(8.dp))
+
+            Text(stringResource(R.string.hero_tagline),
+                fontSize = 16.sp, color = AccentTeal, textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.graphicsLayer { this.alpha = alpha })
+
+            Spacer(Modifier.height(20.dp))
 
             // Feature pills
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.graphicsLayer { this.alpha = alpha }) {
-                listOf("📲 Auto SMS" to AccentTeal, "📊 Live charts" to AccentBlue, "🔐 Private" to AccentGreen)
-                    .forEach { (label, col) ->
-                        Box(
-                            Modifier.clip(CircleShape)
-                                .background(col.copy(.12f))
-                                .drawBehind {
-                                    drawCircle(color = col.copy(.28f),
-                                        radius = size.minDimension / 2, style = Stroke(1.dp.toPx()))
-                                }
-                                .padding(horizontal = 12.dp, vertical = 7.dp)
-                        ) { Text(label, color = col, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
-                    }
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            // Tagline card
-            Box(
-                Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(BgCard)
-                    .drawBehind {
-                        drawRoundRect(color = AccentTeal.copy(.16f), size = this.size,
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(20.dp.toPx()),
-                            style = Stroke(1.dp.toPx()))
-                    }
-                    .padding(20.dp),
-                contentAlignment = Alignment.Center
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth().graphicsLayer { this.alpha = alpha }
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Tanzania's smartest personal finance tracker",
-                        color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        listOf("17+ banks", "Zero setup", "100% private").forEach { lbl ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        Triple("📲", stringResource(R.string.hero_pill_sms),     AccentTeal),
+                        Triple("📊", stringResource(R.string.hero_pill_charts),  AccentBlue),
+                        Triple("🔐", stringResource(R.string.hero_pill_private), AccentGreen)
+                    ).forEach { (emoji, label, col) ->
+                        Box(
+                            Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(col.copy(.10f))
+                                .drawBehind {
+                                    drawRoundRect(color = col.copy(.25f), size = this.size,
+                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
+                                        style = Stroke(.8.dp.toPx()))
+                                }
+                                .padding(horizontal = 11.dp, vertical = 8.dp)
+                        ) {
                             Row(verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Box(Modifier.size(5.dp).clip(CircleShape).background(AccentTeal))
-                                Text(lbl, color = TextSoft, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                                Text(emoji, fontSize = 13.sp)
+                                Text(label, color = col, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
                 }
             }
 
+            // ── MIDDLE SECTION: Stats card ────────────────────────────────────
             Spacer(Modifier.weight(1f))
+
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(BgCard)
+                    .drawBehind {
+                        drawRoundRect(color = AccentTeal.copy(.14f), size = this.size,
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(20.dp.toPx()),
+                            style = Stroke(1.dp.toPx()))
+                    }
+                    .padding(horizontal = 20.dp, vertical = 18.dp)
+                    .graphicsLayer { this.alpha = alpha }
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Top row — tag
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.size(6.dp).clip(CircleShape).background(AccentTeal))
+                        Text(stringResource(R.string.hero_card_tag),
+                            color = TextSoft, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                    // Stats row
+                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+                        listOf(
+                            Triple("📲", stringResource(R.string.hero_stat1_title), stringResource(R.string.hero_stat1_sub)),
+                            Triple("📊", stringResource(R.string.hero_stat2_title), stringResource(R.string.hero_stat2_sub)),
+                            Triple("🔐", stringResource(R.string.hero_stat3_title), stringResource(R.string.hero_stat3_sub)),
+                        ).forEach { (emoji, statTitle, sub) ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(3.dp),
+                                modifier = Modifier.weight(1f)) {
+                                Text(emoji, fontSize = 18.sp)
+                                Text(statTitle, color = TextWhite, fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                Text(sub, color = TextMuted, fontSize = 9.sp,
+                                    textAlign = TextAlign.Center, lineHeight = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── BOTTOM SECTION: Language picker ──────────────────────────────
+            Spacer(Modifier.weight(.8f))
+
+            // Section label
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth().graphicsLayer { this.alpha = alpha }) {
+                Box(Modifier.weight(1f).height(1.dp).background(
+                    Brush.horizontalGradient(listOf(Color.Transparent, TextMuted.copy(.2f)))))
+                Text(stringResource(R.string.hero_choose_lang), color = TextMuted, fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold, letterSpacing = .5.sp)
+                Box(Modifier.weight(1f).height(1.dp).background(
+                    Brush.horizontalGradient(listOf(TextMuted.copy(.2f), Color.Transparent))))
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // Compact horizontal language roller — transparent background
+            val itemW = 140.dp
+            BoxWithConstraints(
+                Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .graphicsLayer { this.alpha = alpha }
+            ) {
+                val screenW = maxWidth
+                // Selection highlight in centre only
+                Box(
+                    Modifier
+                        .width(itemW).height(64.dp)
+                        .align(Alignment.Center)
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AccentGold.copy(.10f))
+                        .drawBehind {
+                            drawRoundRect(color = AccentGold.copy(.38f), size = this.size,
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
+                                style = Stroke(1.4.dp.toPx()))
+                        }
+                )
+
+                LazyRow(
+                    state         = rowState,
+                    flingBehavior = snapBehavior,
+                    modifier      = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = (screenW - itemW) / 2)
+                ) {
+                    items(LANGUAGES.size) { idx ->
+                        val lang = LANGUAGES[idx]
+                        val isSel = idx == centreIndex
+                        val iAlpha by animateFloatAsState(if (isSel) 1f else .3f, tween(200), label = "lia$idx")
+                        val iScale by animateFloatAsState(if (isSel) 1f else .80f,
+                            spring(Spring.DampingRatioMediumBouncy), label = "lis$idx")
+                        Box(
+                            Modifier.width(itemW).fillMaxHeight()
+                                .clickable(remember { MutableInteractionSource() }, null) {
+                                    langScope.launch { rowState.animateScrollToItem(idx) }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                Modifier.scale(iScale).graphicsLayer { this.alpha = iAlpha },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(lang.flag, fontSize = 22.sp)
+                                Column {
+                                    Text(lang.name, fontSize = 14.sp,
+                                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSel) TextWhite else TextMuted)
+                                    Text(lang.native, fontSize = 10.sp,
+                                        color = if (isSel) AccentGold else TextMuted.copy(.5f))
+                                }
+                                if (isSel) {
+                                    Icon(Icons.Default.Check, null,
+                                        tint = AccentGold, modifier = Modifier.size(13.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(6.dp))
+            Text(stringResource(R.string.hero_swipe_hint),
+                fontSize = 10.sp, color = TextMuted.copy(.45f),
+                modifier = Modifier.graphicsLayer { this.alpha = alpha })
+
+            Spacer(Modifier.weight(.6f))
         }
     }
 }
+
 
 // ── Pages 1-3: Feature pages ──────────────────────────────────────────────────
 @Composable
@@ -486,7 +710,7 @@ private fun FeaturePageContent(page: FeaturePage) {
 
         Spacer(Modifier.height(28.dp))
 
-        Text(page.title,
+        Text(stringResource(page.titleRes),
             fontSize = 34.sp, fontWeight = FontWeight.ExtraBold,
             color = TextWhite, textAlign = TextAlign.Center,
             lineHeight = 40.sp, letterSpacing = (-.4).sp,
@@ -502,11 +726,11 @@ private fun FeaturePageContent(page: FeaturePage) {
                         style = Stroke(.8.dp.toPx()))
                 }
                 .padding(horizontal = 18.dp, vertical = 7.dp)
-        ) { Text(page.tagline, color = page.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+        ) { Text(stringResource(page.taglineRes), color = page.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
 
         Spacer(Modifier.height(18.dp))
 
-        Text(page.body, fontSize = 15.sp, color = TextMuted,
+        Text(stringResource(page.bodyRes), fontSize = 15.sp, color = TextMuted,
             textAlign = TextAlign.Center, lineHeight = 24.sp,
             modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
 
@@ -521,7 +745,7 @@ private fun FeaturePageContent(page: FeaturePage) {
                 }
                 .padding(vertical = 6.dp)
         ) {
-            page.items.forEachIndexed { i, (icon, title, subtitle) ->
+            page.items.forEachIndexed { i, (icon, titleRes, subtitleRes) ->
                 Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -530,8 +754,8 @@ private fun FeaturePageContent(page: FeaturePage) {
                         Icon(icon, null, tint = page.accent, modifier = Modifier.size(20.dp))
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(title, color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                        Text(subtitle, color = TextMuted, fontSize = 12.sp)
+                        Text(stringResource(titleRes), color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(subtitleRes), color = TextMuted, fontSize = 12.sp)
                     }
                     Box(Modifier.size(22.dp).clip(CircleShape).background(page.accent.copy(.12f)),
                         Alignment.Center) {
@@ -545,151 +769,7 @@ private fun FeaturePageContent(page: FeaturePage) {
     }
 }
 
-// ── Page 4: Language roller ───────────────────────────────────────────────────
-private data class LangOption(val code: String, val flag: String, val name: String, val native: String)
-private val LANGUAGES = listOf(
-    LangOption("en", "🇬🇧", "English",  "English"),
-    LangOption("sw", "🇹🇿", "Swahili",  "Kiswahili"),
-)
-
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-@Composable
-private fun LanguagePage(selected: String, onSelect: (String) -> Unit) {
-    var triggered by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { triggered = true }
-    val alpha  by animateFloatAsState(if (triggered) 1f else 0f, tween(500), label = "la")
-    val slideY by animateFloatAsState(if (triggered) 0f else 40f, tween(500, easing = EaseOut), label = "lsy")
-    val logoSc by animateFloatAsState(if (triggered) 1f else .5f,
-        spring(Spring.DampingRatioMediumBouncy), label = "lls")
-
-    val itemHeight   = 80.dp
-    val initIdx      = LANGUAGES.indexOfFirst { it.code == selected }.coerceAtLeast(0)
-    val listState    = rememberLazyListState(initialFirstVisibleItemIndex = initIdx)
-    val snapBehavior = rememberSnapFlingBehavior(listState)
-    val scope        = rememberCoroutineScope()
-
-    val centreIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
-    LaunchedEffect(centreIndex) {
-        val lang = LANGUAGES.getOrNull(centreIndex)
-        if (lang != null && lang.code != selected) onSelect(lang.code)
-    }
-
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 28.dp).padding(top = 24.dp, bottom = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            Modifier.size(100.dp).scale(logoSc)
-                .clip(CircleShape).background(AccentGold.copy(.10f))
-                .drawBehind {
-                    drawCircle(color = AccentGold.copy(.30f),
-                        radius = size.minDimension / 2 - 1.dp.toPx(), style = Stroke(1.5.dp.toPx()))
-                },
-            contentAlignment = Alignment.Center
-        ) { Text("🌍", fontSize = 42.sp) }
-
-        Spacer(Modifier.height(20.dp))
-
-        Text("Choose Language",
-            fontSize = 30.sp, fontWeight = FontWeight.ExtraBold,
-            color = TextWhite, textAlign = TextAlign.Center, letterSpacing = (-.4).sp,
-            modifier = Modifier.graphicsLayer { this.alpha = alpha; translationY = slideY })
-        Spacer(Modifier.height(6.dp))
-        Text("Scroll to select your preferred language",
-            fontSize = 14.sp, color = TextMuted, textAlign = TextAlign.Center,
-            modifier = Modifier.graphicsLayer { this.alpha = alpha })
-
-        Spacer(Modifier.height(36.dp))
-
-        // ── Drum roller ───────────────────────────────────────────────────────
-        val rollerH = itemHeight * 3
-        Box(Modifier.fillMaxWidth().height(rollerH)) {
-            // Track background
-            Box(Modifier.fillMaxWidth().height(rollerH).clip(RoundedCornerShape(20.dp))
-                .background(BgCard)
-                .drawBehind {
-                    drawRoundRect(color = AccentGold.copy(.12f), size = this.size,
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(20.dp.toPx()),
-                        style = Stroke(1.dp.toPx()))
-                })
-
-            // Centre selection highlight
-            Box(Modifier.fillMaxWidth().height(itemHeight).align(Alignment.Center)
-                .padding(horizontal = 12.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(AccentGold.copy(.10f))
-                .drawBehind {
-                    drawRoundRect(color = AccentGold.copy(.42f), size = this.size,
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(14.dp.toPx()),
-                        style = Stroke(1.5.dp.toPx()))
-                })
-
-            // Top fade
-            Box(Modifier.fillMaxWidth().height(itemHeight).align(Alignment.TopCenter)
-                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                .background(Brush.verticalGradient(listOf(BgCard, Color.Transparent))))
-            // Bottom fade
-            Box(Modifier.fillMaxWidth().height(itemHeight).align(Alignment.BottomCenter)
-                .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
-                .background(Brush.verticalGradient(listOf(Color.Transparent, BgCard))))
-
-            // Scrollable items
-            LazyColumn(
-                state         = listState,
-                flingBehavior = snapBehavior,
-                modifier      = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = itemHeight)
-            ) {
-                items(LANGUAGES.size) { idx ->
-                    val lang      = LANGUAGES[idx]
-                    val isCentred = idx == centreIndex
-                    val iAlpha by animateFloatAsState(if (isCentred) 1f else .32f, tween(200), label = "ia$idx")
-                    val iScale by animateFloatAsState(if (isCentred) 1f else .82f,
-                        spring(Spring.DampingRatioMediumBouncy), label = "is$idx")
-
-                    Box(
-                        Modifier.fillMaxWidth().height(itemHeight)
-                            .clickable(remember { MutableInteractionSource() }, null) {
-                                scope.launch { listState.animateScrollToItem(idx) }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            Modifier.scale(iScale).graphicsLayer { this.alpha = iAlpha },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text(lang.flag, fontSize = 32.sp)
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(lang.name,
-                                    fontSize   = 18.sp,
-                                    fontWeight = if (isCentred) FontWeight.Bold else FontWeight.Normal,
-                                    color      = if (isCentred) TextWhite else TextMuted)
-                                Text(lang.native, fontSize = 13.sp,
-                                    color = if (isCentred) AccentGold else TextMuted.copy(.5f))
-                            }
-                            if (isCentred) {
-                                Spacer(Modifier.width(4.dp))
-                                Box(Modifier.size(22.dp).clip(CircleShape).background(AccentGold.copy(.15f)),
-                                    Alignment.Center) {
-                                    Icon(Icons.Default.Check, null,
-                                        tint = AccentGold, modifier = Modifier.size(12.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(24.dp))
-        Text("Swipe up or down to change language",
-            fontSize = 12.sp, color = TextMuted.copy(.6f), textAlign = TextAlign.Center,
-            modifier = Modifier.graphicsLayer { this.alpha = alpha })
-    }
-}
-
-// ── Page 5: Personalise / Setup ───────────────────────────────────────────────
+// ── Page 4: Personalise / Setup ───────────────────────────────────────────────
 @Composable
 private fun SetupPage(
     userName: String,
@@ -795,11 +875,11 @@ private fun SetupPage(
                 done = selectedSenders.isNotEmpty(), active = activeStep == 1) {
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    ServiceTile("🏦", "Banks",
-                        if (bankCount > 0) "$bankCount selected" else "NMB, CRDB, NBC…",
+                    ServiceTile("🏦", stringResource(R.string.onb_banks_label),
+                        if (bankCount > 0) stringResource(R.string.onb_filled_of, bankCount, ALL_SENDERS.count{it.category=="Bank"}) else "NMB, CRDB, NBC…",
                         bankCount > 0, Modifier.weight(1f)) { onOpenSheet("Bank") }
-                    ServiceTile("📱", "Mobile Money",
-                        if (mmCount > 0) "$mmCount selected" else "M-Pesa, Tigo…",
+                    ServiceTile("📱", stringResource(R.string.onb_mobile_money_label),
+                        if (mmCount > 0) stringResource(R.string.onb_filled_of, mmCount, ALL_SENDERS.count{it.category=="Mobile Money"}) else "M-Pesa, Tigo…",
                         mmCount > 0, Modifier.weight(1f)) { onOpenSheet("Mobile Money") }
                 }
             }
@@ -826,7 +906,7 @@ private fun SetupPage(
                         }
                         Spacer(Modifier.width(10.dp))
                         AnimatedContent(allDone, label = "sc") { done ->
-                            Text(if (done) "All set" else "$filled / ${selectedSenders.size}",
+                            Text(if (done) stringResource(R.string.onb_all_set) else stringResource(R.string.onb_filled_of, filled, selectedSenders.size),
                                 fontSize = 11.sp, color = if (done) GreenOk else TextMuted,
                                 fontWeight = FontWeight.SemiBold)
                         }
@@ -886,12 +966,12 @@ private fun SenderSheet(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text(if (category == "Bank") "Choose your bank" else "Choose mobile money",
+                    Text(if (category == "Bank") stringResource(R.string.onb_choose_bank) else stringResource(R.string.onb_choose_mobile),
                         fontWeight = FontWeight.Bold, fontSize = 17.sp, color = TextWhite)
                     Text(
                         if (available.isEmpty() && selectedSenders.isNotEmpty())
                             stringResource(R.string.all_added_check)
-                        else "Tap to add · ${available.size} available",
+                        else stringResource(R.string.onb_tap_add_count, available.size),
                         fontSize = 12.sp, color = if (available.isEmpty()) GreenOk else TextMuted)
                 }
                 IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
@@ -919,8 +999,8 @@ private fun SenderSheet(
             AnimatedContent(available.isEmpty(), label = "empty") { empty ->
                 if (empty) {
                     Box(Modifier.fillMaxWidth().height(80.dp), Alignment.Center) {
-                        Text(if (query.isNotBlank()) "No match for \"$query\""
-                        else "All ${category.lowercase()}s added!",
+                        Text(if (query.isNotBlank()) stringResource(R.string.onb_no_match, query)
+                        else stringResource(R.string.onb_all_cat_added, category.lowercase()),
                             color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center)
                     }
                 } else {

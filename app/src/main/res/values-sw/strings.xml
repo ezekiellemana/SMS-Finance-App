@@ -294,6 +294,91 @@
     <string name="onb_feat_nointernet">Hakuna intaneti inayohitajika</string>
     <string name="onb_feat_encrypted">Hifadhi iliyosimbwa</string>
     <string name="onb_feat_biometric">Kufuli cha biometriki</string>
+    <!-- Hero page -->
+    <string name="hero_tagline">Fedha zako, kwa otomatiki.</string>
+    <string name="hero_pill_sms">SMS Otomatiki</string>
+    <string name="hero_pill_charts">Grafu za Moja kwa Moja</string>
+    <string name="hero_pill_private">Faragha</string>
+    <string name="hero_card_tag">Ufuatiliaji wa fedha, duniani kote</string>
+    <string name="hero_stat1_title">Inasoma SMS</string>
+    <string name="hero_stat1_sub">Hakuna kuandika</string>
+    <string name="hero_stat2_title">Salio la Wakati Halisi</string>
+    <string name="hero_stat2_sub">Daima la kisasa</string>
+    <string name="hero_stat3_title">100% Kwenye Simu</string>
+    <string name="hero_stat3_sub">Faragha &amp; salama</string>
+    <string name="hero_choose_lang">Chagua lugha</string>
+    <string name="hero_swipe_hint">Telezesha kubadilisha</string>
+    <!-- Feature page row sub-labels -->
+    <string name="onb_feat_instant_sub">Inasoma SMS chini ya sekunde 2</string>
+    <string name="onb_feat_smart">Mifumo ya akili</string>
+    <string name="onb_feat_smart_sub">Inajifunza muundo wa miamala yako</string>
+    <string name="onb_feat_widget">Wijeti ya skrini</string>
+    <string name="onb_feat_widget_sub">Salio linaonekana bila kufungua app</string>
+    <string name="onb_feat_charts_sub">Muhtasari wa matumizi kwa kundi</string>
+    <string name="onb_feat_ai_sub">Tabiri mahali pesa yako inaenda</string>
+    <string name="onb_feat_ondevice_sub">Hakuna wingu, hakuna seva, kamwe</string>
+    <string name="onb_feat_aes">Usimbaji wa AES</string>
+    <string name="onb_feat_aes_sub">Data imefungwa wakati wa kuhifadhi</string>
+    <string name="onb_feat_biometric_sub">PIN au alama ya kidole</string>
+    <!-- Feature page full bodies (long form) -->
+    <string name="onb_page1_body_long">Smart Money inafuatilia SMS zako zinazoingia na kunasa kila muamala — amana, uondoaji, uhamisho — mara zinapofika.</string>
+    <string name="onb_page2_body_long">Wijeti ya skrini na dashibodi kamili zinaonyesha salio, mapato na matumizi wakati halisi — zikiwa na grafu nzuri na za kisasa.</string>
+    <string name="onb_page3_body_long">Kila muamala huhifadhiwa ndani ya simu kwa usimbaji wa AES. Hakuna kinachotumwa kwa seva yoyote. Data yako ya fedha ni yako peke yako.</string>
+    <!-- Setup page -->
+    <string name="onb_banks_label">Benki</string>
+    <string name="onb_mobile_money_label">Pesa za Simu</string>
+    <string name="onb_all_set">Imekamilika ✓</string>
+    <string name="onb_filled_of">%1$d / %2$d</string>
+    <string name="onb_choose_bank">Chagua benki yako</string>
+    <string name="onb_choose_mobile">Chagua pesa za simu</string>
+    <string name="onb_tap_add_count">Gusa kuongeza · %1$d zinapatikana</string>
+    <string name="onb_no_match">Hakuna inayofanana na "%1$s"</string>
+    <string name="onb_all_cat_added">%1$ss zote zimeongezwa!</string>
+    <!-- Dashboard -->
+    <string name="dash_good_morning">Habari za asubuhi</string>
+    <string name="dash_good_afternoon">Habari za mchana</string>
+    <string name="dash_good_evening">Habari za jioni</string>
+    <string name="dash_hey">Hujambo</string>
+    <string name="dash_snapshot">Hapa kuna muhtasari wako wa fedha wa leo</string>
+    <string name="dash_tracked">Pesa yako inafuatiliwa kiotomatiki</string>
+    <string name="dash_day_looked">Hivi ndivyo siku yako ilivyoonekana kiuchumi</string>
+    <string name="dash_late_night">Usiku wa manane — fedha zako ziko salama</string>
+    <string name="dash_no_tx">Hakuna miamala bado</string>
+    <string name="dash_no_tx_sub">SMS za fedha zitaonekana hapa kiotomatiki</string>
+    <string name="dash_calculating">Inakokotoa salio…</string>
+    <string name="dash_current_balance">Salio la Sasa</string>
+    <string name="dash_total_income">Jumla ya Mapato</string>
+    <string name="dash_total_expenses">Jumla ya Matumizi</string>
+    <string name="dash_my_services">Huduma Zangu</string>
+    <string name="dash_btn_transactions">Miamala</string>
+    <string name="dash_btn_analytics">Takwimu</string>
+    <string name="dash_up_to_date">Imesasishwa</string>
+    <string name="dash_new_tx">+%1$d mpya</string>
+    <!-- Transaction type labels -->
+    <string name="tx_type_deposit">Amana</string>
+    <string name="tx_type_withdrawal">Uondoaji</string>
+    <!-- Transaction detail screen -->
+    <string name="tx_money_received">Pesa Imepokelewa</string>
+    <string name="tx_money_sent">Pesa Imetumwa</string>
+    <string name="tx_detail_source">Chanzo</string>
+    <string name="tx_detail_type">Aina</string>
+    <string name="tx_detail_reference">Rejea</string>
+    <string name="tx_detail_entry">Kuingizwa</string>
+    <string name="tx_detail_manual_entry">Kuingizwa Mkono</string>
+    <!-- Transaction list screen -->
+    <string name="tx_list_empty_title">Hakuna miamala iliyopatikana</string>
+    <string name="tx_list_empty_sub">Gusa + kuongeza, au subiri SMS</string>
+    <string name="tx_list_add_btn">Ongeza Muamala</string>
+    <string name="tx_list_show_more">Onyesha zaidi</string>
+    <!-- SMS detection titles -->
+    <string name="sms_auto_reads">Inasoma SMS kiotomatiki</string>
+    <string name="sms_instant_capture">Kunasa papo hapo</string>
+    <string name="sms_17_services">Huduma 17+</string>
+    <string name="sms_smart_patterns">Mifumo ya akili</string>
+    <string name="sms_page_title">Ugunduzi wa SMS</string>
+    <string name="sms_reads_in">Inasoma SMS chini ya sekunde 2</string>
+    <string name="sms_services_list">NMB, CRDB, M-Pesa, Airtel na zaidi</string>
+    <string name="sms_learns">Inajifunza muundo wa miamala yako</string>
 
     <!-- Settings screen -->
     <string name="settings">Mipangilio</string>

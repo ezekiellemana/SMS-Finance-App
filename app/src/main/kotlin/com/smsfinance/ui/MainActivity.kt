@@ -43,7 +43,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.smsfinance.R
 import com.smsfinance.ui.ai.AiPredictionsScreen
 import com.smsfinance.ui.charts.ChartsScreen
@@ -76,13 +78,15 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.core.content.edit
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 object Routes {
     const val PIN = "pin"
-    const val DASHBOARD = "dashboard"
+    const val DASHBOARD      = "dashboard"
+    const val DASHBOARD_ROUTE = "dashboard?fromOnboarding={fromOnboarding}"
     const val TRANSACTIONS = "transactions"
     const val TRANSACTION_DETAIL = "transaction_detail/{id}"
     const val ADD_TRANSACTION = "add_transaction"
@@ -153,36 +157,73 @@ class MainActivity : FragmentActivity() {
         setContent {
             @Suppress("DEPRECATION")
             val vm: SettingsViewModel = hiltViewModel()
-            val darkMode by vm.darkMode.collectAsStateWithLifecycle()
-            val pinEnabled by vm.pinEnabled.collectAsStateWithLifecycle()
-            val bioEnabled by vm.biometricEnabled.collectAsStateWithLifecycle()
-            val onboardingDone by vm.onboardingDone.collectAsStateWithLifecycle()
+            val darkMode        by vm.darkMode.collectAsStateWithLifecycle()
+            val pinEnabled      by vm.pinEnabled.collectAsStateWithLifecycle()
+            val bioEnabled      by vm.biometricEnabled.collectAsStateWithLifecycle()
+            val onboardingDone  by vm.onboardingDone.collectAsStateWithLifecycle()
+            val prefsReady      by vm.prefsReady.collectAsStateWithLifecycle()
+            val currentLang     by vm.language.collectAsStateWithLifecycle()
             val windowSizeClass = calculateWindowSizeClass(this)
-            // Resolve active profile colour — used for card borders throughout the app
+
             val multiUserVmRoot: MultiUserViewModel = hiltViewModel()
             val multiUserStateRoot by multiUserVmRoot.uiState.collectAsStateWithLifecycle()
             val activeProfileColor = runCatching {
                 Color(
                     (multiUserStateRoot.activeProfile?.color ?: "#00C853").toColorInt()
                 )
-            }.getOrElse { Color(0xFF3DDAD7) }  // fallback = BrandTeal
-            SMSFinanceTheme(darkTheme = darkMode) {
-                CompositionLocalProvider(LocalProfileColor provides activeProfileColor) {
-                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                        // Don't render navigation until DataStore has emitted the real
-                        // onboardingDone value. Without this guard the app briefly shows
-                        // onboarding on every launch because StateFlow starts at false.
-                        val prefsReady by vm.prefsReady.collectAsStateWithLifecycle()
-                        if (!prefsReady) return@Surface
+            }.getOrElse { Color(0xFF3DDAD7) }
 
+            // Apply locale immediately to resources (so strings resolve correctly
+            // even before any recompose). This alone is not enough for all strings —
+            // we also recreate() the Activity when the language actually changes so
+            // that the entire Compose tree is rebuilt with the new Configuration.
+            val locale = java.util.Locale(currentLang)
+            java.util.Locale.setDefault(locale)
+            val cfg = resources.configuration
+            cfg.setLocale(locale)
+            @Suppress("DEPRECATION")
+            resources.updateConfiguration(cfg, resources.displayMetrics)
+
+            // Track whether language has changed since Activity was created.
+            // We only call recreate() on a CHANGE — not on initial composition —
+            // so there is no blink on first launch.
+            val activity = this@MainActivity
+            val initialLang = remember {
+                activity.getSharedPreferences("app_language", MODE_PRIVATE)
+                    .getString("language", "en").orEmpty().ifEmpty { "en" }
+            }
+            LaunchedEffect(currentLang) {
+                if (currentLang != initialLang) {
+                    // Persist the new language before recreate so attachBaseContext
+                    // reads the updated value on the next Activity instance.
+                    activity.getSharedPreferences("app_language", MODE_PRIVATE)
+                        .edit { putString("language", currentLang) }
+                    activity.recreate()
+                }
+            }
+
+            CompositionLocalProvider(
+                LocalProfileColor provides activeProfileColor
+            ) {
+                SMSFinanceTheme(darkTheme = darkMode) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        if (!prefsReady) return@Surface
                         AdaptiveAppNavigation(
                             windowSizeClass = windowSizeClass,
-                            requireAuth = pinEnabled || bioEnabled,
+                            requireAuth     = pinEnabled || bioEnabled,
                             onBiometricAuth = { cb -> triggerBiometricAuth(cb) },
-                            onboardingDone = onboardingDone
+                            onboardingDone  = onboardingDone,
+                            onLangChange    = {
+                                // Language changed in settings — recreate so all
+                                // Views and system UI also update.
+                                activity.recreate()
+                            }
                         )
                     }
-                } // CompositionLocalProvider
+                }
             }
         }
     }
@@ -221,7 +262,8 @@ class MainActivity : FragmentActivity() {
 fun AppNavigation(
     requireAuth: Boolean,
     onBiometricAuth: (() -> Unit) -> Unit,
-    onboardingDone: Boolean = true
+    onboardingDone: Boolean = true,
+    onLangChange: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -264,11 +306,17 @@ fun AppNavigation(
             popExitTransition  = { popExitTransition }
         ) {
             composable(Routes.ONBOARDING) {
-                OnboardingScreen(onFinished = {
-                    navController.navigate(Routes.DASHBOARD) {
-                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                OnboardingScreen(
+                    onFinished = {
+                        navController.navigate(Routes.DASHBOARD + "?fromOnboarding=true") {
+                            popUpTo(Routes.ONBOARDING) { inclusive = true }
+                        }
                     }
-                })
+                    // No onLangChange here — the roller calls setLanguage() which
+                    // updates DataStore → currentLang StateFlow → setContent
+                    // re-applies resources.updateConfiguration() → all
+                    // stringResource() calls recompose instantly. No recreate needed.
+                )
             }
             composable(Routes.PIN) {
                 PinScreen(
@@ -277,12 +325,19 @@ fun AppNavigation(
                     onBiometricRequest = { onBiometricAuth { navController.navigate(Routes.DASHBOARD) } }
                 )
             }
-            composable(Routes.DASHBOARD) {
+            composable(
+                route = Routes.DASHBOARD_ROUTE,
+                arguments = listOf(navArgument("fromOnboarding") {
+                    type = NavType.BoolType; defaultValue = false
+                })
+            ) { back ->
+                val fromOnboarding = back.arguments?.getBoolean("fromOnboarding") ?: false
                 DashboardScreen(
                     onNavigateToTransactions = { navController.navigate(Routes.TRANSACTIONS) },
-                    onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
-                    onNavigateToSearch = { navController.navigate(Routes.SEARCH) },
-                    onNavigateToCharts = { navController.navigate(Routes.CHARTS) }
+                    onNavigateToSettings     = { navController.navigate(Routes.SETTINGS) },
+                    onNavigateToSearch       = { navController.navigate(Routes.SEARCH) },
+                    onNavigateToCharts       = { navController.navigate(Routes.CHARTS) },
+                    fromOnboarding           = fromOnboarding
                 )
             }
             composable(Routes.TRANSACTIONS) {
@@ -519,7 +574,7 @@ private fun BottomBarItem(
                                 modifier           = Modifier.fillMaxSize().clip(CircleShape)
                             )
                         } else {
-                            Text(text = profileEmoji, fontSize = 26.sp)
+                            Text(text = profileEmoji.orEmpty().ifEmpty { "👤" }, fontSize = 26.sp)
                         }
                     }
                 }

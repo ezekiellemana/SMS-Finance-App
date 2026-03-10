@@ -1,8 +1,7 @@
 package com.smsfinance.viewmodel
 
-import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
+import java.util.Locale
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -96,28 +95,17 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setLanguage(lang: String, context: Context) = viewModelScope.launch {
-        // 1. Persist to both DataStore and SharedPreferences so both
-        //    Application.attachBaseContext and Activity.attachBaseContext
-        //    read the same value on the next cold start or recreate().
+        // 1. Persist to DataStore — this updates the StateFlow in MainActivity
+        //    which triggers the LaunchedEffect that calls recreate().
         prefs.setLanguage(lang)
+        // 2. Write to SharedPreferences synchronously so attachBaseContext on the
+        //    new Activity instance reads the correct language immediately.
         context.getSharedPreferences("app_language", Context.MODE_PRIVATE)
             .edit { putString("language", lang) }
-
-        // 2. Unwrap the ContextWrapper chain to reach the real Activity.
-        //    LocalContext.current in Compose is a ContextThemeWrapper, not
-        //    the Activity itself, so a direct cast always returns null.
-        context.findActivity()?.recreate()
+        // 3. Update default locale so any non-Compose code also uses correct locale.
+        Locale.setDefault(Locale(lang))
     }
 
-    /** Walk the ContextWrapper chain until we find an Activity or give up. */
-    private fun Context.findActivity(): Activity? {
-        var ctx: Context = this
-        repeat(10) {                       // guard against infinite loops
-            if (ctx is Activity) return ctx
-            ctx = (ctx as? ContextWrapper)?.baseContext ?: return null
-        }
-        return null
-    }
 
     fun setPin(pin: String) = viewModelScope.launch {
         prefs.setPinHash(sha256(pin))

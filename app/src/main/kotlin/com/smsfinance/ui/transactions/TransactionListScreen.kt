@@ -131,8 +131,8 @@ fun TransactionListScreen(
                         CircularProgressIndicator(color = AccentTeal, strokeWidth = 3.dp)
                     }
                     uiState.transactions.isEmpty() -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        EmptyState("🔍", "No transactions found",
-                            "Tap + to add one, or wait for an SMS")
+                        EmptyState("🔍", stringResource(R.string.tx_list_empty_title),
+                            stringResource(R.string.tx_list_empty_sub))
                     }
                     else -> Box(Modifier.fillMaxSize()) {
                         LazyColumn(
@@ -176,7 +176,7 @@ fun TransactionListScreen(
                 BigFab(
                     onClick   = onNavigateToAdd,
                     icon      = Icons.Default.Add,
-                    label     = "Add Transaction",
+                    label     = stringResource(R.string.tx_list_add_btn),
                     accentColor = AccentTeal,
                     modifier  = Modifier
                         .align(Alignment.BottomCenter)
@@ -272,7 +272,7 @@ private fun ShowMoreFab(onClick: () -> Unit) {
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                "Show more",
+                stringResource(R.string.tx_list_show_more),
                 color      = Color(0xFF0D1B2A),
                 fontWeight = FontWeight.Bold,
                 fontSize   = 13.sp

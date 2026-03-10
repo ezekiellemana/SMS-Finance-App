@@ -1,8 +1,11 @@
 package com.smsfinance.ui.dashboard
 import com.smsfinance.R
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -57,25 +60,18 @@ import java.util.*
 // ── Greeting ──────────────────────────────────────────────────────────────────
 private data class GreetingData(val greeting: String, val emoji: String, val message: String)
 
-private fun buildGreeting(name: String): GreetingData {
+private fun buildGreeting(
+    name: String,
+    morning: String, afternoon: String, evening: String, night: String,
+    msgMorning: String, msgAfternoon: String, msgEvening: String, msgNight: String
+): GreetingData {
     val first = name.trim().split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() } ?: ""
+    val suffix = if (first.isNotBlank()) ", $first" else ""
     return when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-        in 5..11  -> GreetingData(
-            "Good morning${if (first.isNotBlank()) ", $first" else ""}",
-            "☀️", "Here's your financial snapshot for today"
-        )
-        in 12..16 -> GreetingData(
-            "Good afternoon${if (first.isNotBlank()) ", $first" else ""}",
-            "🌤️", "Your money is being tracked automatically"
-        )
-        in 17..20 -> GreetingData(
-            "Good evening${if (first.isNotBlank()) ", $first" else ""}",
-            "🌇", "Here's how your day looked financially"
-        )
-        else -> GreetingData(
-            "Hey${if (first.isNotBlank()) ", $first" else ""}",
-            "🌙", "Late night — your finances are safe"
-        )
+        in 5..11  -> GreetingData("$morning$suffix",  "☀️",  msgMorning)
+        in 12..16 -> GreetingData("$afternoon$suffix","🌤️", msgAfternoon)
+        in 17..20 -> GreetingData("$evening$suffix",  "🌇",  msgEvening)
+        else      -> GreetingData("$night$suffix",    "🌙",  msgNight)
     }
 }
 
@@ -113,7 +109,8 @@ fun DashboardScreen(
     onNavigateToTransactions: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit = {},
-    onNavigateToCharts: () -> Unit = {}
+    onNavigateToCharts: () -> Unit = {},
+    fromOnboarding: Boolean = false
 ) {
     val uiState     by viewModel.uiState.collectAsStateWithLifecycle()
     val multiState  by multiUserVm.uiState.collectAsStateWithLifecycle()
@@ -127,6 +124,26 @@ fun DashboardScreen(
             val hex = multiState.activeProfile?.color ?: return@runCatching AccentTeal
             Color(hex.toColorInt())
         }.getOrElse { AccentTeal }
+    }
+
+    // ── Staggered entrance animation (only after onboarding) ─────────────────
+    var showTopBar      by remember { mutableStateOf(!fromOnboarding) }
+    var showGreeting    by remember { mutableStateOf(!fromOnboarding) }
+    var showBalance     by remember { mutableStateOf(!fromOnboarding) }
+    var showActions     by remember { mutableStateOf(!fromOnboarding) }
+    var showActivity    by remember { mutableStateOf(!fromOnboarding) }
+    if (fromOnboarding) {
+        LaunchedEffect(Unit) {
+            delay(120);  showTopBar   = true
+            delay(160);  showGreeting = true
+            delay(200);  showBalance  = true
+            delay(180);  showActions  = true
+            delay(220);  showActivity = true
+        }
+    }
+    val enterSpec = { offsetY: Int ->
+        fadeIn(tween(420, easing = EaseOutCubic)) +
+                slideInVertically(tween(420, easing = EaseOutCubic)) { offsetY }
     }
 
     Scaffold(containerColor = BgPrimary) { padding ->
@@ -151,179 +168,194 @@ fun DashboardScreen(
                 Spacer(Modifier.height(4.dp))
 
                 // Top bar
-                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PulsingDot(size = 9.dp)
-                        Column {
-                            Text("Smart Money",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold, color = TextWhite)
-                            Text(stringResource(R.string.auto_tracking_active), fontSize = 11.sp, color = AccentTeal)
+                AnimatedVisibility(visible = showTopBar, enter = enterSpec(-60)) {
+                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PulsingDot(size = 9.dp)
+                            Column {
+                                Text("Smart Money",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold, color = TextWhite)
+                                Text(stringResource(R.string.auto_tracking_active), fontSize = 11.sp, color = AccentTeal)
+                            }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
+                            IconButton(onClick = { settingsVm.setPrivacyMode(!privacyMode) }) {
+                                Icon(if (privacyMode) Icons.Default.VisibilityOff
+                                else Icons.Default.Visibility, null, tint = TextSecondary)
+                            }
+                            IconButton(onClick = onNavigateToCharts) {
+                                Icon(Icons.Default.BarChart, null, tint = TextSecondary)
+                            }
+                            IconButton(onClick = onNavigateToSearch) {
+                                Icon(Icons.Default.Search, null, tint = TextSecondary)
+                            }
+                            IconButton(onClick = onNavigateToSettings) {
+                                Icon(Icons.Default.Settings, null, tint = TextSecondary)
+                            }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-                        IconButton(onClick = { settingsVm.setPrivacyMode(!privacyMode) }) {
-                            Icon(if (privacyMode) Icons.Default.VisibilityOff
-                            else Icons.Default.Visibility, null, tint = TextSecondary)
-                        }
-                        IconButton(onClick = onNavigateToCharts) {
-                            Icon(Icons.Default.BarChart, null, tint = TextSecondary)
-                        }
-                        IconButton(onClick = onNavigateToSearch) {
-                            Icon(Icons.Default.Search, null, tint = TextSecondary)
-                        }
-                        IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Default.Settings, null, tint = TextSecondary)
-                        }
-                    }
-                }
+                } // end AnimatedVisibility topBar
 
                 // Greeting
-                GreetingCard(uiState.userName)
+                AnimatedVisibility(visible = showGreeting, enter = enterSpec(-50)) {
+                    GreetingCard(uiState.userName)
+                } // end AnimatedVisibility greeting
 
                 // Hero balance
-                HeroBalanceCard(
-                    balance         = uiState.summary.estimatedBalance,
-                    income          = uiState.allTimeIncome,
-                    expenses        = uiState.allTimeExpenses,
-                    isLoading       = uiState.isLoading,
-                    privacyMode     = privacyMode,
-                    profileAccent   = profileAccent,
-                    serviceBalances = uiState.serviceBalances
-                )
+                AnimatedVisibility(visible = showBalance, enter = enterSpec(-70)) {
+                    HeroBalanceCard(
+                        balance         = uiState.summary.estimatedBalance,
+                        income          = uiState.allTimeIncome,
+                        expenses        = uiState.allTimeExpenses,
+                        isLoading       = uiState.isLoading,
+                        privacyMode     = privacyMode,
+                        profileAccent   = profileAccent,
+                        serviceBalances = uiState.serviceBalances
+                    )
+                } // end AnimatedVisibility balance
 
                 // Quick actions
-                QuickActionsRow(onNavigateToTransactions, onNavigateToCharts)
+                AnimatedVisibility(visible = showActions, enter = enterSpec(-40)) {
+                    QuickActionsRow(onNavigateToTransactions, onNavigateToCharts)
+                } // end AnimatedVisibility actions
             }
 
             Spacer(Modifier.height(10.dp))
 
             // ── RECENT ACTIVITY — no scroll, fits exactly what the screen has left ──
+            // Wrapped in AnimatedVisibility for stagger entrance from onboarding
             // BoxWithConstraints measures the remaining height and shows only as many
             // cards as fit, keeping the layout flush on every screen size.
-            BoxWithConstraints(
-                Modifier.fillMaxWidth().weight(1f).padding(horizontal = 16.dp)
+            AnimatedVisibility(
+                visible = showActivity,
+                enter   = enterSpec(-60),
+                modifier = Modifier.weight(1f)
             ) {
-                // Each card is ~72dp tall + 9dp gap; header row is ~52dp
-                val cardH   = 72.dp
-                val gapH    = 9.dp
-                val headerH = 52.dp
-                val available = maxHeight - headerH
-                val maxCards = if (available > 0.dp) {
-                    ((available + gapH) / (cardH + gapH)).toInt().coerceAtLeast(1)
-                } else 1
-                val visibleTx = uiState.recentTransactions.take(maxCards)
+                BoxWithConstraints(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                ) {
+                    // Each card is ~72dp tall + 9dp gap; header row is ~52dp
+                    val cardH   = 72.dp
+                    val gapH    = 9.dp
+                    val headerH = 52.dp
+                    val available = maxHeight - headerH
+                    val maxCards = if (available > 0.dp) {
+                        ((available + gapH) / (cardH + gapH)).toInt().coerceAtLeast(1)
+                    } else 1
+                    val visibleTx = uiState.recentTransactions.take(maxCards)
 
-                Column(Modifier.fillMaxWidth()) {
-                    // ── Recent Activity header row ─────────────────────────
-                    Row(
-                        Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                        Arrangement.SpaceBetween, Alignment.CenterVertically
-                    ) {
-                        // Left: title + subtitle
-                        Column {
-                            Text(stringResource(R.string.recent_activity),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold, color = TextWhite)
-                            if (uiState.recentTransactions.isNotEmpty()) {
-                                Text(
-                                    "${uiState.recentTransactions.size} transaction" +
-                                            if (uiState.recentTransactions.size > 1) "s" else "",
-                                    fontSize = 11.sp, color = TextSecondary
-                                )
-                            }
-                        }
-
-                        // Right: refresh button + optional "See all"
+                    Column(Modifier.fillMaxWidth()) {
+                        // ── Recent Activity header row ─────────────────────────
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                            Arrangement.SpaceBetween, Alignment.CenterVertically
                         ) {
-                            // ── Refresh badge (shows count of newly found tx) ──
-                            val result = uiState.refreshResult
-                            if (result != null) {
-                                LaunchedEffect(result) {
-                                    delay(3_000)
-                                    viewModel.clearRefreshResult()
-                                }
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (result > 0) AccentTeal.copy(.18f)
-                                    else TextSecondary.copy(.12f),
-                                    modifier = Modifier.clickable { viewModel.clearRefreshResult() }
-                                ) {
+                            // Left: title + subtitle
+                            Column {
+                                Text(stringResource(R.string.recent_activity),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold, color = TextWhite)
+                                if (uiState.recentTransactions.isNotEmpty()) {
                                     Text(
-                                        if (result > 0) "+$result new" else "Up to date",
-                                        fontSize = 10.sp,
-                                        color = if (result > 0) AccentTeal else TextSecondary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                        "${uiState.recentTransactions.size} transaction" +
+                                                if (uiState.recentTransactions.size > 1) "s" else "",
+                                        fontSize = 11.sp, color = TextSecondary
                                     )
                                 }
                             }
 
-                            // ── Spinning refresh icon button ──────────────────
-                            val spinAngle by rememberInfiniteTransition(label = "spin")
-                                .animateFloat(
-                                    0f, 360f,
-                                    infiniteRepeatable(tween(700, easing = LinearEasing)),
-                                    label = "sa"
-                                )
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (uiState.isRefreshing) AccentTeal.copy(.18f)
-                                        else TextSecondary.copy(.08f)
-                                    )
-                                    .clickable(enabled = !uiState.isRefreshing) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        viewModel.refreshFromInbox()
-                                    },
-                                contentAlignment = Alignment.Center
+                            // Right: refresh button + optional "See all"
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = "Refresh SMS",
-                                    tint = if (uiState.isRefreshing) AccentTeal
-                                    else TextSecondary,
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                        .rotate(if (uiState.isRefreshing) spinAngle else 0f)
-                                )
-                            }
+                                // ── Refresh badge (shows count of newly found tx) ──
+                                val result = uiState.refreshResult
+                                if (result != null) {
+                                    LaunchedEffect(result) {
+                                        delay(3_000)
+                                        viewModel.clearRefreshResult()
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (result > 0) AccentTeal.copy(.18f)
+                                        else TextSecondary.copy(.12f),
+                                        modifier = Modifier.clickable { viewModel.clearRefreshResult() }
+                                    ) {
+                                        Text(
+                                            if (result > 0) stringResource(R.string.dash_new_tx, result) else stringResource(R.string.dash_up_to_date),
+                                            fontSize = 10.sp,
+                                            color = if (result > 0) AccentTeal else TextSecondary,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                }
 
-                            // ── "See all" link ────────────────────────────────
-                            if (uiState.recentTransactions.size > maxCards) {
-                                TextButton(onClick = onNavigateToTransactions,
-                                    contentPadding = PaddingValues(0.dp)) {
-                                    Text(stringResource(R.string.see_all), color = AccentTeal, fontSize = 13.sp)
-                                    Spacer(Modifier.width(3.dp))
-                                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
-                                        Modifier.size(13.dp), AccentTeal)
+                                // ── Spinning refresh icon button ──────────────────
+                                val spinAngle by rememberInfiniteTransition(label = "spin")
+                                    .animateFloat(
+                                        0f, 360f,
+                                        infiniteRepeatable(tween(700, easing = LinearEasing)),
+                                        label = "sa"
+                                    )
+                                Box(
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (uiState.isRefreshing) AccentTeal.copy(.18f)
+                                            else TextSecondary.copy(.08f)
+                                        )
+                                        .clickable(enabled = !uiState.isRefreshing) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            viewModel.refreshFromInbox()
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Refresh SMS",
+                                        tint = if (uiState.isRefreshing) AccentTeal
+                                        else TextSecondary,
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .rotate(if (uiState.isRefreshing) spinAngle else 0f)
+                                    )
+                                }
+
+                                // ── "See all" link ────────────────────────────────
+                                if (uiState.recentTransactions.size > maxCards) {
+                                    TextButton(onClick = onNavigateToTransactions,
+                                        contentPadding = PaddingValues(0.dp)) {
+                                        Text(stringResource(R.string.see_all), color = AccentTeal, fontSize = 13.sp)
+                                        Spacer(Modifier.width(3.dp))
+                                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
+                                            Modifier.size(13.dp), AccentTeal)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // Transaction cards — exactly as many as fit, no scroll
-                    if (uiState.recentTransactions.isEmpty()) {
-                        Box(Modifier.fillMaxWidth(), Alignment.Center) {
-                            EmptyState("📭", "No transactions yet",
-                                "Financial SMS messages will appear here automatically")
-                        }
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                            visibleTx.forEach { tx ->
-                                TransactionRow(tx, privacyMode, profileAccent,
-                                    onClick = onNavigateToTransactions)
+                        // Transaction cards — exactly as many as fit, no scroll
+                        if (uiState.recentTransactions.isEmpty()) {
+                            Box(Modifier.fillMaxWidth(), Alignment.Center) {
+                                EmptyState("📭", stringResource(R.string.dash_no_tx),
+                                    stringResource(R.string.dash_no_tx_sub))
+                            }
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                                visibleTx.forEach { tx ->
+                                    TransactionRow(tx, privacyMode, profileAccent,
+                                        onClick = onNavigateToTransactions)
+                                }
                             }
                         }
                     }
                 }
-            }
+            } // end AnimatedVisibility activity
         }
     }
 }
@@ -331,7 +363,18 @@ fun DashboardScreen(
 // ── Greeting card ─────────────────────────────────────────────────────────────
 @Composable
 private fun GreetingCard(userName: String) {
-    val greet = remember(userName) { buildGreeting(userName) }
+    val greetMorning   = stringResource(R.string.dash_good_morning)
+    val greetAfternoon = stringResource(R.string.dash_good_afternoon)
+    val greetEvening   = stringResource(R.string.dash_good_evening)
+    val greetNight     = stringResource(R.string.dash_hey)
+    val msgMorning     = stringResource(R.string.dash_snapshot)
+    val msgAfternoon   = stringResource(R.string.dash_tracked)
+    val msgEvening     = stringResource(R.string.dash_day_looked)
+    val msgNight       = stringResource(R.string.dash_late_night)
+    val greet = remember(userName, greetMorning, greetAfternoon, greetEvening, greetNight) {
+        buildGreeting(userName, greetMorning, greetAfternoon, greetEvening, greetNight,
+            msgMorning, msgAfternoon, msgEvening, msgNight)
+    }
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
     val cardAlpha by animateFloatAsState(if (visible) 1f else 0f, tween(500), label = "ga")
@@ -429,12 +472,16 @@ fun HeroBalanceCard(
                 listOf(Color(0xFF1A3040), Color(0xFF1E3A3A), Color(0xFF1F2E3A))
             ))
             .drawBehind {
-                // Ambient glow orb — uses profile accent colour
+                // Ambient glow orb — radius passed to drawCircle so it stays contained
+                val orbRadius = size.width * 0.42f
                 drawCircle(
-                    Brush.radialGradient(
+                    brush = Brush.radialGradient(
                         listOf(profileAccent.copy(glowAlpha), Color.Transparent),
-                        Offset(size.width * .82f, size.height * .18f), size.width * .55f
-                    )
+                        center = Offset(size.width * .82f, size.height * .18f),
+                        radius = orbRadius
+                    ),
+                    radius = orbRadius,
+                    center = Offset(size.width * .82f, size.height * .18f)
                 )
                 // Shimmer sweep — only while loading
                 if (isLoading) {
@@ -465,7 +512,7 @@ fun HeroBalanceCard(
                             .background(if (isLoading) TextSecondary.copy(.4f) else AccentTeal.copy(.7f))
                     )
                     Text(
-                        if (isLoading) "Calculating balance…" else "Current Balance",
+                        if (isLoading) stringResource(R.string.dash_calculating) else stringResource(R.string.dash_current_balance),
                         fontSize = 11.sp, color = TextSecondary,
                         fontWeight = FontWeight.Medium, letterSpacing = .5.sp
                     )
@@ -501,7 +548,7 @@ fun HeroBalanceCard(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     StatItem(
                         icon     = Icons.AutoMirrored.Filled.TrendingUp,
-                        label    = "Total Income",
+                        label    = stringResource(R.string.dash_total_income),
                         value    = if (privacyMode) "••••"
                         else if (isLoading) "—"
                         else "TZS ${fmtAmt(animInc.toDouble())}",
@@ -510,7 +557,7 @@ fun HeroBalanceCard(
                     )
                     StatItem(
                         icon     = Icons.AutoMirrored.Filled.TrendingDown,
-                        label    = "Total Expenses",
+                        label    = stringResource(R.string.dash_total_expenses),
                         value    = if (privacyMode) "••••"
                         else if (isLoading) "—"
                         else "TZS ${fmtAmt(animExp.toDouble())}",
@@ -534,7 +581,7 @@ fun HeroBalanceCard(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            "My Services",
+                            stringResource(R.string.dash_my_services),
                             fontSize = 9.sp,
                             color    = TextSecondary,
                             letterSpacing = .5.sp,
@@ -599,8 +646,8 @@ private fun StatItem(icon: ImageVector, label: String, value: String, color: Col
 @Composable
 fun QuickActionsRow(onTransactions: () -> Unit, onCharts: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        QuickAction(Modifier.weight(1f), "Transactions", Icons.Default.Receipt, AccentTeal, onTransactions)
-        QuickAction(Modifier.weight(1f), "Analytics", Icons.Default.BarChart, AccentLight, onCharts)
+        QuickAction(Modifier.weight(1f), stringResource(R.string.dash_btn_transactions), Icons.Default.Receipt, AccentTeal, onTransactions)
+        QuickAction(Modifier.weight(1f), stringResource(R.string.dash_btn_analytics), Icons.Default.BarChart, AccentLight, onCharts)
     }
 }
 
