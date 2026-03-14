@@ -1,10 +1,8 @@
 package com.smsfinance.ui.dashboard
 import com.smsfinance.R
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +29,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -44,10 +41,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.border
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.animateColorAsState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.smsfinance.ui.components.DashboardSkeleton
+import com.smsfinance.ui.components.ResumeLoadingOverlay
 import com.smsfinance.domain.model.Transaction
 import com.smsfinance.domain.model.TransactionType
 import com.smsfinance.ui.components.*
+import com.smsfinance.ui.components.PulsingDot
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.DashboardViewModel
 import com.smsfinance.viewmodel.MultiUserViewModel
@@ -118,6 +125,25 @@ fun DashboardScreen(
     val privacyMode by settingsVm.privacyMode.collectAsStateWithLifecycle()
     val haptic      = LocalHapticFeedback.current
 
+    // ── Resume detection — show brief skeleton when returning from another app ──
+    var isResuming by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP   -> isResuming = true
+                Lifecycle.Event.ON_RESUME -> {
+                    if (isResuming) {
+                        isResuming = false
+                    }
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     // Derive the profile accent colour — falls back to AccentTeal if none set
     val profileAccent: Color = remember(multiState.activeProfile?.color) {
         runCatching {
@@ -148,12 +174,17 @@ fun DashboardScreen(
 
     Scaffold(containerColor = BgPrimary) { padding ->
 
-        if (uiState.isLoading && uiState.userName.isBlank()) {
-            Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
-                CircularProgressIndicator(color = AccentTeal, strokeWidth = 3.dp)
+        // ── Skeleton on first load (no user data yet) ──────────────────────
+        AnimatedVisibility(
+            visible = uiState.isLoading && uiState.userName.isBlank(),
+            enter   = fadeIn(tween(200)),
+            exit    = fadeOut(tween(350))
+        ) {
+            Box(Modifier.fillMaxSize().padding(padding)) {
+                DashboardSkeleton()
             }
-            return@Scaffold
         }
+        if (uiState.isLoading && uiState.userName.isBlank()) return@Scaffold
 
         // ── Fixed outer column — top section static, transactions scroll ──────
         Column(
@@ -167,33 +198,79 @@ fun DashboardScreen(
             ) {
                 Spacer(Modifier.height(4.dp))
 
-                // Top bar
+                // ── Top navigation bar ──────────────────────────────────
                 AnimatedVisibility(visible = showTopBar, enter = enterSpec(-60)) {
-                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(Color(0xFF1A2438).copy(0.95f), BgPrimary.copy(0.85f))
+                                )
+                            )
+                            .border(1.dp,
+                                Brush.linearGradient(listOf(
+                                    profileAccent.copy(0.35f), profileAccent.copy(0.08f)
+                                )),
+                                RoundedCornerShape(20.dp)
+                            )
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        Arrangement.SpaceBetween, Alignment.CenterVertically
+                    ) {
+                        // Left: breathing dot + brand name + subtitle
                         Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            PulsingDot(size = 9.dp)
-                            Column {
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            PulsingDot(color = profileAccent, size = 8.dp)
+                            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                                 Text("Smart Money",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold, color = TextWhite)
-                                Text(stringResource(R.string.auto_tracking_active), fontSize = 11.sp, color = AccentTeal)
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = TextWhite,
+                                    letterSpacing = (-0.3).sp)
+                                Row(verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(Modifier.size(5.dp).background(profileAccent, CircleShape))
+                                    Text(stringResource(R.string.auto_tracking_active),
+                                        fontSize = 10.sp, color = profileAccent.copy(0.85f),
+                                        letterSpacing = 0.2.sp)
+                                }
                             }
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-                            IconButton(onClick = { settingsVm.setPrivacyMode(!privacyMode) }) {
-                                Icon(if (privacyMode) Icons.Default.VisibilityOff
-                                else Icons.Default.Visibility, null, tint = TextSecondary)
-                            }
-                            IconButton(onClick = onNavigateToCharts) {
-                                Icon(Icons.Default.BarChart, null, tint = TextSecondary)
-                            }
-                            IconButton(onClick = onNavigateToSearch) {
-                                Icon(Icons.Default.Search, null, tint = TextSecondary)
-                            }
-                            IconButton(onClick = onNavigateToSettings) {
-                                Icon(Icons.Default.Settings, null, tint = TextSecondary)
-                            }
+
+                        // Right: icon buttons with pill backgrounds
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+
+                            // Privacy toggle
+                            TopNavIcon(
+                                icon     = if (privacyMode) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                tint     = if (privacyMode) profileAccent else TextSecondary,
+                                active   = privacyMode,
+                                accent   = profileAccent,
+                                onClick  = { settingsVm.setPrivacyMode(!privacyMode) }
+                            )
+                            // Charts
+                            TopNavIcon(
+                                icon    = Icons.Default.BarChart,
+                                tint    = TextSecondary,
+                                accent  = profileAccent,
+                                onClick = onNavigateToCharts
+                            )
+                            // Search
+                            TopNavIcon(
+                                icon    = Icons.Default.Search,
+                                tint    = TextSecondary,
+                                accent  = profileAccent,
+                                onClick = onNavigateToSearch
+                            )
+                            // Settings
+                            TopNavIcon(
+                                icon    = Icons.Default.Settings,
+                                tint    = TextSecondary,
+                                accent  = profileAccent,
+                                onClick = onNavigateToSettings
+                            )
                         }
                     }
                 } // end AnimatedVisibility topBar
@@ -226,8 +303,8 @@ fun DashboardScreen(
 
             // ── RECENT ACTIVITY — no scroll, fits exactly what the screen has left ──
             // Wrapped in AnimatedVisibility for stagger entrance from onboarding
-            // BoxWithConstraints measures the remaining height and shows only as many
-            // cards as fit, keeping the layout flush on every screen size.
+            // BoxWithConstraints measures remaining height.
+            // Shows only as many cards as fit — flush on every screen size.
             AnimatedVisibility(
                 visible = showActivity,
                 enter   = enterSpec(-60),
@@ -357,6 +434,41 @@ fun DashboardScreen(
                 }
             } // end AnimatedVisibility activity
         }
+
+        // ── Brief skeleton overlay when resuming from another app ──────────
+        ResumeLoadingOverlay(visible = isResuming)
+    }
+}
+
+// ── Top nav icon button with optional active pill background ─────────────────
+
+@Composable
+private fun TopNavIcon(
+    icon: ImageVector,
+    tint: Color,
+    accent: Color,
+    active: Boolean = false,
+    onClick: () -> Unit
+) {
+    val bg by animateColorAsState(
+        if (active) accent.copy(0.18f) else Color.Transparent,
+        tween(200), label = "iconBg"
+    )
+    Box(
+        Modifier
+            .size(36.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(bg)
+            .clickable(
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null,
+            tint = if (active) accent else tint,
+            modifier = Modifier.size(20.dp))
     }
 }
 
@@ -506,11 +618,12 @@ fun HeroBalanceCard(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    // Dot: pulsing green when live, muted while loading
-                    Box(
-                        Modifier.size(6.dp).clip(CircleShape)
-                            .background(if (isLoading) TextSecondary.copy(.4f) else AccentTeal.copy(.7f))
-                    )
+                    // Dot: pulsing profile colour when live
+                    if (isLoading) {
+                        Box(Modifier.size(6.dp).clip(CircleShape).background(TextSecondary.copy(.4f)))
+                    } else {
+                        PulsingDot(color = profileAccent, size = 6.dp)
+                    }
                     Text(
                         if (isLoading) stringResource(R.string.dash_calculating) else stringResource(R.string.dash_current_balance),
                         fontSize = 11.sp, color = TextSecondary,
@@ -688,6 +801,25 @@ fun TransactionRow(
 ) {
     val isDeposit   = transaction.type == TransactionType.DEPOSIT
     val haptic      = LocalHapticFeedback.current
+
+    // ── Resume detection — show brief skeleton when returning from another app ──
+    var isResuming by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP   -> isResuming = true
+                Lifecycle.Event.ON_RESUME -> {
+                    if (isResuming) {
+                        isResuming = false
+                    }
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val txColor     = if (isDeposit) AccentTeal else ErrorRed
 
     Row(

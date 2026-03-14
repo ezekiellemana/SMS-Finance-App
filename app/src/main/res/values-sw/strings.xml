@@ -273,6 +273,26 @@
     <string name="notify_at_pct">Arifu wakati (%)</string>
     <string name="period_label">Kipindi</string>
     <string name="widget_preview_balance">TZS 1,250,000</string>
+    <!-- Widget preview sample data — Swahili -->
+    <string name="widget_preview_income">↑ TZS 850,000</string>
+    <string name="widget_preview_expense">↓ TZS 350,000</string>
+    <string name="widget_preview_income_value">TZS 850,000</string>
+    <string name="widget_preview_expense_value">TZS 350,000</string>
+    <string name="widget_preview_tx1_source">M-Pesa</string>
+    <string name="widget_preview_tx1_date">14 Mar, 09:30</string>
+    <string name="widget_preview_tx1_amount">+ TZS 50,000</string>
+    <string name="widget_preview_tx1_icon">↑</string>
+    <string name="widget_preview_tx2_source">CRDB Benki</string>
+    <string name="widget_preview_tx2_date">13 Mar, 14:15</string>
+    <string name="widget_preview_tx2_amount">- TZS 15,000</string>
+    <string name="widget_preview_tx2_icon">↓</string>
+    <string name="widget_preview_tx3_source">NMB Benki</string>
+    <string name="widget_preview_tx3_date">13 Mar, 08:00</string>
+    <string name="widget_preview_tx3_amount">+ TZS 800,000</string>
+    <string name="widget_preview_tx3_icon">↑</string>
+    <string name="widget_income_label_full">Mapato</string>
+    <string name="widget_expense_label_full">Matumizi</string>
+    <string name="widget_tap_to_open_full">Gusa kufungua Smart Money</string>
     <string name="widget_recent_activity_preview">SHUGHULI ZA HIVI KARIBUNI</string>
 
     <!-- Kurasa za Uanzishaji -->
@@ -413,4 +433,9 @@
     <string name="save">Hifadhi</string>
     <string name="add">Ongeza</string>
     <string name="edit">Hariri</string>
+    <!-- Background SMS monitor service notification — Swahili -->
+    <string name="monitor_notif_title">Smart Money inafanya kazi</string>
+    <string name="monitor_notif_body">Inafuatilia SMS zako za fedha kiotomatiki</string>
+    <string name="monitor_channel_name">Ufuatiliaji wa SMS</string>
+    <string name="monitor_channel_desc">Huduma ya nyuma kwa ugunduzi wa haraka wa miamala ya SMS</string>
 </resources>

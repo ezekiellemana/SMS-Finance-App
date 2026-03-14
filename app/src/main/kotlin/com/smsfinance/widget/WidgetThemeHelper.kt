@@ -1,6 +1,7 @@
 package com.smsfinance.widget
 
 import android.graphics.Color
+import androidx.core.graphics.toColorInt
 import com.smsfinance.R
 import com.smsfinance.domain.model.WidgetTheme
 
@@ -8,7 +9,7 @@ import com.smsfinance.domain.model.WidgetTheme
  * Maps WidgetTheme enum → drawable resource ID.
  * Using setBackgroundResource() instead of setBackgroundColor() avoids
  * the "Can't load widget" crash on some launchers (Samsung, MIUI, etc.)
- * that reject programmatic color backgrounds on RemoteViews root views.
+ * that reject programmatic colour backgrounds on RemoteViews root views.
  */
 object WidgetThemeHelper {
 
@@ -29,5 +30,9 @@ object WidgetThemeHelper {
         return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
     }
 
-    fun expenseColor(): Int = Color.parseColor("#FF5C5C")
+    @Suppress("SpellCheckingInspection")
+    fun expenseColour(): Int = "#FF5C5C".toColorInt()
+
+    // Alias kept for existing callers
+    fun expenseColor(): Int = expenseColour()
 }

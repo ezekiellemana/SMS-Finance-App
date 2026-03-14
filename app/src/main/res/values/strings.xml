@@ -247,6 +247,26 @@
     <string name="notify_at_pct">Notify at (%)</string>
     <string name="period_label">Period</string>
     <string name="widget_preview_balance">TZS 1,250,000</string>
+    <!-- Preview sample data strings -->
+    <string name="widget_preview_income">↑ TZS 850,000</string>
+    <string name="widget_preview_expense">↓ TZS 350,000</string>
+    <string name="widget_preview_income_value">TZS 850,000</string>
+    <string name="widget_preview_expense_value">TZS 350,000</string>
+    <string name="widget_preview_tx1_source">M-Pesa</string>
+    <string name="widget_preview_tx1_date">14 Mar, 09:30</string>
+    <string name="widget_preview_tx1_amount">+ TZS 50,000</string>
+    <string name="widget_preview_tx1_icon">↑</string>
+    <string name="widget_preview_tx2_source">CRDB Bank</string>
+    <string name="widget_preview_tx2_date">13 Mar, 14:15</string>
+    <string name="widget_preview_tx2_amount">- TZS 15,000</string>
+    <string name="widget_preview_tx2_icon">↓</string>
+    <string name="widget_preview_tx3_source">NMB Bank</string>
+    <string name="widget_preview_tx3_date">13 Mar, 08:00</string>
+    <string name="widget_preview_tx3_amount">+ TZS 800,000</string>
+    <string name="widget_preview_tx3_icon">↑</string>
+    <string name="widget_income_label_full">Income</string>
+    <string name="widget_expense_label_full">Expenses</string>
+    <string name="widget_tap_to_open_full">Tap to open Smart Money</string>
     <string name="widget_recent_activity_preview">RECENT ACTIVITY</string>
 
     <!-- Onboarding pages -->
@@ -290,7 +310,7 @@
     <string name="onb_feat_widget_sub">Balance visible without opening app</string>
     <string name="onb_feat_charts_sub">Visual breakdown by category</string>
     <string name="onb_feat_ai_sub">Forecast where your money goes</string>
-    <string name="onb_feat_ondevice_sub">No cloud, no servers, ever</string>
+    <string name="onb_feat_ondevice_sub" tools:ignore="Typos">No cloud, no servers, ever</string>
     <string name="onb_feat_aes">AES encryption</string>
     <string name="onb_feat_aes_sub">Data locked at rest</string>
     <string name="onb_feat_biometric_sub">PIN or fingerprint protection</string>
@@ -378,7 +398,7 @@
 
     <!-- Settings — features -->
     <string name="advanced_charts">Advanced Charts</string>
-    <string name="advanced_charts_desc">Pie, donut, trend &amp; category analytics</string>
+    <string name="advanced_charts_desc">Pie, doughnut, trend &amp; category analytics</string>
     <string name="investments_desc">Track savings goals &amp; portfolio</string>
     <string name="budget_planning_desc">Set monthly category budgets</string>
     <string name="recurring_transactions">Recurring Transactions</string>
@@ -395,4 +415,9 @@
     <string name="save">Save</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>
+    <!-- Background SMS monitor service notification -->
+    <string name="monitor_notif_title">Smart Money is active</string>
+    <string name="monitor_notif_body">Tracking your financial SMS automatically</string>
+    <string name="monitor_channel_name">SMS Monitor</string>
+    <string name="monitor_channel_desc">Background service for instant SMS transaction detection</string>
 </resources>

@@ -3,7 +3,9 @@ package com.smsfinance.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.smsfinance.service.SmsMonitorService
 import com.smsfinance.widget.WidgetUpdateManager
+import com.smsfinance.worker.SmsSyncWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +32,8 @@ class BootReceiver : BroadcastReceiver() {
         scope.launch {
             try {
                 widgetUpdateManager.updateAllWidgets(context)
+                SmsSyncWorker.schedule(context)
+                SmsMonitorService.start(context)
             } finally {
                 pendingResult.finish()
             }

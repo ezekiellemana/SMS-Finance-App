@@ -1,9 +1,9 @@
 package com.smsfinance.widget
 
 import android.content.Context
+import androidx.core.graphics.toColorInt
 import com.smsfinance.data.database.AppDatabase
 import com.smsfinance.data.entity.TransactionEntity
-import org.json.JSONObject
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
@@ -22,7 +22,9 @@ object WidgetDataLoader {
     // ── Keys that mirror PreferencesManager / DataStore ─────────────────────
     private const val PREFS_NAME        = "smart_money_prefs"   // SharedPreferences used by widget
     private const val KEY_WIDGET_THEME  = "widget_theme"
-    private const val KEY_PRIVACY       = "privacy_mode"
+    private const val KEY_PRIVACY        = "privacy_mode"
+    private const val KEY_LANGUAGE       = "widget_language"
+    private const val KEY_PROFILE_COLOR  = "widget_profile_color"
 
     // DataStore is written by the app. Widgets can't use DataStore directly
     // (no Hilt context) so we read the DataStore prefs file via a plain
@@ -93,6 +95,24 @@ object WidgetDataLoader {
             .apply { maximumFractionDigits = 0 }.format(amount)
 
     // ── Date helpers ──────────────────────────────────────────────────────────
+
+    fun widgetLanguage(context: Context): String =
+        context.applicationContext
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_LANGUAGE, "en") ?: "en"
+
+    fun profileColor(context: Context): Int {
+        @Suppress("SpellCheckingInspection")
+        val defaultColor = "#3DDAD7"
+        val hex = context.applicationContext
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_PROFILE_COLOR, defaultColor) ?: defaultColor
+        return try {
+            hex.toColorInt()
+        } catch (_: Exception) {
+            defaultColor.toColorInt()
+        }
+    }
 
     private fun monthRange(): Pair<Long, Long> {
         val cal = Calendar.getInstance().apply {

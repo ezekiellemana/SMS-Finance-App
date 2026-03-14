@@ -61,7 +61,6 @@ fun AdaptiveAppNavigation(
     requireAuth: Boolean,
     onBiometricAuth: (() -> Unit) -> Unit,
     onboardingDone: Boolean = true,
-    onLangChange: () -> Unit = {}
 ) {
     val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
     val isMedium   = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Medium
@@ -69,7 +68,7 @@ fun AdaptiveAppNavigation(
     if (isExpanded || isMedium) {
         TabletLayout(requireAuth, onBiometricAuth, isExpanded, onboardingDone)
     } else {
-        AppNavigation(requireAuth, onBiometricAuth, onboardingDone, onLangChange)
+        AppNavigation(requireAuth, onBiometricAuth, onboardingDone)
     }
 }
 

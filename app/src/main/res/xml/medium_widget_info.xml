@@ -10,7 +10,7 @@
     android:maxResizeWidth="500dp"
     android:maxResizeHeight="400dp"
     android:updatePeriodMillis="0"
-    android:previewImage="@drawable/widget_preview_medium"
+    android:previewLayout="@layout/widget_medium_preview"
     android:initialLayout="@layout/widget_medium"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"

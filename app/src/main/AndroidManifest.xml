@@ -9,9 +9,9 @@
         externally (tools:ignore suppresses the Play-policy lint reminder).
     -->
     <uses-permission android:name="android.permission.RECEIVE_SMS"
-        tools:ignore="ProtectedPermissions" />
+        tools:ignore="ProtectedPermissions,SmsUsedForLogin" />
     <uses-permission android:name="android.permission.READ_SMS"
-        tools:ignore="ProtectedPermissions" />
+        tools:ignore="ProtectedPermissions,SmsUsedForLogin" />
 
     <!-- Telephony declared optional so the app installs on Chrome OS tablets -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -28,9 +28,10 @@
     <!-- Restore home-screen widgets after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- Foreground service — widget data-sync background work -->
-    <!-- Foreground service — required by WorkManager on Android 14+ -->
+    <!-- Foreground service — required to keep process alive for instant SMS detection.
+         Type "dataSync" declared in the <service> tag below per Android 14+ requirement. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- Internet — Google Drive backup (opt-in only, no data sent by default) -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -116,13 +117,20 @@
                 android:resource="@xml/medium_widget_info" />
         </receiver>
 
+        <!-- SMS Monitor Foreground Service — keeps process warm for instant SMS detection -->
+        <service
+            android:name=".service.SmsMonitorService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
+
         <!-- FileProvider for sharing exported Excel/PDF files -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true"
-            tools:ignore="Typo">
+            tools:ignore="Typo,SpellCheckingInspection">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />

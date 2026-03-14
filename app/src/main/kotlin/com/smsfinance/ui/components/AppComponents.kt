@@ -195,9 +195,26 @@ fun AppSwitchRow(
 @Composable
 fun PulsingDot(color: Color = AccentTeal, size: Dp = 8.dp) {
     val inf = rememberInfiniteTransition(label = "pulse")
-    val alpha by inf.animateFloat(1f, 0.25f,
-        infiniteRepeatable(tween(950, easing = EaseInOutSine), RepeatMode.Reverse), label = "a")
-    Box(Modifier.size(size).background(color.copy(alpha = alpha), CircleShape))
+    // Outer ring breathes slow
+    val outerAlpha by inf.animateFloat(0.15f, 0.45f,
+        infiniteRepeatable(tween(1200, easing = EaseInOutSine), RepeatMode.Reverse), label = "oa")
+    val outerScale by inf.animateFloat(1f, 1.9f,
+        infiniteRepeatable(tween(1200, easing = EaseInOutSine), RepeatMode.Reverse), label = "os")
+    // Inner dot pulses
+    val innerAlpha by inf.animateFloat(0.7f, 1f,
+        infiniteRepeatable(tween(950, easing = EaseInOutSine), RepeatMode.Reverse), label = "ia")
+
+    Box(Modifier.size(size * 2f), contentAlignment = Alignment.Center) {
+        // Outer glow ring
+        Box(
+            Modifier
+                .size(size)
+                .graphicsLayer { scaleX = outerScale; scaleY = outerScale; alpha = outerAlpha }
+                .background(color, CircleShape)
+        )
+        // Inner solid dot
+        Box(Modifier.size(size * 0.65f).background(color.copy(alpha = innerAlpha), CircleShape))
+    }
 }
 
 @Suppress("unused")
@@ -234,7 +251,7 @@ fun fmtAmt(amount: Double): String =
         .apply { maximumFractionDigits = 0 }.format(amount)
 
 // ── Shared Screen Scaffold ────────────────────────────────────────────────────
-// All sub-screens use this so they match the dashboard's size, insets, colors.
+// All sub-screens use this so they match the dashboard's size, insets, colours.
 //
 // Provides:
 //  • statusBarsPadding so content never hides under the status bar
@@ -262,7 +279,7 @@ fun AppScreenScaffold(
                 .padding(innerPadding)
                 .statusBarsPadding()
         ) {
-            // ── Header — profile-color accent line at the bottom ──
+            // ── Header — profile-colour accent line at the bottom ──
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -346,7 +363,7 @@ fun BigFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     accentColor: Color = AccentTeal,
-    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.Add
+    icon: ImageVector = Icons.Default.Add
 ) {
     val pulse = rememberInfiniteTransition(label = "fabPulse")
     val glow  by pulse.animateFloat(

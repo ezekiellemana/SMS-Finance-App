@@ -49,8 +49,8 @@ enum class WidgetTheme(
     ),
     LIGHT_CLEAN(
         "Light", "☀️",
-        0xFFF0F4F8.toInt(), 0xFFFFFFFF.toInt(),
-        0xFF1F2633.toInt(), 0xFF2AB8B5.toInt()
+        0xFFEEF4FB.toInt(), 0xFFFFFFFF.toInt(),
+        0xFF1A2233.toInt(), 0xFF1A9E9B.toInt()   // dark navy text, deeper teal accent for contrast
     ),
     GREEN_DARK(
         "Forest", "🌿",

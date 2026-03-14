@@ -95,8 +95,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setLanguage(lang: String, context: Context) = viewModelScope.launch {
-        // 1. Persist to DataStore — this updates the StateFlow in MainActivity
-        //    which triggers the LaunchedEffect that calls recreate().
+        // 1. Persist to DataStore + mirror to SharedPrefs for widget locale
         prefs.setLanguage(lang)
         // 2. Write to SharedPreferences synchronously so attachBaseContext on the
         //    new Activity instance reads the correct language immediately.
@@ -104,6 +103,8 @@ class SettingsViewModel @Inject constructor(
             .edit { putString("language", lang) }
         // 3. Update default locale so any non-Compose code also uses correct locale.
         Locale.setDefault(Locale(lang))
+        // 4. Refresh widgets so they render in the new language.
+        widgetUpdateManager.updateAllWidgets(appContext)
     }
 
 
@@ -142,20 +143,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun saveUserSetup(
+    /** Suspend — caller must await this before calling setOnboardingDone() or navigating away.
+     *  All DataStore writes are sequential so balance formula reads consistent data immediately. */
+    suspend fun saveUserSetup(
         name: String,
         selectedSenders: List<String>,
         openingBalances: Map<String, String>
-    ) = viewModelScope.launch {
-        prefs.setUserName(name.trim())
-        prefs.setSetupCompletedAt(System.currentTimeMillis())
-        prefs.setSelectedSenders(JSONArray(selectedSenders).toString())
-
-        // Sync the name into the active DB profile immediately so Family
-        // Accounts shows the real name without requiring a fresh install.
-        userProfileRepository.syncActiveProfileName()
-
-        // Opening balances are stored purely in DataStore — NOT as transactions.
+    ) {
+        // 1. Save opening balances FIRST so the balance formula has them
         val balancesJson = JSONObject()
         openingBalances.forEach { (senderId, balStr) ->
             val amount = balStr.replace(",", "").toDoubleOrNull() ?: return@forEach
@@ -163,6 +158,20 @@ class SettingsViewModel @Inject constructor(
             balancesJson.put(senderId, amount)
         }
         prefs.setOpeningBalances(balancesJson.toString())
+
+        // 2. Record setupAt AFTER balances — any SMS arriving now correctly counts as "new"
+        prefs.setSetupCompletedAt(System.currentTimeMillis())
+
+        // 3. User metadata
+        prefs.setUserName(name.trim())
+        prefs.setSelectedSenders(JSONArray(selectedSenders).toString())
+
+        // Sync the name into the active DB profile immediately so Family
+        // Accounts shows the real name without requiring a fresh install.
+        userProfileRepository.syncActiveProfileName()
+
+        // Sync the name into the active DB profile immediately
+        userProfileRepository.syncActiveProfileName()
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

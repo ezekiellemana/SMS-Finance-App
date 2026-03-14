@@ -45,8 +45,13 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smsfinance.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -66,7 +71,7 @@ private val TextMuted   = Color(0xFF8A96A8)
 private val TextSoft    = Color(0xFFCDD5E0)
 private val GreenOk     = Color(0xFF43C59E)
 
-// 0=Hero 1=SMS Detection 2=Dashboard 3=Security 4=Personalize
+// 0=Hero 1=SMS Detection 2=Dashboard 3=Security 4=Setup
 private const val TOTAL_PAGES = 5
 private const val PAGE_SETUP  = 4
 
@@ -149,14 +154,34 @@ private val FEATURE_PAGES = listOf(
 @Composable
 fun OnboardingScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
-    onFinished: () -> Unit,
-    onLangChange: (() -> Unit)? = null
+    onFinished: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { TOTAL_PAGES })
     val scope      = rememberCoroutineScope()
     val context    = LocalContext.current
 
-    val currentLang by settingsViewModel.language.collectAsStateWithLifecycle()
+    // ── Permission launcher — triggered when user reaches the SMS Detection page ──
+    val permLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { /* results handled by SmsReceiver automatically */ }
+
+    // Fire permission dialogue the moment user swipes to page 1 (SMS Detection)
+    val page = pagerState.currentPage
+    LaunchedEffect(page) {
+        if (page == 1) {
+            val perms = mutableListOf(
+                Manifest.permission.RECEIVE_SMS,
+                Manifest.permission.READ_SMS
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                perms.add(Manifest.permission.POST_NOTIFICATIONS)
+            val needed = perms.filter {
+                ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+            }
+            if (needed.isNotEmpty()) permLauncher.launch(needed.toTypedArray())
+        }
+    }
+
     // Read initial lang from SharedPrefs synchronously so the roller always
     // starts at the correct position — even right after a recreate() where
     // the DataStore flow might not have emitted yet.
@@ -171,7 +196,6 @@ fun OnboardingScreen(
     var showSheet       by remember { mutableStateOf(false) }
     val sheetState      = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val page = pagerState.currentPage
     val accent = when (page) {
         1    -> AccentTeal
         2    -> AccentBlue
@@ -205,8 +229,12 @@ fun OnboardingScreen(
                 pageSpacing = 16.dp,
                 beyondViewportPageCount = 1
             ) { p ->
-                val pageOffset = (pagerState.currentPage - p) + pagerState.currentPageOffsetFraction
-                val absOffset  = abs(pageOffset).coerceIn(0f, 1f)
+                val pageOffset by remember {
+                    derivedStateOf {
+                        (pagerState.currentPage - p) + pagerState.currentPageOffsetFraction
+                    }
+                }
+                val absOffset = abs(pageOffset).coerceIn(0f, 1f)
                 Box(
                     Modifier.fillMaxSize().statusBarsPadding()
                         .graphicsLayer {
@@ -316,6 +344,7 @@ fun OnboardingScreen(
                             ) {
                                 scope.launch {
                                     if (isLast) {
+                                        // Await all DataStore writes before navigating — fixes balance recording
                                         settingsViewModel.saveUserSetup(
                                             userName, selectedSenders.toList(), openingBalances)
                                         settingsViewModel.setOnboardingDone()
@@ -370,13 +399,10 @@ fun OnboardingScreen(
             selectedSenders = selectedSenders,
             sheetState      = sheetState,
             onSelect        = { id -> selectedSenders = selectedSenders + id },
+            onDeselect      = { id -> selectedSenders = selectedSenders - id },
             onDismiss       = {
-                @Suppress("UNUSED_EXPRESSION")
-                scope.launch {
-                    sheetState.hide()
-                    showSheet = false
-                }
-                Unit
+                val job = scope.launch { sheetState.hide(); showSheet = false }
+                job.invokeOnCompletion { /* dismiss complete */ }
             }
         )
     }
@@ -418,7 +444,7 @@ private fun HeroPage(selectedLang: String, onSelectLang: (String) -> Unit) {
     val langScope    = rememberCoroutineScope()
     val centreIndex  by remember { derivedStateOf { rowState.firstVisibleItemIndex } }
     // Fire instantly as centreIndex changes — no debounce needed because
-    // recreate() in onLangChange reloads all strings immediately.
+    // resources.updateConfiguration() in MainActivity reloads all strings immediately.
     LaunchedEffect(centreIndex) {
         val lang = LANGUAGES.getOrNull(centreIndex)
         if (lang != null && lang.code != selectedLang) onSelectLang(lang.code)
@@ -839,17 +865,22 @@ private fun SetupPage(
                 done = userName.isNotBlank(), active = activeStep == 0) {
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
-                    value = userName, onValueChange = onNameChange,
-                    placeholder = {
+                    value         = userName,
+                    onValueChange = if (selectedSenders.isEmpty()) onNameChange else { _ -> },
+                    placeholder   = {
                         Text("e.g. John Masai", color = TextMuted.copy(.45f),
                             fontSize = 15.sp, fontStyle = FontStyle.Italic)
                     },
                     singleLine = true,
+                    readOnly   = selectedSenders.isNotEmpty(),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
-                        imeAction      = ImeAction.Done
+                        imeAction      = ImeAction.Next
                     ),
-                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.clearFocus() },
+                        onDone = { focusManager.clearFocus() }
+                    ),
                     leadingIcon = {
                         Icon(Icons.Default.Person, null,
                             tint = if (userName.isNotBlank()) AccentTeal else TextMuted.copy(.5f),
@@ -945,7 +976,9 @@ private fun SetupPage(
 @Composable
 private fun SenderSheet(
     category: String, selectedSenders: Set<String>,
-    sheetState: SheetState, onSelect: (String) -> Unit, onDismiss: () -> Unit
+    sheetState: SheetState, onSelect: (String) -> Unit,
+    onDeselect: (String) -> Unit = {},
+    onDismiss: () -> Unit
 ) {
     var query by remember { mutableStateOf("") }
     val available = ALL_SENDERS.filter { s ->
@@ -995,6 +1028,41 @@ private fun SenderSheet(
                     focusedTextColor = TextWhite, unfocusedTextColor = TextWhite,
                     cursorColor = AccentTeal, focusedContainerColor = BgRow, unfocusedContainerColor = BgRow),
                 shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+
+            // ── Already selected — show with remove button ──────────────────
+            val alreadySelected = ALL_SENDERS.filter { it.id in selectedSenders && it.category == category }
+            if (alreadySelected.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Selected", fontSize = 11.sp, color = GreenOk,
+                        fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
+                    alreadySelected.forEach { sender ->
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(13.dp))
+                                .background(GreenOk.copy(.08f))
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp))
+                                .background(GreenOk.copy(.12f)), Alignment.Center) {
+                                Text(sender.emoji, fontSize = 16.sp)
+                            }
+                            Text(sender.displayName, color = TextSoft, fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                            Icon(Icons.Default.CheckCircle, null,
+                                tint = GreenOk.copy(.7f), modifier = Modifier.size(16.dp))
+                            IconButton(
+                                onClick = { onDeselect(sender.id) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(Icons.Default.Close, null,
+                                    tint = TextMuted, modifier = Modifier.size(14.dp))
+                            }
+                        }
+                    }
+                }
+            }
 
             AnimatedContent(available.isEmpty(), label = "empty") { empty ->
                 if (empty) {

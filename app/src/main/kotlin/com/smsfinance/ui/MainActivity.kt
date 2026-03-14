@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,7 +79,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.core.content.edit
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -215,12 +215,7 @@ class MainActivity : FragmentActivity() {
                             windowSizeClass = windowSizeClass,
                             requireAuth     = pinEnabled || bioEnabled,
                             onBiometricAuth = { cb -> triggerBiometricAuth(cb) },
-                            onboardingDone  = onboardingDone,
-                            onLangChange    = {
-                                // Language changed in settings — recreate so all
-                                // Views and system UI also update.
-                                activity.recreate()
-                            }
+                            onboardingDone  = onboardingDone
                         )
                     }
                 }
@@ -263,7 +258,6 @@ fun AppNavigation(
     requireAuth: Boolean,
     onBiometricAuth: (() -> Unit) -> Unit,
     onboardingDone: Boolean = true,
-    onLangChange: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -273,7 +267,9 @@ fun AppNavigation(
         requireAuth     -> Routes.PIN
         else            -> Routes.DASHBOARD
     }
-    val showBottomBar = currentRoute in bottomNavItems.map { it.route }
+    // Strip query params (e.g. "dashboard?fromOnboarding=false" → "dashboard") before matching
+    val baseRoute     = currentRoute?.substringBefore("?")
+    val showBottomBar = baseRoute in bottomNavItems.map { it.route }
 
     val multiUserVm: MultiUserViewModel = hiltViewModel()
     val multiUserState by multiUserVm.uiState.collectAsStateWithLifecycle()
@@ -574,7 +570,7 @@ private fun BottomBarItem(
                                 modifier           = Modifier.fillMaxSize().clip(CircleShape)
                             )
                         } else {
-                            Text(text = profileEmoji.orEmpty().ifEmpty { "👤" }, fontSize = 26.sp)
+                            Text(text = profileEmoji ?: "👤", fontSize = 26.sp)
                         }
                     }
                 }

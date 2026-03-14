@@ -8,12 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import com.smsfinance.R
-import com.smsfinance.data.entity.TransactionEntity
 import com.smsfinance.domain.model.WidgetTheme
 import com.smsfinance.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -21,13 +21,12 @@ import java.util.Locale
 
 /**
  * Medium (4×2) home screen widget.
- *
- * Shows:
- *  - Estimated balance  (opening balance + new income - new expenses since setupAt)
- *  - Monthly income and expenses
- *  - Last 3 transactions with type arrow, source, amount, date
- *
- * Data loaded via [WidgetDataLoader] — same balance formula as DashboardViewModel.
+ * - Auto-updates on SMS arrival (SmsReceiver → WidgetUpdateManager)
+ * - Auto-updates on theme change (SettingsViewModel.setWidgetTheme → updateAllWidgets)
+ * - Profile-colour accent stripe at top
+ * - Smooth fade-in on every refresh
+ * - Privacy mode hides all values
+ * - Language-aware formatting
  */
 class MediumFinanceWidget : AppWidgetProvider() {
 
@@ -54,27 +53,46 @@ class MediumFinanceWidget : AppWidgetProvider() {
         appWidgetId: Int
     ) {
         val appCtx = context.applicationContext
+        // Show placeholder immediately so widget is never blank
         showPlaceholder(appCtx, appWidgetManager, appWidgetId)
 
         scope.launch {
             try {
-                val theme      = resolveTheme(WidgetDataLoader.widgetThemeName(appCtx))
-                val privacy    = WidgetDataLoader.isPrivacyOn(appCtx)
-                val data       = WidgetDataLoader.load(appCtx, recentCount = 3)
-                val expColor   = WidgetThemeHelper.expenseColor()
+                val theme        = resolveTheme(WidgetDataLoader.widgetThemeName(appCtx))
+                val privacy      = WidgetDataLoader.isPrivacyOn(appCtx)
+                val data         = WidgetDataLoader.load(appCtx, recentCount = 3)
+                val expColor     = WidgetThemeHelper.expenseColor()
+                val profileColor = WidgetDataLoader.profileColor(appCtx)
+                val lang         = WidgetDataLoader.widgetLanguage(appCtx)
+                val locale       = Locale(lang)
+
+                val textPrimary  = theme.textColor
+                val textMuted    = WidgetThemeHelper.adjustAlpha(textPrimary, 0.55f)
+                val accentColor  = theme.accentColor
 
                 val v = RemoteViews(appCtx.packageName, R.layout.widget_medium)
 
-                // Theme background
+                // ── Theme background ────────────────────────────────────────────
                 v.setInt(R.id.widget_medium_root, "setBackgroundResource",
                     WidgetThemeHelper.bgDrawable(theme))
 
-                // Header text colours
-                v.setTextColor(R.id.tv_balance_medium, theme.textColor)
-                v.setTextColor(R.id.tv_income_medium,  theme.accentColor)
-                v.setTextColor(R.id.tv_expense_medium, expColor)
+                // ── Profile-colour accent stripe ────────────────────────────────
+                // ── Profile-colour accent stripe + live dot ─────────────────────────
+                v.setInt(R.id.tv_accent_medium, "setBackgroundColor", profileColor)
+                v.setInt(R.id.tv_live_dot_medium, "setBackgroundColor", profileColor)
 
-                // Balance + monthly stats
+                // ── Text colors ──────────────────────────────────────────────────
+                v.setTextColor(R.id.tv_balance_medium,     textPrimary)
+                v.setTextColor(R.id.tv_income_medium,      accentColor)
+                v.setTextColor(R.id.tv_expense_medium,     expColor)
+
+                // ── Last-updated timestamp ──────────────────────────────────────
+                val timeFmt = SimpleDateFormat("HH:mm", locale)
+                v.setTextViewText(R.id.tv_last_updated_medium, timeFmt.format(Date()))
+                v.setTextColor(R.id.tv_last_updated_medium,
+                    WidgetThemeHelper.adjustAlpha(textPrimary, 0.35f))
+
+                // ── Balance + pills ──────────────────────────────────────────────
                 if (privacy) {
                     v.setTextViewText(R.id.tv_balance_medium, "TZS ••••••")
                     v.setTextViewText(R.id.tv_income_medium,  "↑ ••••")
@@ -85,39 +103,49 @@ class MediumFinanceWidget : AppWidgetProvider() {
                     v.setTextViewText(R.id.tv_expense_medium, "↓ ${WidgetDataLoader.fmtTzs(data.expenses)}")
                 }
 
-                // Recent 3 transaction rows
+                // ── Transaction rows ─────────────────────────────────────────────
                 val txRows = listOf(
                     TxIds(R.id.tx1_type_icon, R.id.tx1_source, R.id.tx1_amount, R.id.tx1_date),
                     TxIds(R.id.tx2_type_icon, R.id.tx2_source, R.id.tx2_amount, R.id.tx2_date),
                     TxIds(R.id.tx3_type_icon, R.id.tx3_source, R.id.tx3_amount, R.id.tx3_date)
                 )
-                val dateFmt = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
+                val dateFmt = SimpleDateFormat("dd MMM, HH:mm", locale)
 
                 txRows.forEachIndexed { i, ids ->
                     val tx = data.recent.getOrNull(i)
                     if (tx != null) {
                         val isDeposit = tx.type == "DEPOSIT"
-                        val amtColor  = if (isDeposit) theme.accentColor else expColor
+                        val rowAccent = if (isDeposit) accentColor else expColor
                         v.setTextViewText(ids.icon,   if (isDeposit) "↑" else "↓")
-                        v.setTextColor(ids.icon,       amtColor)
+                        v.setTextColor(ids.icon,       rowAccent)
                         v.setTextViewText(ids.source,  tx.source)
-                        v.setTextColor(ids.source,     theme.textColor)
+                        v.setTextColor(ids.source,     textPrimary)
                         val amtText = if (privacy) "••••"
                         else "${if (isDeposit) "+" else "-"} ${WidgetDataLoader.fmtTzs(tx.amount)}"
                         v.setTextViewText(ids.amount,  amtText)
-                        v.setTextColor(ids.amount,     amtColor)
-                        v.setTextViewText(ids.date,    dateFmt.format(Date(tx.date)))
-                        v.setTextColor(ids.date,
-                            WidgetThemeHelper.adjustAlpha(theme.textColor, 0.55f))
+                        v.setTextColor(ids.amount,     rowAccent)
+                        v.setTextViewText(ids.date,    if (privacy) "" else dateFmt.format(Date(tx.date)))
+                        v.setTextColor(ids.date,       textMuted)
                     } else {
                         listOf(ids.icon, ids.source, ids.amount, ids.date)
                             .forEach { id -> v.setTextViewText(id, "") }
                     }
                 }
 
-                // Tap → open app
                 v.setOnClickPendingIntent(R.id.widget_medium_root, makeIntent(appCtx, appWidgetId))
+
+                // ── Push fully built views, then fade in ─────────────────────────
                 appWidgetManager.updateAppWidget(appWidgetId, v)
+
+                // Smooth fade-in via alpha steps (fade the root, it's now a real LinearLayout)
+                delay(50)
+                val steps = listOf(0.4f, 0.65f, 0.82f, 0.93f, 1f)
+                steps.forEach { alpha ->
+                    delay(25)
+                    val fade = RemoteViews(appCtx.packageName, R.layout.widget_medium)
+                    fade.setFloat(R.id.widget_medium_root, "setAlpha", alpha)
+                    appWidgetManager.partiallyUpdateAppWidget(appWidgetId, fade)
+                }
 
             } catch (_: Exception) {
                 showError(appCtx, appWidgetManager, appWidgetId)
@@ -128,22 +156,26 @@ class MediumFinanceWidget : AppWidgetProvider() {
     private data class TxIds(val icon: Int, val source: Int, val amount: Int, val date: Int)
 
     private fun showPlaceholder(ctx: Context, mgr: AppWidgetManager, id: Int) {
-        val views = RemoteViews(ctx.packageName, R.layout.widget_medium)
-        views.setTextViewText(R.id.tv_balance_medium, "TZS ---")
-        views.setTextViewText(R.id.tv_income_medium,  "↑ ---")
-        views.setTextViewText(R.id.tv_expense_medium, "↓ ---")
-        views.setOnClickPendingIntent(R.id.widget_medium_root, makeIntent(ctx, id))
-        mgr.updateAppWidget(id, views)
+        val v = RemoteViews(ctx.packageName, R.layout.widget_medium)
+        val theme = resolveTheme(WidgetDataLoader.widgetThemeName(ctx))
+        v.setInt(R.id.widget_medium_root, "setBackgroundResource", WidgetThemeHelper.bgDrawable(theme))
+        v.setFloat(R.id.widget_medium_root, "setAlpha", 0.3f)
+        v.setTextViewText(R.id.tv_balance_medium, "...")
+        v.setOnClickPendingIntent(R.id.widget_medium_root, makeIntent(ctx, id))
+        mgr.updateAppWidget(id, v)
     }
 
     private fun showError(ctx: Context, mgr: AppWidgetManager, id: Int) {
         try {
-            val views = RemoteViews(ctx.packageName, R.layout.widget_medium)
-            views.setTextViewText(R.id.tv_balance_medium, "TZS 0")
-            views.setTextViewText(R.id.tv_income_medium,  "↑ 0")
-            views.setTextViewText(R.id.tv_expense_medium, "↓ 0")
-            views.setOnClickPendingIntent(R.id.widget_medium_root, makeIntent(ctx, id))
-            mgr.updateAppWidget(id, views)
+            val v = RemoteViews(ctx.packageName, R.layout.widget_medium)
+            v.setInt(R.id.widget_medium_root, "setBackgroundResource",
+                WidgetThemeHelper.bgDrawable(resolveTheme(WidgetDataLoader.widgetThemeName(ctx))))
+            v.setFloat(R.id.widget_medium_root, "setAlpha", 1f)
+            v.setTextViewText(R.id.tv_balance_medium, "TZS 0")
+            v.setTextViewText(R.id.tv_income_medium,  "↑ 0")
+            v.setTextViewText(R.id.tv_expense_medium, "↓ 0")
+            v.setOnClickPendingIntent(R.id.widget_medium_root, makeIntent(ctx, id))
+            mgr.updateAppWidget(id, v)
         } catch (_: Exception) {}
     }
 

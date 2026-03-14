@@ -54,13 +54,25 @@ class PreferencesManager @Inject constructor(
     suspend fun isSmsHistoryImported(): Boolean = context.dataStore.data.first()[SMS_HISTORY_IMPORTED] ?: false
 
     // ── Writes ────────────────────────────────────────────────────────────────
-    suspend fun setPrivacyMode(enabled: Boolean)     = context.dataStore.edit { it[PRIVACY_MODE]         = enabled }
+    suspend fun setPrivacyMode(enabled: Boolean) {
+        context.dataStore.edit { it[PRIVACY_MODE] = enabled }
+        context.getSharedPreferences("smart_money_prefs", Context.MODE_PRIVATE)
+            .edit { putBoolean("privacy_mode", enabled) }
+    }
     suspend fun setBiometricEnabled(enabled: Boolean)= context.dataStore.edit { it[BIOMETRIC_ENABLED]    = enabled }
     suspend fun setPinEnabled(enabled: Boolean)      = context.dataStore.edit { it[PIN_ENABLED]          = enabled }
     suspend fun setPinHash(hash: String)             = context.dataStore.edit { it[PIN_HASH]             = hash }
     suspend fun setDarkMode(enabled: Boolean)        = context.dataStore.edit { it[DARK_MODE]            = enabled }
-    suspend fun setLanguage(lang: String)            = context.dataStore.edit { it[LANGUAGE]             = lang }
-    suspend fun setWidgetTheme(theme: String)        = context.dataStore.edit { it[WIDGET_THEME]         = theme }
+    suspend fun setLanguage(lang: String) {
+        context.dataStore.edit { it[LANGUAGE] = lang }
+        context.getSharedPreferences("smart_money_prefs", Context.MODE_PRIVATE)
+            .edit { putString("widget_language", lang) }
+    }
+    suspend fun setWidgetTheme(theme: String) {
+        context.dataStore.edit { it[WIDGET_THEME] = theme }
+        context.getSharedPreferences("smart_money_prefs", Context.MODE_PRIVATE)
+            .edit { putString("widget_theme", theme) }
+    }
     suspend fun setOnboardingDone()                  = context.dataStore.edit { it[ONBOARDING_DONE]      = true }
     suspend fun setSmsHistoryImported(done: Boolean) = context.dataStore.edit { it[SMS_HISTORY_IMPORTED] = done }
     suspend fun setUserName(name: String)            = context.dataStore.edit { it[USER_NAME]            = name }
@@ -89,6 +101,12 @@ class PreferencesManager @Inject constructor(
      * into SharedPreferences under "widget_opening_balance_tzs".
      * Called every time opening balances are updated in onboarding or settings.
      */
+    /** Called from MultiUserViewModel / UserProfileRepository whenever the active profile changes. */
+    fun mirrorProfileColorToWidgetPrefs(hexColor: String) {
+        context.getSharedPreferences("smart_money_prefs", Context.MODE_PRIVATE)
+            .edit { putString("widget_profile_color", hexColor) }
+    }
+
     private fun mirrorOpeningBalanceToWidgetPrefs(openingBalancesJson: String) {
         val total = try {
             val obj = JSONObject(openingBalancesJson)

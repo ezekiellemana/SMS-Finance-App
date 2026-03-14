@@ -26,16 +26,21 @@ class UserProfileRepository @Inject constructor(
     suspend fun insertProfile(profile: UserProfile): Long =
         dao.insert(profile.toEntity())
 
-    suspend fun updateProfile(profile: UserProfile) =
+    suspend fun updateProfile(profile: UserProfile) {
         dao.update(profile.toEntity())
+        // If this is the active profile, mirror color change to widget prefs
+        if (profile.isActive) prefs.mirrorProfileColorToWidgetPrefs(profile.color)
+    }
 
     suspend fun deleteProfile(profile: UserProfile) =
         dao.delete(profile.toEntity())
 
-    /** Switch active profile — deactivates all others first */
+    /** Switch active profile — deactivates all others, then mirrors color to widget SharedPrefs */
     suspend fun switchToProfile(id: Long) {
         dao.deactivateAll()
         dao.setActive(id)
+        // Mirror the new active profile color so widgets pick it up on next update
+        dao.getActiveProfileOnce()?.color?.let { prefs.mirrorProfileColorToWidgetPrefs(it) }
     }
 
     /**
@@ -55,6 +60,8 @@ class UserProfileRepository @Inject constructor(
                 )
             )
         }
+        // Always mirror current active profile color on startup
+        dao.getActiveProfileOnce()?.color?.let { prefs.mirrorProfileColorToWidgetPrefs(it) }
     }
 
     /**

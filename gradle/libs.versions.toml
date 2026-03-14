@@ -29,6 +29,7 @@ googleApiClient           = "2.9.0"
 googlePlayAuth            = "21.5.1"
 coil                      = "2.7.0"
 desugarJdkLibs            = "2.1.5"
+animation = "1.10.5"
 
 [libraries]
 androidx-core-ktx                    = { group = "androidx.core",                    name = "core-ktx",                      version.ref = "coreKtx" }
@@ -74,6 +75,7 @@ google-api-client-android            = { group = "com.google.api-client",       
 google-play-auth                     = { group = "com.google.android.gms",           name = "play-services-auth",            version.ref = "googlePlayAuth" }
 coil-compose                         = { group = "io.coil-kt",                       name = "coil-compose",                  version.ref = "coil" }
 android-desugarJdkLibs               = { group = "com.android.tools",               name = "desugar_jdk_libs",              version.ref = "desugarJdkLibs" }
+androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 
 [plugins]
 android-application = { id = "com.android.application",             version.ref = "agp" }

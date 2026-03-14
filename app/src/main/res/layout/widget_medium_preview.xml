@@ -4,20 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_background"
+    android:background="@drawable/widget_bg_green"
     android:baselineAligned="false"
     android:padding="14dp">
 
-    <!-- Profile-colour accent stripe (color set at runtime) -->
-    <TextView
-        android:id="@+id/tv_accent_medium"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="#FF3DDAD7"
-        android:text=""
-        android:layout_marginBottom="8dp" />
-
-    <!-- Top row: live dot + app name + last-updated -->
+    <!-- Top row: dot + app name + time -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="18dp"
@@ -26,10 +17,9 @@
         android:baselineAligned="false">
 
         <TextView
-            android:id="@+id/tv_live_dot_medium"
             android:layout_width="8dp"
             android:layout_height="8dp"
-            android:background="#FF3DDAD7"
+            android:background="#FF69F0AE"
             android:layout_marginEnd="6dp"
             android:text="" />
 
@@ -44,9 +34,9 @@
             android:textAllCaps="true" />
 
         <TextView
-            android:id="@+id/tv_last_updated_medium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/widget_preview_tx1_date"
             android:textColor="#55FFFFFF"
             android:textSize="11sp" />
 
@@ -75,10 +65,9 @@
                 android:textSize="11sp" />
 
             <TextView
-                android:id="@+id/tv_balance_medium"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/widget_balance_placeholder"
+                android:text="@string/widget_preview_balance"
                 android:textColor="#FFFFFFFF"
                 android:textSize="22sp"
                 android:textStyle="bold"
@@ -109,10 +98,9 @@
                 android:textAllCaps="true" />
 
             <TextView
-                android:id="@+id/tv_income_medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/widget_income_arrow"
+                android:text="@string/widget_preview_income"
                 android:textColor="#FF69F0AE"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -141,10 +129,9 @@
                 android:textAllCaps="true" />
 
             <TextView
-                android:id="@+id/tv_expense_medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/widget_expense_arrow"
+                android:text="@string/widget_preview_expense"
                 android:textColor="#FFFF5C5C"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -162,12 +149,11 @@
         android:layout_marginBottom="4dp"
         android:text="" />
 
-    <!-- Recent activity label -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/widget_recent_activity"
-        android:textColor="#663DDAD7"
+        android:textColor="#443DDAD7"
         android:textSize="11sp"
         android:letterSpacing="0.14"
         android:textAllCaps="true"
@@ -175,7 +161,6 @@
 
     <!-- Transaction row 1 -->
     <RelativeLayout
-        android:id="@+id/tx1_row"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -185,46 +170,48 @@
         android:layout_marginBottom="3dp">
 
         <TextView
-            android:id="@+id/tx1_type_icon"
+            android:id="@+id/prev_tx1_icon"
             android:layout_width="14dp"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:text="@string/widget_tx_arrow"
-            android:textColor="#FF3DDAD7"
+            android:text="@string/widget_preview_tx1_icon"
+            android:textColor="#FF69F0AE"
             android:textSize="13sp"
             android:textStyle="bold"
             android:gravity="center" />
 
         <TextView
-            android:id="@+id/tx1_amount"
+            android:id="@+id/prev_tx1_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:textColor="#FF3DDAD7"
+            android:text="@string/widget_preview_tx1_amount"
+            android:textColor="#FF69F0AE"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tx1_date"
+            android:id="@+id/prev_tx1_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toStartOf="@id/tx1_amount"
+            android:layout_toStartOf="@id/prev_tx1_amount"
             android:layout_centerVertical="true"
             android:layout_marginEnd="6dp"
+            android:text="@string/widget_preview_tx1_date"
             android:textColor="#55FFFFFF"
             android:textSize="11sp" />
 
         <TextView
-            android:id="@+id/tx1_source"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/tx1_type_icon"
-            android:layout_toStartOf="@id/tx1_date"
+            android:layout_toEndOf="@id/prev_tx1_icon"
+            android:layout_toStartOf="@id/prev_tx1_date"
             android:layout_centerVertical="true"
             android:layout_marginStart="7dp"
             android:layout_marginEnd="4dp"
+            android:text="@string/widget_preview_tx1_source"
             android:textColor="#EEFFFFFF"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -235,7 +222,6 @@
 
     <!-- Transaction row 2 -->
     <RelativeLayout
-        android:id="@+id/tx2_row"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -245,46 +231,48 @@
         android:layout_marginBottom="3dp">
 
         <TextView
-            android:id="@+id/tx2_type_icon"
+            android:id="@+id/prev_tx2_icon"
             android:layout_width="14dp"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:text="@string/widget_tx_arrow"
-            android:textColor="#FF3DDAD7"
+            android:text="@string/widget_preview_tx2_icon"
+            android:textColor="#FFFF5C5C"
             android:textSize="13sp"
             android:textStyle="bold"
             android:gravity="center" />
 
         <TextView
-            android:id="@+id/tx2_amount"
+            android:id="@+id/prev_tx2_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:textColor="#FF3DDAD7"
+            android:text="@string/widget_preview_tx2_amount"
+            android:textColor="#FFFF5C5C"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tx2_date"
+            android:id="@+id/prev_tx2_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toStartOf="@id/tx2_amount"
+            android:layout_toStartOf="@id/prev_tx2_amount"
             android:layout_centerVertical="true"
             android:layout_marginEnd="6dp"
+            android:text="@string/widget_preview_tx2_date"
             android:textColor="#55FFFFFF"
             android:textSize="11sp" />
 
         <TextView
-            android:id="@+id/tx2_source"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/tx2_type_icon"
-            android:layout_toStartOf="@id/tx2_date"
+            android:layout_toEndOf="@id/prev_tx2_icon"
+            android:layout_toStartOf="@id/prev_tx2_date"
             android:layout_centerVertical="true"
             android:layout_marginStart="7dp"
             android:layout_marginEnd="4dp"
+            android:text="@string/widget_preview_tx2_source"
             android:textColor="#EEFFFFFF"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -295,7 +283,6 @@
 
     <!-- Transaction row 3 -->
     <RelativeLayout
-        android:id="@+id/tx3_row"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -304,46 +291,48 @@
         android:paddingEnd="10dp">
 
         <TextView
-            android:id="@+id/tx3_type_icon"
+            android:id="@+id/prev_tx3_icon"
             android:layout_width="14dp"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:text="@string/widget_tx_arrow"
-            android:textColor="#FF3DDAD7"
+            android:text="@string/widget_preview_tx3_icon"
+            android:textColor="#FF69F0AE"
             android:textSize="13sp"
             android:textStyle="bold"
             android:gravity="center" />
 
         <TextView
-            android:id="@+id/tx3_amount"
+            android:id="@+id/prev_tx3_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:textColor="#FF3DDAD7"
+            android:text="@string/widget_preview_tx3_amount"
+            android:textColor="#FF69F0AE"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tx3_date"
+            android:id="@+id/prev_tx3_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toStartOf="@id/tx3_amount"
+            android:layout_toStartOf="@id/prev_tx3_amount"
             android:layout_centerVertical="true"
             android:layout_marginEnd="6dp"
+            android:text="@string/widget_preview_tx3_date"
             android:textColor="#55FFFFFF"
             android:textSize="11sp" />
 
         <TextView
-            android:id="@+id/tx3_source"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/tx3_type_icon"
-            android:layout_toStartOf="@id/tx3_date"
+            android:layout_toEndOf="@id/prev_tx3_icon"
+            android:layout_toStartOf="@id/prev_tx3_date"
             android:layout_centerVertical="true"
             android:layout_marginStart="7dp"
             android:layout_marginEnd="4dp"
+            android:text="@string/widget_preview_tx3_source"
             android:textColor="#EEFFFFFF"
             android:textSize="11sp"
             android:textStyle="bold"

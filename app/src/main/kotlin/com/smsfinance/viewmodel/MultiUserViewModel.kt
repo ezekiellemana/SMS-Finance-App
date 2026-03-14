@@ -2,9 +2,12 @@ package com.smsfinance.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
 import com.smsfinance.domain.model.UserProfile
 import com.smsfinance.repository.UserProfileRepository
+import com.smsfinance.widget.WidgetUpdateManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
@@ -18,7 +21,9 @@ data class MultiUserUiState(
 
 @HiltViewModel
 class MultiUserViewModel @Inject constructor(
-    private val repository: UserProfileRepository
+    private val repository: UserProfileRepository,
+    private val widgetUpdateManager: WidgetUpdateManager,
+    @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MultiUserUiState())
@@ -42,6 +47,7 @@ class MultiUserViewModel @Inject constructor(
 
     fun updateProfile(profile: UserProfile) = viewModelScope.launch {
         repository.updateProfile(profile)
+        if (profile.isActive) widgetUpdateManager.updateAllWidgets(appContext)
     }
 
     fun deleteProfile(profile: UserProfile) = viewModelScope.launch {
@@ -57,6 +63,7 @@ class MultiUserViewModel @Inject constructor(
 
     fun switchProfile(profile: UserProfile) = viewModelScope.launch {
         repository.switchToProfile(profile.id)
+        widgetUpdateManager.updateAllWidgets(appContext)
     }
 
     fun sha256(input: String): String {

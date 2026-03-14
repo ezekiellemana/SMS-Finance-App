@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Profile-colour accent border drawn over the widget background.
+     The stroke color is overridden programmatically via setColorFilter. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <stroke
+        android:width="1.5dp"
+        android:color="#FF3DDAD7" />
+    <corners android:radius="20dp" />
+</shape>

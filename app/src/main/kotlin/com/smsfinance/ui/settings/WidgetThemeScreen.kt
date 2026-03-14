@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smsfinance.domain.model.WidgetTheme
 import com.smsfinance.ui.components.AppScreenScaffold
 import com.smsfinance.ui.components.GlassCard
+import com.smsfinance.ui.components.LocalProfileColor
 import com.smsfinance.ui.components.SectionHeader
 import com.smsfinance.ui.components.ScreenEnterAnimation
 import com.smsfinance.ui.theme.*
@@ -61,7 +62,9 @@ fun WidgetThemeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 SectionHeader("Preview")
-                LiveWidgetPreview(selected)
+                val profileAccent = LocalProfileColor.current
+                val privMode by viewModel.privacyMode.collectAsStateWithLifecycle()
+                LiveWidgetPreview(selected, profileAccent, privMode)
 
                 SectionHeader("Choose Theme")
                 LazyVerticalGrid(
@@ -102,82 +105,153 @@ fun WidgetThemeScreen(
 }
 
 @Composable
-fun LiveWidgetPreview(theme: WidgetTheme) {
+fun LiveWidgetPreview(
+    theme: WidgetTheme,
+    profileColor: Color = Color(0xFF3DDAD7),
+    privacyMode: Boolean = false
+) {
     val bgStart = Color(theme.bgColorStart)
     val bgEnd   = Color(theme.bgColorEnd)
     val text    = Color(theme.textColor)
     val accent  = Color(theme.accentColor)
-    val expense = Color(0xFFFF5252)
+    val expClr  = Color(0xFFFF5C5C)
+    val isLight    = theme == WidgetTheme.LIGHT_CLEAN
+    val textColor  = if (isLight) Color(0xFF1A2233) else text
+    val mutedColor = if (isLight) Color(0xFF1A2233).copy(0.55f) else text.copy(0.55f)
+    val faintColor = if (isLight) Color(0xFF1A2233).copy(0.35f) else text.copy(0.35f)
+    val dotColor   = if (isLight) accent else AccentTeal
 
     val inf = rememberInfiniteTransition(label = "dot")
-    val dotAlpha by inf.animateFloat(1f, 0.2f,
-        infiniteRepeatable(tween(900, easing = EaseInOutSine), RepeatMode.Reverse), label = "a")
+    val dotAlpha by inf.animateFloat(1f, 0.3f,
+        infiniteRepeatable(tween(1000, easing = EaseInOutSine), RepeatMode.Reverse), label = "d")
 
+    // Outer container — matches widget_medium.xml geometry
     Box(
-        Modifier.fillMaxWidth()
-            .shadow(12.dp, RoundedCornerShape(20.dp))
+        Modifier
+            .fillMaxWidth()
+            .shadow(16.dp, RoundedCornerShape(20.dp))
             .clip(RoundedCornerShape(20.dp))
-            .background(Brush.linearGradient(listOf(bgStart, bgEnd)))
-            .padding(18.dp)
+            .border(1.5.dp, profileColor, RoundedCornerShape(20.dp))
+            .background(Brush.linearGradient(
+                listOf(bgStart, bgEnd),
+                start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                end   = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+            ))
+            .padding(14.dp)
     ) {
-        Column {
-            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Box(Modifier.size(7.dp).background(AccentTeal.copy(dotAlpha), CircleShape))
-                        Text("SMART MONEY", color = text.copy(0.6f), fontSize = 9.sp,
-                            letterSpacing = 1.sp)
-                    }
-                    Spacer(Modifier.height(3.dp))
-                    Text("TZS 1,250,000", color = text, fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold)
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+
+            // ── Top row: live dot + app name + time ──────────────────────────
+            Row(
+                Modifier.fillMaxWidth().height(18.dp),
+                Arrangement.SpaceBetween, Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(Modifier.size(7.dp).background(
+                        dotColor.copy(dotAlpha), CircleShape))
+                    Text("SMART MONEY", color = text.copy(0.55f),
+                        fontSize = 10.sp, letterSpacing = 1.2.sp)
                 }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("↑ TZS 850,000", color = accent, fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold)
-                    Text("↓ TZS 350,000", color = expense, fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold)
+                Text("09:41", color = faintColor, fontSize = 11.sp)
+            }
+
+            Spacer(Modifier.height(5.dp))
+
+            // ── Balance + income/expense pills ───────────────────────────────
+            Row(
+                Modifier.fillMaxWidth().height(52.dp),
+                Arrangement.SpaceBetween, Alignment.CenterVertically
+            ) {
+                // Balance column
+                Column(Modifier.weight(1f)) {
+                    Text("Est. Balance", color = mutedColor, fontSize = 11.sp)
+                    Text(if (privacyMode) "TZS ••••••" else "TZS 1,250,000",
+                        color = textColor, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.5).sp, maxLines = 1)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Income pill
+                    Column(
+                        Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(accent.copy(.18f))
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("IN", color = accent.copy(.7f), fontSize = 9.sp,
+                            letterSpacing = 0.8.sp)
+                        Text(if (privacyMode) "↑ ••••" else "↑ TZS 850K", color = accent,
+                            fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    // Expense pill
+                    Column(
+                        Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(expClr.copy(.18f))
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("OUT", color = expClr.copy(.7f), fontSize = 9.sp,
+                            letterSpacing = 0.8.sp)
+                        Text(if (privacyMode) "↓ ••••" else "↓ TZS 350K", color = expClr,
+                            fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
-            Spacer(Modifier.height(14.dp))
-            Box(Modifier.fillMaxWidth().height(1.dp).background(text.copy(0.2f)))
-            Spacer(Modifier.height(10.dp))
-            Text("RECENT ACTIVITY", color = text.copy(0.5f), fontSize = 9.sp, letterSpacing = 1.sp)
-            Spacer(Modifier.height(8.dp))
+
+            Spacer(Modifier.height(6.dp))
+
+            // ── Divider ───────────────────────────────────────────────────────
+            Box(Modifier.fillMaxWidth().height(1.dp)
+                .background(text.copy(0.13f).takeIf { !isLight } ?: Color.Black.copy(0.10f)))
+
+            Spacer(Modifier.height(5.dp))
+
+            // ── "RECENT ACTIVITY" label ───────────────────────────────────────
+            Text("RECENT ACTIVITY", color = accent.copy(.4f),
+                fontSize = 11.sp, letterSpacing = 1.4.sp)
+
+            Spacer(Modifier.height(5.dp))
+
+            // ── Transaction rows ──────────────────────────────────────────────
             listOf(
-                Triple("↑", "HaloPesa", "+ TZS 20,000"),
-                Triple("↓", "CRDB Agent", "- TZS 15,000"),
-                Triple("↑", "M-Pesa", "+ TZS 100")
-            ).forEach { (icon, source, amount) ->
-                val isDeposit = icon == "↑"
+                Triple(true,  "M-Pesa",     "+ TZS 50,000"),
+                Triple(false, "CRDB Bank",  "- TZS 15,000"),
+                Triple(true,  "NMB Bank",   "+ TZS 800,000")
+            ).forEachIndexed { i, (isDeposit, source, amount) ->
+                val rowAccent = if (isDeposit) accent else expClr
                 Row(
-                    Modifier.fillMaxWidth().padding(vertical = 3.dp)
+                    Modifier
+                        .fillMaxWidth()
+                        .height(28.dp)
+                        .then(if (i < 2) Modifier.padding(bottom = 3.dp) else Modifier)
                         .clip(RoundedCornerShape(8.dp))
                         .background(text.copy(0.08f))
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                        .padding(horizontal = 10.dp),
                     Arrangement.SpaceBetween, Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(icon, color = if (isDeposit) accent else expense,
-                            fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text(source, color = text, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                    Text(amount, color = if (isDeposit) accent else expense,
-                        fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            Row(Modifier.fillMaxWidth(), Arrangement.End) {
-                Surface(color = text.copy(0.15f), shape = RoundedCornerShape(50)) {
-                    Text("${theme.emoji} ${theme.displayName}", color = text, fontSize = 10.sp,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                    // Arrow icon
+                    Text(if (isDeposit) "↑" else "↓",
+                        color = rowAccent, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(14.dp))
+                    Spacer(Modifier.width(7.dp))
+                    // Source (fills space)
+                    Text(if (privacyMode) "••••••" else source, color = textColor.copy(.93f), fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold, maxLines = 1,
+                        modifier = Modifier.weight(1f))
+                    // Date
+                    Text(if (privacyMode) "" else "14 Mar", color = faintColor, fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 6.dp))
+                    // Amount
+                    Text(if (privacyMode) "••••" else amount, color = rowAccent, fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun ThemeCard(theme: WidgetTheme, isSelected: Boolean, onClick: () -> Unit) {

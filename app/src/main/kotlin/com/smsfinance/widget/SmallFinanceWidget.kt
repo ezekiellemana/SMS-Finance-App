@@ -13,6 +13,7 @@ import com.smsfinance.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -20,16 +21,11 @@ import java.util.Locale
 
 /**
  * Small (2×2) home screen widget.
- *
- * Shows:
- *  - Estimated balance  (opening balance + new income − new expenses since setupAt)
- *  - Monthly income
- *  - Monthly expenses
- *  - Last-updated timestamp
- *
- * Data is loaded via [WidgetDataLoader] which mirrors the exact balance formula
- * used by DashboardViewModel, reading opening balances from SharedPreferences
- * (mirrored there by PreferencesManager on every save).
+ * - Auto-updates on SMS arrival and theme change
+ * - Profile-colour accent stripe
+ * - Smooth fade-in
+ * - Privacy mode
+ * - Language-aware formatting
  */
 class SmallFinanceWidget : AppWidgetProvider() {
 
@@ -60,36 +56,64 @@ class SmallFinanceWidget : AppWidgetProvider() {
 
         scope.launch {
             try {
-                val theme   = resolveTheme(WidgetDataLoader.widgetThemeName(appCtx))
-                val privacy = WidgetDataLoader.isPrivacyOn(appCtx)
-                val data    = WidgetDataLoader.load(appCtx, recentCount = 1)
+                val theme        = resolveTheme(WidgetDataLoader.widgetThemeName(appCtx))
+                val privacy      = WidgetDataLoader.isPrivacyOn(appCtx)
+                val data         = WidgetDataLoader.load(appCtx, recentCount = 1)
+                val expColor     = WidgetThemeHelper.expenseColor()
+                val profileColor = WidgetDataLoader.profileColor(appCtx)
+                val lang         = WidgetDataLoader.widgetLanguage(appCtx)
+                val locale       = Locale(lang)
+
+                val textPrimary = theme.textColor
+                val textMuted   = WidgetThemeHelper.adjustAlpha(textPrimary, 0.55f)
+                val textFaint   = WidgetThemeHelper.adjustAlpha(textPrimary, 0.35f)
+                val accentColor = theme.accentColor
 
                 val views = RemoteViews(appCtx.packageName, R.layout.widget_small)
 
-                // Theme background drawable — must use setInt / setBackgroundResource
-                // because setBackgroundColor crashes on some launchers (Samsung, MIUI)
+                // ── Theme background ─────────────────────────────────────────────
                 views.setInt(R.id.widget_small_root, "setBackgroundResource",
                     WidgetThemeHelper.bgDrawable(theme))
 
-                views.setTextColor(R.id.tv_balance,  theme.textColor)
-                views.setTextColor(R.id.tv_income,   theme.accentColor)
-                views.setTextColor(R.id.tv_expenses, WidgetThemeHelper.expenseColor())
+                // ── Profile-colour accent stripe ─────────────────────────────────
+                // ── Profile-colour accent stripe + live dot ──────────────────────────
+                views.setInt(R.id.tv_accent_small, "setBackgroundColor", profileColor)
+                views.setInt(R.id.tv_live_dot, "setBackgroundColor", profileColor)
 
+                // ── Text colors ──────────────────────────────────────────────────
+                views.setTextColor(R.id.tv_balance,       textPrimary)
+                views.setTextColor(R.id.tv_balance_label, textMuted)
+                views.setTextColor(R.id.tv_income,        accentColor)
+                views.setTextColor(R.id.tv_expenses,      expColor)
+                views.setTextColor(R.id.tv_last_updated,  textFaint)
+
+                // ── Balance + stats ──────────────────────────────────────────────
                 if (privacy) {
-                    views.setTextViewText(R.id.tv_balance,      "TZS \u2022\u2022\u2022\u2022\u2022\u2022")
-                    views.setTextViewText(R.id.tv_income,       "\u2022\u2022\u2022\u2022")
-                    views.setTextViewText(R.id.tv_expenses,     "\u2022\u2022\u2022\u2022")
-                    views.setTextViewText(R.id.tv_last_updated, "Privacy on")
+                    views.setTextViewText(R.id.tv_balance,      "TZS ••••••")
+                    views.setTextViewText(R.id.tv_income,        "••••")
+                    views.setTextViewText(R.id.tv_expenses,      "••••")
+                    views.setTextViewText(R.id.tv_last_updated,  "🔒 Private")
                 } else {
                     views.setTextViewText(R.id.tv_balance,  WidgetDataLoader.fmtTzs(data.balance))
                     views.setTextViewText(R.id.tv_income,   WidgetDataLoader.fmtShort(data.income))
                     views.setTextViewText(R.id.tv_expenses, WidgetDataLoader.fmtShort(data.expenses))
-                    views.setTextViewText(R.id.tv_last_updated,
-                        "Updated ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())}")
+                    val timeFmt = SimpleDateFormat("HH:mm", locale)
+                    views.setTextViewText(R.id.tv_last_updated, "↻ ${timeFmt.format(Date())}")
                 }
 
                 views.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(appCtx, appWidgetId))
+
+                // ── Push fully built views, then fade in ─────────────────────────
                 appWidgetManager.updateAppWidget(appWidgetId, views)
+
+                delay(50)
+                val steps = listOf(0.4f, 0.65f, 0.82f, 0.93f, 1f)
+                steps.forEach { alpha ->
+                    delay(25)
+                    val fade = RemoteViews(appCtx.packageName, R.layout.widget_small)
+                    fade.setFloat(R.id.widget_small_root, "setAlpha", alpha)
+                    appWidgetManager.partiallyUpdateAppWidget(appWidgetId, fade)
+                }
 
             } catch (_: Exception) {
                 showError(appCtx, appWidgetManager, appWidgetId)
@@ -98,24 +122,27 @@ class SmallFinanceWidget : AppWidgetProvider() {
     }
 
     private fun showPlaceholder(ctx: Context, mgr: AppWidgetManager, id: Int) {
-        val views = RemoteViews(ctx.packageName, R.layout.widget_small)
-        views.setTextViewText(R.id.tv_balance,      "Loading...")
-        views.setTextViewText(R.id.tv_income,       "---")
-        views.setTextViewText(R.id.tv_expenses,     "---")
-        views.setTextViewText(R.id.tv_last_updated, "Smart Money")
-        views.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(ctx, id))
-        mgr.updateAppWidget(id, views)
+        val v = RemoteViews(ctx.packageName, R.layout.widget_small)
+        val theme = resolveTheme(WidgetDataLoader.widgetThemeName(ctx))
+        v.setInt(R.id.widget_small_root, "setBackgroundResource", WidgetThemeHelper.bgDrawable(theme))
+        v.setFloat(R.id.widget_small_root, "setAlpha", 0.3f)
+        v.setTextViewText(R.id.tv_balance, "...")
+        v.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(ctx, id))
+        mgr.updateAppWidget(id, v)
     }
 
     private fun showError(ctx: Context, mgr: AppWidgetManager, id: Int) {
         try {
-            val views = RemoteViews(ctx.packageName, R.layout.widget_small)
-            views.setTextViewText(R.id.tv_balance,      "TZS 0")
-            views.setTextViewText(R.id.tv_income,       "0")
-            views.setTextViewText(R.id.tv_expenses,     "0")
-            views.setTextViewText(R.id.tv_last_updated, "Tap to open")
-            views.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(ctx, id))
-            mgr.updateAppWidget(id, views)
+            val v = RemoteViews(ctx.packageName, R.layout.widget_small)
+            v.setInt(R.id.widget_small_root, "setBackgroundResource",
+                WidgetThemeHelper.bgDrawable(resolveTheme(WidgetDataLoader.widgetThemeName(ctx))))
+            v.setFloat(R.id.widget_small_root, "setAlpha", 1f)
+            v.setTextViewText(R.id.tv_balance,  "TZS 0")
+            v.setTextViewText(R.id.tv_income,   "0")
+            v.setTextViewText(R.id.tv_expenses, "0")
+            v.setTextViewText(R.id.tv_last_updated, "Tap to open")
+            v.setOnClickPendingIntent(R.id.widget_small_root, makeIntent(ctx, id))
+            mgr.updateAppWidget(id, v)
         } catch (_: Exception) {}
     }
 

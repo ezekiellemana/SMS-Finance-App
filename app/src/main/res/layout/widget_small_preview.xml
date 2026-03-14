@@ -1,50 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Preview layout shown in the launcher widget picker for the small (2×2) widget.
+  Mirrors widget_small.xml exactly but with sample data baked in via @string refs.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_small_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_background"
+    android:background="@drawable/widget_bg_green"
     android:baselineAligned="false"
-    android:padding="14dp">
+    android:padding="12dp">
 
-    <!-- Profile-colour accent stripe (color set at runtime) -->
-    <TextView
-        android:id="@+id/tv_accent_small"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="#FF3DDAD7"
-        android:text=""
-        android:layout_marginBottom="6dp" />
-
-    <!-- Top row: live dot + app name -->
+    <!-- Header row -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="16dp"
+        android:layout_height="18dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:baselineAligned="false">
 
         <TextView
-            android:id="@+id/tv_live_dot"
-            android:layout_width="7dp"
-            android:layout_height="7dp"
-            android:background="#FF3DDAD7"
-            android:layout_marginEnd="6dp"
-            android:text="" />
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/widget_app_name"
+            android:textColor="#99FFFFFF"
+            android:textSize="11sp"
+            android:textAllCaps="true" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/widget_app_name"
-            android:textColor="#88FFFFFF"
-            android:textSize="11sp"
-            android:letterSpacing="0.12"
-            android:textAllCaps="true" />
+            android:layout_width="7dp"
+            android:layout_height="7dp"
+            android:background="#FF69F0AE"
+            android:text="" />
 
     </LinearLayout>
 
-    <!-- Balance -->
+    <!-- Balance area -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -53,20 +46,18 @@
         android:gravity="center_vertical">
 
         <TextView
-            android:id="@+id/tv_balance_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/widget_est_balance"
-            android:textColor="#88FFFFFF"
+            android:textColor="#AAFFFFFF"
             android:textSize="11sp" />
 
         <TextView
-            android:id="@+id/tv_balance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/widget_balance_placeholder"
+            android:text="@string/widget_preview_balance"
             android:textColor="#FFFFFFFF"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:ellipsize="end"
             android:maxLines="1" />
@@ -77,40 +68,38 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@drawable/widget_divider"
-        android:layout_marginBottom="6dp"
+        android:background="#33FFFFFF"
+        android:layout_marginBottom="4dp"
         android:text="" />
 
-    <!-- Income / Expense side-by-side pills -->
+    <!-- Income / Expenses — two side-by-side panels, fixed height avoids nested weights -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="44dp">
+        android:layout_height="40dp">
 
         <LinearLayout
-            android:id="@+id/income_panel"
+            android:id="@+id/panel_income"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_alignParentStart="true"
-            android:layout_toStartOf="@id/expense_panel"
-            android:layout_marginEnd="4dp"
+            android:layout_toStartOf="@id/panel_expense"
+            android:layout_marginEnd="3dp"
             android:orientation="vertical"
             android:gravity="center_vertical"
-            android:background="@drawable/widget_pill_income"
-            android:padding="7dp">
+            android:background="#1A69F0AE"
+            android:padding="6dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/widget_income_label"
-                android:textColor="#AA69F0AE"
-                android:textSize="11sp"
-                android:textAllCaps="true" />
+                android:text="@string/widget_income_label_full"
+                android:textColor="#77FFFFFF"
+                android:textSize="11sp" />
 
             <TextView
-                android:id="@+id/tv_income"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/widget_value_placeholder"
+                android:text="@string/widget_preview_income_value"
                 android:textColor="#FF69F0AE"
                 android:textSize="11sp"
                 android:textStyle="bold"
@@ -120,28 +109,27 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/expense_panel"
+            android:id="@+id/panel_expense"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
+            android:layout_marginStart="3dp"
             android:orientation="vertical"
             android:gravity="center_vertical"
-            android:background="@drawable/widget_pill_expense"
-            android:padding="7dp">
+            android:background="#1AFF5C5C"
+            android:padding="6dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/widget_expense_label"
-                android:textColor="#AAFF5C5C"
-                android:textSize="11sp"
-                android:textAllCaps="true" />
+                android:text="@string/widget_expense_label_full"
+                android:textColor="#77FFFFFF"
+                android:textSize="11sp" />
 
             <TextView
-                android:id="@+id/tv_expenses"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/widget_value_placeholder"
+                android:text="@string/widget_preview_expense_value"
                 android:textColor="#FFFF5C5C"
                 android:textSize="11sp"
                 android:textStyle="bold"
@@ -154,13 +142,11 @@
 
     <!-- Last updated -->
     <TextView
-        android:id="@+id/tv_last_updated"
         android:layout_width="wrap_content"
-        android:layout_height="14dp"
-        android:text="@string/widget_tap_to_open"
+        android:layout_height="16dp"
+        android:text="@string/widget_tap_to_open_full"
         android:textColor="#44FFFFFF"
         android:textSize="11sp"
-        android:gravity="bottom"
-        android:layout_marginTop="4dp" />
+        android:gravity="bottom" />
 
 </LinearLayout>
