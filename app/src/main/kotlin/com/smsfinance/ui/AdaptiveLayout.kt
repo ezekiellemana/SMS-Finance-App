@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.*
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,11 +43,28 @@ import com.smsfinance.ui.transactions.TransactionListScreen
 data class NavRailItem(val route: String, val label: String, val icon: ImageVector)
 
 // ── Shared transition spec (mirrors MainActivity) ─────────────────────────────
-private const val ANIM_DURATION = 300
-internal val enterTransition     = slideInHorizontally(tween(ANIM_DURATION))  { it / 3 } + fadeIn(tween(ANIM_DURATION))
-internal val exitTransition      = fadeOut(tween(ANIM_DURATION / 2))
-internal val popEnterTransition  = fadeIn(tween(ANIM_DURATION))
-internal val popExitTransition   = slideOutHorizontally(tween(ANIM_DURATION)) { it / 3 } + fadeOut(tween(ANIM_DURATION))
+private const val ANIM_DURATION = 480
+// Physics-based spring — mimics finger releasing momentum, slow and silky
+@Suppress("unused")
+private val smoothSpring = spring<Int>(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness    = 32f
+)
+private const val fadeDuration = ANIM_DURATION
+// Enter: slide gently from right + fade in — feels like turning a page
+internal val enterTransition     = slideInHorizontally(tween(fadeDuration, easing = androidx.compose.animation.core.EaseOutCubic)) { it / 5 } +
+        fadeIn(tween(fadeDuration, easing = androidx.compose.animation.core.EaseOutCubic))
+// Exit: just fade out quickly so the new screen takes over smoothly
+internal val exitTransition      = fadeOut(
+    tween(fadeDuration / 3,
+        easing = androidx.compose.animation.core.EaseInCubic))
+// Pop-back enter: fade in gently — screen returns without jarring
+internal val popEnterTransition  = fadeIn(tween(fadeDuration,
+    easing = androidx.compose.animation.core.EaseOutCubic))
+// Pop-back exit: slide out softly to the right + fade — mirrors entering
+internal val popExitTransition   = slideOutHorizontally(tween(fadeDuration, easing = androidx.compose.animation.core.EaseInCubic)) { it / 5 } +
+        fadeOut(tween(fadeDuration / 3,
+            easing = androidx.compose.animation.core.EaseInCubic))
 
 val navRailItems = listOf(
     NavRailItem(Routes.DASHBOARD,      "Dashboard",    Icons.Default.Home),

@@ -238,12 +238,16 @@ fun OnboardingScreen(
                 Box(
                     Modifier.fillMaxSize().statusBarsPadding()
                         .graphicsLayer {
-                            alpha        = 1f - absOffset * 0.65f
-                            val sc       = 0.90f + 0.10f * (1f - absOffset)
+                            // Soft fade: page ahead stays more visible during slow swipe
+                            alpha        = 1f - absOffset * 0.45f
+                            // Gentle scale — barely shrinks so content feels stable
+                            val sc       = 0.94f + 0.06f * (1f - absOffset)
                             scaleX = sc; scaleY = sc
-                            translationX = pageOffset * 24.dp.toPx()
-                            rotationY    = pageOffset * -4f
-                            cameraDistance = 12f * density
+                            // Small lateral nudge — feels like pages gliding past
+                            translationX = pageOffset * 14.dp.toPx()
+                            // Very subtle 3-D tilt — enough to feel depth, not jarring
+                            rotationY    = pageOffset * -2.5f
+                            cameraDistance = 14f * density
                         }
                 ) {
                     when (p) {
@@ -284,7 +288,10 @@ fun OnboardingScreen(
                     repeat(TOTAL_PAGES) { i ->
                         val sel = page == i
                         val w by animateDpAsState(if (sel) 22.dp else 5.dp,
-                            spring(Spring.DampingRatioMediumBouncy), label = "dot$i")
+                            spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness    = Spring.StiffnessLow
+                            ), label = "dot$i")
                         val c by animateColorAsState(
                             if (sel) accent else TextMuted.copy(.25f), tween(300), label = "dotc$i")
                         Box(Modifier.height(5.dp).width(w).clip(CircleShape).background(c))
@@ -320,8 +327,11 @@ fun OnboardingScreen(
                     val interactionSource = remember { MutableInteractionSource() }
                     val isPressed by interactionSource.collectIsPressedAsState()
                     val btnScale by animateFloatAsState(
-                        when { isPressed -> .93f; !canProceed -> .97f; else -> 1f },
-                        spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMediumLow),
+                        when { isPressed -> .95f; !canProceed -> .98f; else -> 1f },
+                        spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness    = Spring.StiffnessLow
+                        ),
                         label = "btnsc")
                     val btnLabel = if (isLast) stringResource(R.string.get_started)
                     else        stringResource(R.string.next_label)
@@ -352,7 +362,10 @@ fun OnboardingScreen(
                                     } else {
                                         pagerState.animateScrollToPage(
                                             page + 1,
-                                            animationSpec = tween(520, easing = EaseInOutSine)
+                                            animationSpec = spring(
+                                                dampingRatio  = Spring.DampingRatioNoBouncy,
+                                                stiffness     = 38f   // very low = slow glide
+                                            )
                                         )
                                     }
                                 }

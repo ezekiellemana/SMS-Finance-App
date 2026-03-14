@@ -82,11 +82,7 @@ fun MultiUserScreen(
     ) { innerPadding ->
         Box(Modifier.fillMaxSize().padding(innerPadding)) {
 
-            if (uiState.isLoading) {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = AccentTeal, strokeWidth = 3.dp)
-                }
-            } else {
+            if (!uiState.isLoading) {
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(

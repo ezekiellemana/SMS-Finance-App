@@ -43,14 +43,8 @@ import androidx.compose.foundation.border
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.animateColorAsState
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.smsfinance.ui.components.DashboardSkeleton
-import com.smsfinance.ui.components.ResumeLoadingOverlay
 import com.smsfinance.domain.model.Transaction
 import com.smsfinance.domain.model.TransactionType
 import com.smsfinance.ui.components.*
@@ -125,24 +119,6 @@ fun DashboardScreen(
     val privacyMode by settingsVm.privacyMode.collectAsStateWithLifecycle()
     val haptic      = LocalHapticFeedback.current
 
-    // ── Resume detection — show brief skeleton when returning from another app ──
-    var isResuming by remember { mutableStateOf(false) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_STOP   -> isResuming = true
-                Lifecycle.Event.ON_RESUME -> {
-                    if (isResuming) {
-                        isResuming = false
-                    }
-                }
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
 
     // Derive the profile accent colour — falls back to AccentTeal if none set
     val profileAccent: Color = remember(multiState.activeProfile?.color) {
@@ -175,16 +151,6 @@ fun DashboardScreen(
     Scaffold(containerColor = BgPrimary) { padding ->
 
         // ── Skeleton on first load (no user data yet) ──────────────────────
-        AnimatedVisibility(
-            visible = uiState.isLoading && uiState.userName.isBlank(),
-            enter   = fadeIn(tween(200)),
-            exit    = fadeOut(tween(350))
-        ) {
-            Box(Modifier.fillMaxSize().padding(padding)) {
-                DashboardSkeleton()
-            }
-        }
-        if (uiState.isLoading && uiState.userName.isBlank()) return@Scaffold
 
         // ── Fixed outer column — top section static, transactions scroll ──────
         Column(
@@ -435,8 +401,6 @@ fun DashboardScreen(
             } // end AnimatedVisibility activity
         }
 
-        // ── Brief skeleton overlay when resuming from another app ──────────
-        ResumeLoadingOverlay(visible = isResuming)
     }
 }
 
@@ -802,24 +766,6 @@ fun TransactionRow(
     val isDeposit   = transaction.type == TransactionType.DEPOSIT
     val haptic      = LocalHapticFeedback.current
 
-    // ── Resume detection — show brief skeleton when returning from another app ──
-    var isResuming by remember { mutableStateOf(false) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_STOP   -> isResuming = true
-                Lifecycle.Event.ON_RESUME -> {
-                    if (isResuming) {
-                        isResuming = false
-                    }
-                }
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
     val txColor     = if (isDeposit) AccentTeal else ErrorRed
 
     Row(

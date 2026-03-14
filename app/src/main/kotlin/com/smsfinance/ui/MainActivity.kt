@@ -424,6 +424,7 @@ fun SmartMoneyBottomBar(
     profileColor: String,
     onNavigate: (String) -> Unit
 ) {
+    val baseRoute = currentRoute?.substringBefore("?")
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -472,12 +473,14 @@ fun SmartMoneyBottomBar(
             bottomNavItems.forEach { item ->
                 BottomBarItem(
                     item            = item,
-                    selected        = currentRoute == item.route,
-                    onClick         = { onNavigate(item.route) },
+                    selected        = baseRoute == item.route,
+                    onClick         = { if (baseRoute != item.route) onNavigate(item.route) },
                     profilePhotoUri = if (item.route == Routes.MULTI_USER) profilePhotoUri else null,
                     profileEmoji    = if (item.route == Routes.MULTI_USER) profileEmoji else null,
                     profileColor    = if (item.route == Routes.MULTI_USER) profileColor else null,
-                    modifier        = Modifier.weight(1f)
+                    modifier        = Modifier.weight(1f),
+                    // Dashboard item is non-tappable when already on dashboard
+                    enabled         = !(item.route == Routes.DASHBOARD && baseRoute == Routes.DASHBOARD)
                 )
             }
         }
@@ -492,7 +495,8 @@ private fun BottomBarItem(
     profilePhotoUri: String?,
     profileEmoji: String?,
     profileColor: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     val isProfileTab = profileEmoji != null
 
@@ -525,6 +529,7 @@ private fun BottomBarItem(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
+                    enabled = enabled,
                     onClick = onClick
                 ),
             contentAlignment = Alignment.Center
@@ -570,7 +575,7 @@ private fun BottomBarItem(
                                 modifier           = Modifier.fillMaxSize().clip(CircleShape)
                             )
                         } else {
-                            Text(text = profileEmoji ?: "👤", fontSize = 26.sp)
+                            Text(text = profileEmoji, fontSize = 26.sp)
                         }
                     }
                 }
@@ -593,6 +598,7 @@ private fun BottomBarItem(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
+                    enabled = enabled,
                     onClick = onClick
                 )
                 .padding(vertical = 6.dp),

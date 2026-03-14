@@ -128,7 +128,8 @@ fun TransactionListScreen(
                 }
                 when {
                     uiState.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        CircularProgressIndicator(color = AccentTeal, strokeWidth = 3.dp)
+                        // Smooth placeholder — content fades in when loaded
+                        Box(Modifier.fillMaxSize())
                     }
                     uiState.transactions.isEmpty() -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                         EmptyState("🔍", stringResource(R.string.tx_list_empty_title),

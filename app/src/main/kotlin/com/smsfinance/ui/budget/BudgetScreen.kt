@@ -84,11 +84,7 @@ fun BudgetScreen(
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
 
-            if (uiState.isLoading) {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = AccentTeal, strokeWidth = 3.dp)
-                }
-            } else {
+            if (!uiState.isLoading) {
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
