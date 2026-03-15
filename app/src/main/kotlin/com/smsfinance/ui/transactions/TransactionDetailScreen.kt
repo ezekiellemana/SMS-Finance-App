@@ -2,6 +2,15 @@ package com.smsfinance.ui.transactions
 import com.smsfinance.R
 
 import androidx.compose.animation.core.*
+import kotlinx.coroutines.launch
+import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,6 +54,7 @@ import com.smsfinance.ui.components.*
 import com.smsfinance.ui.theme.*
 import com.smsfinance.viewmodel.TransactionViewModel
 import java.text.SimpleDateFormat
+import kotlinx.coroutines.delay
 import java.util.*
 
 // ── Transaction detail — compact card dialog ──────────────────────────────────
@@ -68,38 +78,62 @@ fun TransactionDetailScreen(
     val isDeposit   = transaction.type == TransactionType.DEPOSIT
     val accentColor = if (isDeposit) AccentTeal else ErrorRed
 
+    // ── Animated dismiss: scale+fade down before closing ────────────────────
+    val scope = rememberCoroutineScope()
+    var visible by remember { mutableStateOf(false) }
+
+    // Trigger entrance on first composition
+    LaunchedEffect(Unit) { visible = true }
+
+    fun dismissWithAnimation() {
+        scope.launch {
+            visible = false
+            delay(280) // wait for exit animation to finish
+            onNavigateBack()
+        }
+    }
+
     Dialog(
-        onDismissRequest = onNavigateBack,
+        onDismissRequest = { dismissWithAnimation() },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Card(
-            modifier  = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape     = RoundedCornerShape(28.dp),
-            colors    = CardDefaults.cardColors(containerColor = Color(0xFF141E2E)),
-            border    = BorderStroke(1.5.dp, profileColor.copy(alpha = 0.45f)),
-            elevation = CardDefaults.cardElevation(0.dp)
+        AnimatedVisibility(
+            visible = visible,
+            enter   = slideInVertically(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMediumLow)) { it / 3 }
+                    + fadeIn(tween(220)),
+            exit    = slideOutVertically(tween(260, easing = EaseInCubic)) { it / 4 }
+                    + scaleOut(tween(260, easing = EaseInCubic), targetScale = 0.92f)
+                    + fadeOut(tween(220))
         ) {
-            // Coloured drag-handle pill
-            Box(
-                Modifier.fillMaxWidth().padding(top = 12.dp),
-                contentAlignment = Alignment.Center
+            Card(
+                modifier  = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape     = RoundedCornerShape(28.dp),
+                colors    = CardDefaults.cardColors(containerColor = Color(0xFF141E2E)),
+                border    = BorderStroke(1.5.dp, profileColor.copy(alpha = 0.45f)),
+                elevation = CardDefaults.cardElevation(0.dp)
             ) {
+                // Coloured drag-handle pill
                 Box(
-                    Modifier.width(44.dp).height(4.dp)
-                        .clip(CircleShape).background(accentColor.copy(.45f))
+                    Modifier.fillMaxWidth().padding(top = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        Modifier.width(44.dp).height(4.dp)
+                            .clip(CircleShape).background(accentColor.copy(.45f))
+                    )
+                }
+
+                TransactionDetailContent(
+                    transaction  = transaction,
+                    isDeposit    = isDeposit,
+                    accentColor  = accentColor,
+                    profileColor = profileColor,
+                    onDelete     = { viewModel.deleteTransaction(transaction); dismissWithAnimation() },
+                    onClose      = { dismissWithAnimation() }
                 )
             }
-
-            TransactionDetailContent(
-                transaction  = transaction,
-                isDeposit    = isDeposit,
-                accentColor  = accentColor,
-                profileColor = profileColor,
-                onDelete     = { viewModel.deleteTransaction(transaction); onNavigateBack() },
-                onClose      = onNavigateBack
-            )
         }
     }
 }
@@ -218,7 +252,7 @@ private fun TransactionDetailContent(
                 DetailItem(
                     if (isDeposit) Icons.AutoMirrored.Filled.CallReceived
                     else           Icons.AutoMirrored.Filled.CallMade,
-                    stringResource(R.string.tx_detail_type), stringResource(if (transaction.type == com.smsfinance.domain.model.TransactionType.DEPOSIT) R.string.tx_type_deposit else R.string.tx_type_withdrawal), accentColor
+                    stringResource(R.string.tx_detail_type), stringResource(if (transaction.type == TransactionType.DEPOSIT) R.string.tx_type_deposit else R.string.tx_type_withdrawal), accentColor
                 )
                 if (transaction.reference.isNotEmpty()) {
                     DetailDivider()

@@ -50,6 +50,7 @@ fun AiPredictionsScreen(
         title = "AI Insights",
         subtitle = "On-device spending analysis",
         onNavigateBack = onNavigateBack,
+        showBackButton = false,
         actions = {
             IconButton(onClick = { viewModel.runAnalysis() }) {
                 Icon(Icons.Default.Refresh, null, tint = AccentTeal)

@@ -10,6 +10,11 @@ data class SpendingAlert(
     val period: AlertPeriod,
     val isEnabled: Boolean = true,
     val notifyAtPercent: Int = 80,
+    val sourceFilter: String? = null,   // null = all sources, "MPESA" = M-Pesa only etc.
+    /** Comma-separated keywords matched against description/reference (e.g. "shoprite,luku,carrefour") */
+    val keywordFilter: String? = null,
+    /** Match transactions tagged with this category (e.g. "Food", "Transport") */
+    val categoryFilter: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
 

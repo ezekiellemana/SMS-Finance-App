@@ -34,6 +34,16 @@ data class SpendingAlertEntity(
     @ColumnInfo(name = "notify_at_percent")
     val notifyAtPercent: Int = 80,
 
+    /** Optional: only track spending from this source (e.g. "MPESA", null = all) */
+    @ColumnInfo(name = "source_filter", defaultValue = "NULL")
+    val sourceFilter: String? = null,
+
+    @ColumnInfo(name = "keyword_filter", defaultValue = "NULL")
+    val keywordFilter: String? = null,
+
+    @ColumnInfo(name = "category_filter", defaultValue = "NULL")
+    val categoryFilter: String? = null,
+
     /** Timestamp alert was created */
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis()

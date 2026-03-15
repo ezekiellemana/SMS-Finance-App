@@ -257,7 +257,7 @@ private fun NavGraphBuilder.buildSharedGraph(
     composable(Routes.EXPORT)       { ExportScreen(onNavigateBack = { nav.popBackStack() }) }
     composable(Routes.CLOUD_BACKUP) { CloudBackupScreen(onNavigateBack = { nav.popBackStack() }) }
     composable(Routes.MULTI_USER)   {
-        MultiUserScreen(onNavigateBack = { nav.popBackStack() }, onProfileSwitched = { nav.popBackStack() })
+        MultiUserScreen(onProfileSwitched = { nav.popBackStack() })
     }
     composable(Routes.WIDGET_THEME) { WidgetThemeScreen(onNavigateBack = { nav.popBackStack() }) }
     composable(Routes.CHARTS) { ChartsScreen(onNavigateBack = { nav.popBackStack() }) }
@@ -274,7 +274,7 @@ private fun NavGraphBuilder.buildDetailGraph(detailNav: NavController) {
     composable(Routes.EXPORT)       { ExportScreen(onNavigateBack = { detailNav.popBackStack() }) }
     composable(Routes.CLOUD_BACKUP) { CloudBackupScreen(onNavigateBack = { detailNav.popBackStack() }) }
     composable(Routes.MULTI_USER)   {
-        MultiUserScreen(onNavigateBack = { detailNav.popBackStack() }, onProfileSwitched = { detailNav.popBackStack() })
+        MultiUserScreen(onProfileSwitched = { detailNav.popBackStack() })
     }
     composable(Routes.WIDGET_THEME) { WidgetThemeScreen(onNavigateBack = { detailNav.popBackStack() }) }
     composable(Routes.CHARTS) { ChartsScreen(onNavigateBack = { detailNav.popBackStack() }) }

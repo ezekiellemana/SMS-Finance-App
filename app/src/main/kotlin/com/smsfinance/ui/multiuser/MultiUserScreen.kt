@@ -54,7 +54,7 @@ import java.io.File
 @Composable
 fun MultiUserScreen(
     viewModel: MultiUserViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onNavigateBack: () -> Unit = {},
     onProfileSwitched: () -> Unit
 ) {
     val uiState      by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,19 +64,19 @@ fun MultiUserScreen(
     Scaffold(
         containerColor = BgPrimary,
         topBar = {
-            Row(
+            Box(
                 Modifier.fillMaxWidth().statusBarsPadding()
-                    .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
             ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = TextWhite)
+                Column(
+                    Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(stringResource(R.string.family_accounts), fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp, color = TextWhite)
+                    Text(stringResource(R.string.family_accounts_sub), fontSize = 11.sp,
+                        color = TextSecondary)
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.family_accounts), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextWhite)
-                    Text(stringResource(R.string.family_accounts_sub), fontSize = 11.sp, color = TextSecondary)
-                }
-                Spacer(Modifier.width(48.dp))
             }
         }
     ) { innerPadding ->

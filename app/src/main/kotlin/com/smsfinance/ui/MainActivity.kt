@@ -87,7 +87,8 @@ object Routes {
     const val PIN = "pin"
     const val DASHBOARD      = "dashboard"
     const val DASHBOARD_ROUTE = "dashboard?fromOnboarding={fromOnboarding}"
-    const val TRANSACTIONS = "transactions"
+    const val TRANSACTIONS           = "transactions"
+    const val TRANSACTIONS_HIGHLIGHT  = "transactions?highlight={txId}"
     const val TRANSACTION_DETAIL = "transaction_detail/{id}"
     const val ADD_TRANSACTION = "add_transaction"
     const val ALERTS = "alerts"
@@ -330,6 +331,8 @@ fun AppNavigation(
                 val fromOnboarding = back.arguments?.getBoolean("fromOnboarding") ?: false
                 DashboardScreen(
                     onNavigateToTransactions = { navController.navigate(Routes.TRANSACTIONS) },
+                    // Open list screen and highlight + shake the tapped transaction
+                    onNavigateToDetail       = { id -> navController.navigate("transactions?highlight=$id") },
                     onNavigateToSettings     = { navController.navigate(Routes.SETTINGS) },
                     onNavigateToSearch       = { navController.navigate(Routes.SEARCH) },
                     onNavigateToCharts       = { navController.navigate(Routes.CHARTS) },
@@ -338,9 +341,25 @@ fun AppNavigation(
             }
             composable(Routes.TRANSACTIONS) {
                 TransactionListScreen(
-                    onNavigateBack    = { navController.popBackStack() },
+                    onNavigateBack     = { navController.popBackStack() },
                     onNavigateToDetail = { id -> navController.navigate("transaction_detail/$id") },
-                    onNavigateToAdd   = { navController.navigate(Routes.ADD_TRANSACTION) }
+                    onNavigateToAdd    = { navController.navigate(Routes.ADD_TRANSACTION) }
+                )
+            }
+            // Transactions with a specific row highlighted (from dashboard tap)
+            composable(
+                route     = Routes.TRANSACTIONS_HIGHLIGHT,
+                arguments = listOf(navArgument("txId") {
+                    type         = NavType.LongType
+                    defaultValue = -1L
+                })
+            ) { back ->
+                val txId = back.arguments?.getLong("txId") ?: -1L
+                TransactionListScreen(
+                    onNavigateBack     = { navController.popBackStack() },
+                    onNavigateToDetail = { id -> navController.navigate("transaction_detail/$id") },
+                    onNavigateToAdd    = { navController.navigate(Routes.ADD_TRANSACTION) },
+                    highlightTxId      = txId
                 )
             }
             composable(Routes.TRANSACTION_DETAIL) { back ->
@@ -364,7 +383,6 @@ fun AppNavigation(
             }
             composable(Routes.MULTI_USER) {
                 MultiUserScreen(
-                    onNavigateBack = { navController.popBackStack() },
                     onProfileSwitched = { navController.popBackStack() }
                 )
             }

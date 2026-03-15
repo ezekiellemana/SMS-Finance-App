@@ -265,6 +265,7 @@ fun AppScreenScaffold(
     title: String,
     subtitle: String = "",
     onNavigateBack: () -> Unit,
+    showBackButton: Boolean = true,
     actions: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
@@ -309,43 +310,43 @@ fun AppScreenScaffold(
                         )
                     }
             ) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 4.dp, vertical = 4.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        IconButton(onClick = onNavigateBack) {
+                    // Back button pinned to start
+                    if (showBackButton) {
+                        IconButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
-                        Column {
+                    }
+                    // Title always centred
+                    Column(Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        if (subtitle.isNotEmpty()) {
                             Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
+                                text = subtitle,
+                                fontSize = 11.sp,
+                                color = profileColor
                             )
-                            if (subtitle.isNotEmpty()) {
-                                Text(
-                                    text = subtitle,
-                                    fontSize = 11.sp,
-                                    color = profileColor
-                                )
-                            }
                         }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        actions()
-                    }
+                    // Trailing actions pinned to end
+                    Box(Modifier.align(Alignment.CenterEnd)) { actions() }
                 }
             }
 

@@ -268,7 +268,6 @@
     <string name="set_limits_budget">Weka mipaka ili ushike bajeti</string>
     <string name="no_alerts_yet">Hakuna tahadhari bado</string>
     <string name="no_alerts_yet_sub">Gusa kitufe hapa chini kuunda\nkikomo chako cha kwanza cha matumizi</string>
-    <string name="alert_name_label">Jina la Tahadhari</string>
     <string name="limit_amount_label">Kiasi cha Kikomo</string>
     <string name="notify_at_pct">Arifu wakati (%)</string>
     <string name="period_label">Kipindi</string>
@@ -438,4 +437,66 @@
     <string name="monitor_notif_body">Inafuatilia SMS zako za fedha kiotomatiki</string>
     <string name="monitor_channel_name">Ufuatiliaji wa SMS</string>
     <string name="monitor_channel_desc">Huduma ya nyuma kwa ugunduzi wa haraka wa miamala ya SMS</string>
+
+    <!-- Tahadhari — maneno mapya kwa Kiswahili -->
+    <string name="alert_live_subtitle">Moja kwa moja • inasasishwa na kila muamala</string>
+    <string name="alert_your_alerts">Tahadhari Zako</string>
+    <string name="alert_no_alerts_yet">Hakuna tahadhari bado</string>
+    <string name="alert_no_alerts_use_preset">Tumia kiolezo hapa chini au unda yako mwenyewe</string>
+    <string name="alert_quick_presets">Vipengele vya Haraka</string>
+    <string name="alert_preset_hint">Gusa kiolezo kuongeza mara moja — badilisha baadaye</string>
+    <string name="alert_new_label">Tahadhari Mpya</string>
+    <string name="alert_live_tracking">Ufuatiliaji wa Moja kwa Moja</string>
+    <string name="alert_how_sms">Kila SMS kutoka benki/pesa ya simu inasomwa</string>
+    <string name="alert_how_sum">Miamala katika kipindi cha tahadhari inajumlishwa</string>
+    <string name="alert_how_progress">Mwambaa inasasishwa wakati muamala mpya unafika</string>
+    <string name="alert_how_notify">Arifa inatumwa unapofika kiwango chako</string>
+    <string name="alert_live_subtitle2">Inasasishwa kiotomatiki na kila SMS</string>
+    <string name="alert_spent_label">IMETUMIKA</string>
+    <string name="alert_limit_label">KIKOMO</string>
+    <string name="alert_left">TZS %1$s imebaki</string>
+    <string name="alert_notifies_at">Inatoa arifa kufikia %1$s%%</string>
+    <string name="alert_exceeded">🚨  Kikomo kimezidiwa!</string>
+    <string name="alert_approaching">⚠️  Unakaribia kikomo — %1$s%% umefikiwa!</string>
+    <string name="alert_new_spending">Tahadhari Mpya ya Matumizi</string>
+    <string name="alert_edit">Hariri Tahadhari</string>
+    <string name="alert_preset_prefix">Kiolezo: %1$s</string>
+    <string name="alert_set_limit_auto">Weka kikomo — tunafuatilia mengine kiotomatiki</string>
+    <string name="alert_name_label">Jina la tahadhari</string>
+    <string name="alert_name_placeholder">mf. Chakula cha Mwezi</string>
+    <string name="alert_limit_label2">Kikomo cha matumizi</string>
+    <string name="alert_period_label">Kipindi</string>
+    <string name="alert_period_daily_tip">Inarejea usiku wa manane — inafuatilia matumizi ya leo</string>
+    <string name="alert_period_weekly_tip">Inarejea Jumatatu — inafuatilia matumizi ya wiki hii</string>
+    <string name="alert_period_monthly_tip">Inarejea tarehe 1 — inafuatilia matumizi ya mwezi huu</string>
+    <string name="alert_track_service">Fuatilia huduma maalum</string>
+    <string name="alert_track_optional">Hiari — acha wazi kufuatilia matumizi yote</string>
+    <string name="alert_all_services">Huduma zote (bila kichujio)</string>
+    <string name="alert_notify_label">Nitaarifu kufikia</string>
+    <string name="alert_notify_hint">Utapata arifa matumizi yanapofikia asilimia hii</string>
+    <string name="alert_banks_label">Benki</string>
+    <string name="alert_mobile_money_label">Pesa ya Simu</string>
+    <!-- Vipengele vya tahadhari -->
+    <string name="preset_daily_food_name">Chakula cha Kila Siku</string>
+    <string name="preset_daily_food_tip">Chakula cha mchana + vitafunio</string>
+    <string name="preset_mobile_data_name">Data ya Simu</string>
+    <string name="preset_mobile_data_tip">Bando ya kawaida ya data</string>
+    <string name="preset_transport_name">Usafiri</string>
+    <string name="preset_transport_tip">Mabasi + bodaboda</string>
+    <string name="preset_groceries_name">Mahitaji ya Nyumba</string>
+    <string name="preset_groceries_tip">Mahitaji ya kila mwezi</string>
+    <string name="preset_total_spending_name">Matumizi Yote</string>
+    <string name="preset_total_spending_tip">Bajeti kamili ya mwezi</string>
+    <string name="preset_health_name">Afya</string>
+    <string name="preset_health_tip">Duka la dawa + kliniki</string>
+
+    <!-- Ufuatiliaji mahiri wa tahadhari -->
+    <string name="alert_smart_tip_title">Jinsi ufuatiliaji unavyofanya kazi bila makundi</string>
+    <string name="alert_smart_tip_body">SMS za miamala hazijumuishi madhumuni. Unaweza kuweka lebo ya kundi, andika maneno muhimu kutoka SMS yako (k.m. "Shoprite", "Luku"), au chagua huduma. Programu itajumlisha malipo yanayolingana katika kipindi.</string>
+    <string name="alert_category_filter_title">Weka lebo ya kundi (hiari)</string>
+    <string name="alert_category_filter_sub">Weka lebo kwenye miamala kisha fuatilia kwa lebo</string>
+    <string name="alert_no_category">Hakuna kundi — fuatilia kwa neno au huduma</string>
+    <string name="alert_keyword_filter_title">Kichujio cha neno (hiari)</string>
+    <string name="alert_keyword_filter_sub">Inafanana na maelezo, mtumaji au kumbukumbu. Tenganisha maneno mengi kwa koma k.m. "shoprite, carrefour"</string>
+    <string name="alert_keyword_placeholder">mf. shoprite, luku, airtel</string>
 </resources>

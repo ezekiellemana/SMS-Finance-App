@@ -242,7 +242,6 @@
     <string name="set_limits_budget">Set limits to stay on budget</string>
     <string name="no_alerts_yet">No alerts yet</string>
     <string name="no_alerts_yet_sub">Tap the button below to create\nyour first spending limit</string>
-    <string name="alert_name_label">Alert Name</string>
     <string name="limit_amount_label">Limit Amount</string>
     <string name="notify_at_pct">Notify at (%)</string>
     <string name="period_label">Period</string>
@@ -420,4 +419,66 @@
     <string name="monitor_notif_body">Tracking your financial SMS automatically</string>
     <string name="monitor_channel_name">SMS Monitor</string>
     <string name="monitor_channel_desc">Background service for instant SMS transaction detection</string>
+
+    <!-- Alerts screen — new strings -->
+    <string name="alert_live_subtitle">Live • updates with every transaction</string>
+    <string name="alert_your_alerts">Your Alerts</string>
+    <string name="alert_no_alerts_yet">No alerts yet</string>
+    <string name="alert_no_alerts_use_preset">Use a preset below or create your own</string>
+    <string name="alert_quick_presets">Quick Presets</string>
+    <string name="alert_preset_hint">Tap a preset to add it instantly — customise after</string>
+    <string name="alert_new_label">New Alert</string>
+    <string name="alert_live_tracking">Live Tracking</string>
+    <string name="alert_how_sms">Every SMS from your bank/mobile money is read</string>
+    <string name="alert_how_sum">Transactions in the alert\'s period are summed</string>
+    <string name="alert_how_progress">Progress bar updates the moment a new tx arrives</string>
+    <string name="alert_how_notify">Notification fires when you hit your set threshold</string>
+    <string name="alert_live_subtitle2">Updates automatically with every SMS</string>
+    <string name="alert_spent_label">SPENT</string>
+    <string name="alert_limit_label">LIMIT</string>
+    <string name="alert_left">TZS %1$s left</string>
+    <string name="alert_notifies_at">Notifies at %1$s%%</string>
+    <string name="alert_exceeded">🚨  Limit exceeded!</string>
+    <string name="alert_approaching">⚠️  Approaching limit — %1$s%% reached!</string>
+    <string name="alert_new_spending">New Spending Alert</string>
+    <string name="alert_edit">Edit Alert</string>
+    <string name="alert_preset_prefix">Preset: %1$s</string>
+    <string name="alert_set_limit_auto">Set limit — we track the rest automatically</string>
+    <string name="alert_name_label">Alert name</string>
+    <string name="alert_name_placeholder">e.g. Monthly Food</string>
+    <string name="alert_limit_label2">Spending limit</string>
+    <string name="alert_period_label">Period</string>
+    <string name="alert_period_daily_tip">Resets every midnight — tracks today\'s spending</string>
+    <string name="alert_period_weekly_tip">Resets every Monday — tracks this week\'s spending</string>
+    <string name="alert_period_monthly_tip">Resets 1st of the month — tracks this month\'s spending</string>
+    <string name="alert_track_service">Track specific service</string>
+    <string name="alert_track_optional">Optional — leave blank to track all spending</string>
+    <string name="alert_all_services">All services (no filter)</string>
+    <string name="alert_notify_label">Notify me at</string>
+    <string name="alert_notify_hint">You\'ll get a notification when spending reaches this %%</string>
+    <string name="alert_banks_label">Banks</string>
+    <string name="alert_mobile_money_label">Mobile Money</string>
+    <!-- Alert presets -->
+    <string name="preset_daily_food_name">Daily Food</string>
+    <string name="preset_daily_food_tip">Covers lunch + snacks</string>
+    <string name="preset_mobile_data_name">Mobile Data</string>
+    <string name="preset_mobile_data_tip">Average data bundle</string>
+    <string name="preset_transport_name">Transport</string>
+    <string name="preset_transport_tip">Buses + motorcycle taxi</string>
+    <string name="preset_groceries_name">Groceries</string>
+    <string name="preset_groceries_tip">Monthly household</string>
+    <string name="preset_total_spending_name">Total Spending</string>
+    <string name="preset_total_spending_tip">Full monthly budget</string>
+    <string name="preset_health_name">Health</string>
+    <string name="preset_health_tip">Pharmacy + clinic</string>
+
+    <!-- Alert smart tracking -->
+    <string name="alert_smart_tip_title">How tracking works without categories</string>
+    <string name="alert_smart_tip_body">SMS transactions do not include purpose. You can tag a category, enter keywords from your SMS (e.g. "Shoprite", "Luku"), or filter by service. The app sums all matching withdrawals in the period.</string>
+    <string name="alert_category_filter_title">Tag a category (optional)</string>
+    <string name="alert_category_filter_sub">Tag transactions manually then track by tag</string>
+    <string name="alert_no_category">No category — track by keyword or service</string>
+    <string name="alert_keyword_filter_title">Keyword filter (optional)</string>
+    <string name="alert_keyword_filter_sub">Matches description, sender or reference. Separate multiple with comma e.g. "shoprite, carrefour"</string>
+    <string name="alert_keyword_placeholder">e.g. shoprite, luku, airtel</string>
 </resources>

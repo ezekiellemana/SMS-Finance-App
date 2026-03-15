@@ -46,6 +46,14 @@ class TransactionRepository @Inject constructor(
     fun getExpensesBySource(start: Long, end: Long): Flow<List<SourceTotal>> =
         dao.getExpensesBySource(start, end)
 
+    /** Flow of total expenses where description/source/reference matches a keyword */
+    fun getExpensesByKeyword(start: Long, end: Long, keyword: String): Flow<Double> =
+        dao.getExpensesByKeyword(start, end, keyword)
+
+    /** Flow of total expenses tagged with a specific category */
+    fun getExpensesByCategory(start: Long, end: Long, category: String): Flow<Double> =
+        dao.getExpensesByCategory(start, end, category)
+
     fun getDailyTotals(start: Long, end: Long): Flow<List<DailyTotal>> =
         dao.getDailyTotals(start, end)
 

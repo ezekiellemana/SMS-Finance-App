@@ -2,10 +2,12 @@ package com.smsfinance.repository
 
 import com.smsfinance.data.dao.SpendingAlertDao
 import com.smsfinance.data.entity.SpendingAlertEntity
+import com.smsfinance.data.dao.SourceTotal
 import com.smsfinance.domain.model.AlertPeriod
 import com.smsfinance.domain.model.AlertCheckResult
 import com.smsfinance.domain.model.SpendingAlert
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
 import javax.inject.Inject
@@ -59,7 +61,36 @@ class SpendingAlertRepository @Inject constructor(
      */
     fun getAlertProgress(alert: SpendingAlert): Flow<AlertCheckResult> {
         val (start, end) = getDateRangeForPeriod(alert.period)
-        return transactionRepository.getTotalExpenses(start, end).map { spending ->
+        // Priority: category > keyword > source > all
+        // Multiple keywords are comma-separated; we combine their flows by summing
+        val spendingFlow: Flow<Double> = when {
+            alert.categoryFilter != null -> {
+                transactionRepository.getExpensesByCategory(start, end, alert.categoryFilter)
+            }
+            alert.keywordFilter != null -> {
+                val keywords = alert.keywordFilter.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                if (keywords.isEmpty()) {
+                    transactionRepository.getTotalExpenses(start, end)
+                } else {
+                    // Combine all keyword flows — sum individual keyword totals
+                    // Use combine for reactive updates across all keywords
+                    val flows = keywords.map { kw ->
+                        transactionRepository.getExpensesByKeyword(start, end, kw)
+                    }
+                    flows.reduce { acc, flow ->
+                        acc.combine(flow) { a, b -> a + b }
+                    }
+                }
+            }
+            alert.sourceFilter != null -> {
+                transactionRepository.getExpensesBySource(start, end).map { list ->
+                    list.firstOrNull { it.source.equals(alert.sourceFilter, ignoreCase = true) }
+                        ?.total ?: 0.0
+                }
+            }
+            else -> transactionRepository.getTotalExpenses(start, end)
+        }
+        return spendingFlow.map { spending ->
             val percent = if (alert.limitAmount > 0) (spending / alert.limitAmount) * 100 else 0.0
             AlertCheckResult(
                 alert = alert,
@@ -105,6 +136,9 @@ class SpendingAlertRepository @Inject constructor(
         period = AlertPeriod.fromString(period),
         isEnabled = isEnabled,
         notifyAtPercent = notifyAtPercent,
+        sourceFilter = sourceFilter,
+        keywordFilter = keywordFilter,
+        categoryFilter = categoryFilter,
         createdAt = createdAt
     )
 
@@ -115,6 +149,9 @@ class SpendingAlertRepository @Inject constructor(
         period = period.name,
         isEnabled = isEnabled,
         notifyAtPercent = notifyAtPercent,
+        sourceFilter = sourceFilter,
+        keywordFilter = keywordFilter,
+        categoryFilter = categoryFilter,
         createdAt = createdAt
     )
 }

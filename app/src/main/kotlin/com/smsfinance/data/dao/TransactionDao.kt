@@ -90,6 +90,22 @@ interface TransactionDao {
     @Query("SELECT source, SUM(amount) as total FROM transactions WHERE type = 'WITHDRAWAL' AND date BETWEEN :startDate AND :endDate GROUP BY source")
     fun getExpensesBySource(startDate: Long, endDate: Long): Flow<List<SourceTotal>>
 
+    /** Expenses where description/reference/source contains a keyword (for keyword-based alerts) */
+    @Query("""SELECT COALESCE(SUM(amount), 0.0) FROM transactions
+        WHERE type = 'WITHDRAWAL'
+        AND date BETWEEN :startDate AND :endDate
+        AND (LOWER(description) LIKE '%' || LOWER(:keyword) || '%'
+          OR LOWER(source)      LIKE '%' || LOWER(:keyword) || '%'
+          OR LOWER(reference)   LIKE '%' || LOWER(:keyword) || '%')""")
+    fun getExpensesByKeyword(startDate: Long, endDate: Long, keyword: String): Flow<Double>
+
+    /** Expenses tagged with a specific category */
+    @Query("""SELECT COALESCE(SUM(amount), 0.0) FROM transactions
+        WHERE type = 'WITHDRAWAL'
+        AND date BETWEEN :startDate AND :endDate
+        AND LOWER(category) = LOWER(:category)""")
+    fun getExpensesByCategory(startDate: Long, endDate: Long, category: String): Flow<Double>
+
     /** Daily totals for chart rendering */
     @Query("""
         SELECT 

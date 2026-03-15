@@ -143,6 +143,18 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /** Remove a service from the user's selected list and clear its opening balance. */
+    fun removeService(serviceId: String) = viewModelScope.launch {
+        val currentSenders = serviceBalances.value.map { it.id }.toMutableList()
+        currentSenders.remove(serviceId)
+        prefs.setSelectedSenders(JSONArray(currentSenders).toString())
+        // Also clear the opening balance entry
+        val current = try { JSONObject(prefs.getOpeningBalances()) }
+        catch (_: Exception) { JSONObject() }
+        current.remove(serviceId)
+        prefs.setOpeningBalances(current.toString())
+    }
+
     /** Suspend — caller must await this before calling setOnboardingDone() or navigating away.
      *  All DataStore writes are sequential so balance formula reads consistent data immediately. */
     suspend fun saveUserSetup(

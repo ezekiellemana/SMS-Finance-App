@@ -108,6 +108,7 @@ fun DashboardScreen(
     multiUserVm: MultiUserViewModel = hiltViewModel(),
     settingsVm: SettingsViewModel = hiltViewModel(),
     onNavigateToTransactions: () -> Unit,
+    onNavigateToDetail: (Long) -> Unit = {},
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit = {},
     onNavigateToCharts: () -> Unit = {},
@@ -392,7 +393,7 @@ fun DashboardScreen(
                             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
                                 visibleTx.forEach { tx ->
                                     TransactionRow(tx, privacyMode, profileAccent,
-                                        onClick = onNavigateToTransactions)
+                                        onClick = { onNavigateToDetail(tx.id) })
                                 }
                             }
                         }
